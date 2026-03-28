@@ -4,55 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Maintenance Dashboard</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-  /* ================= CSS Styles ================= */
-  :root { 
-    --bg-color: #0f172a; 
-    --card-bg: #1e293b; 
-    --card-border: #334155; 
-    --text-main: #f8fafc; 
-    --text-muted: #94a3b8; 
-    --primary: #3b82f6; 
-    --warning: #f59e0b; 
-    --success: #10b981; 
-    --danger: #ef4444; 
-  }
-  
+  :root { --bg-color: #0f172a; --card-bg: #1e293b; --card-border: #334155; --text-main: #f8fafc; --text-muted: #94a3b8; --primary: #3b82f6; --warning: #f59e0b; --success: #10b981; --danger: #ef4444; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Kanit', sans-serif; background-color: var(--bg-color); color: var(--text-main); padding: 20px; background-image: radial-gradient(circle at top right, rgba(30, 64, 175, 0.1), transparent 400px); }
   
-  body { 
-    font-family: 'Kanit', sans-serif; 
-    background-color: var(--bg-color); 
-    color: var(--text-main); 
-    padding: 20px; 
-    background-image: radial-gradient(circle at top right, rgba(30, 64, 175, 0.1), transparent 400px); 
-  }
-  
-  /* Header */
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 10px; }
   .header-left { display: flex; align-items: center; gap: 16px; }
   .back-btn { display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 0.9rem; }
   .back-btn:hover { background: var(--card-bg); color: var(--text-main); border-color: var(--primary); }
   .header-left h2 { font-weight: 600; font-size: 1.5rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px;}
-  
   .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
-  
   .header-right { display: flex; align-items: center; gap: 16px; color: var(--text-muted); font-weight: 300;}
   .time { text-align: right; }
   .time-big { font-size: 1.2rem; color: var(--text-main); font-weight: 500;}
 
-  /* Grid & Cards */
   .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
   .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin-bottom: 16px; font-weight: 500; color: var(--text-main); }
   .span-2 { grid-column: span 2; }
 
-  /* KPIs */
   .kpi-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
   .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
   .kpi-total::before { background: var(--success); }
@@ -68,7 +42,6 @@
   .kpi-value { font-size: 2.5rem; font-weight: 600; margin-top: 10px;}
   .kpi-label { color: var(--text-muted); font-size: 0.9rem; }
 
-  /* Buildings */
   .building-container { display: flex; justify-content: space-around; align-items: flex-end; height: 100%; padding-bottom: 10px;}
   .building-item { text-align: center; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; transition: transform 0.2s; }
   .building-item:hover { transform: translateY(-5px); }
@@ -81,7 +54,6 @@
   .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; width: max-content; z-index: 10; opacity: 0; transition: opacity 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: left; }
   .building-item:hover .tooltip { visibility: visible; opacity: 1; }
 
-  /* Modal Popup */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
   .modal-overlay.show { display: flex; opacity: 1; }
   .modal { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; width: 90%; max-width: 550px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; transform: translateY(-20px); transition: transform 0.3s; }
@@ -97,7 +69,6 @@
   .job-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem;}
   .job-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
 
-  /* SLA & Tables */
   .sla-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .sla-badge { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 10px 16px; border-radius: 99px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
   .sla-badge .alert-icon { background: var(--danger); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;}
@@ -110,10 +81,8 @@
   .status-done { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
   .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
   
-  /* Loading Overlay */
   #loadingState { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-size: 1.2rem; transition: opacity 0.3s;}
 
-  /* Responsive */
   @media (max-width: 1200px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .span-2 { grid-column: span 1; } .sla-grid { grid-template-columns: 1fr; } }
 </style>
@@ -197,32 +166,27 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <div class="modal-title" id="modalTitle">🏢 ชื่ออาคาร</div>
-    
     <div class="modal-stats-row">
       <div style="color: var(--success);">📋 รับงาน: <span id="modalTotal">0</span></div>
       <div style="color: var(--primary);">✅ เสร็จสิ้น: <span id="modalComplete">0</span></div>
       <div style="color: var(--warning);">⏳ งานค้าง: <span id="modalPending">0</span></div>
     </div>
-    
     <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม:</div>
     <div class="modal-job-list" id="modalJobList"></div>
-    
     <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: var(--card-border); color: var(--text-main); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s;">ปิดหน้าต่าง</button>
   </div>
 </div>
 
 <script>
   // ==========================================
-  // 🔴 1. การตั้งค่าระบบ (Config)
+  // 🔴 1. Config
   // ==========================================
-  // อัปเดตลิงก์ API ตัวใหม่
   const API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec"; 
-  const AUTO_REFRESH_MINUTES = 5; // ตั้งเวลาอัปเดตอัตโนมัติ (นาที)
+  const AUTO_REFRESH_MINUTES = 5; 
 
   // ==========================================
-  // 🔵 2. ฟังก์ชันช่วยเหลือ (Utility Functions)
+  // 🔵 2. Utility Functions
   // ==========================================
-  // แปลงจำนวนชั่วโมงเป็น วัน/ชั่วโมง
   function formatDuration(hours) {
     if (hours < 0) return '0 ชม.';
     if (hours >= 24) {
@@ -233,7 +197,6 @@
     return `${hours} ชม.`;
   }
 
-  // แปลงรูปแบบวันที่จาก Google Sheets
   function parseCustomDate(dateStr) {
     if(!dateStr) return null;
     try {
@@ -246,18 +209,16 @@
     }
   }
 
-  // ระบบนาฬิกามุมขวาบน
   function updateClock() {
     const now = new Date();
     document.getElementById('timeEl').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const days = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
     document.getElementById('dateEl').innerText = `${days[now.getDay()]} ${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear().toString().slice(-2)}`;
   }
-  setInterval(updateClock, 1000); 
-  updateClock();
+  setInterval(updateClock, 1000); updateClock();
 
   // ==========================================
-  // 🟢 3. ตัวแปรเก็บข้อมูลหลัก (State Management)
+  // 🟢 3. State Management
   // ==========================================
   const svgAri = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 22h12M4 22h16M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>`;
   const svgKSL = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V7l4-4 4 4v15M4 22h16M12 7v15M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 19h.01M15 19h.01"/></svg>`;
@@ -270,7 +231,7 @@
   let myChart = null; 
 
   // ==========================================
-  // 🟡 4. การดึงข้อมูล (Fetch Data)
+  // 🟡 4. Fetch Data
   // ==========================================
   async function loadData(isSilent = false) {
     const syncEl = document.getElementById('syncStatus');
@@ -319,7 +280,7 @@
           start: start,
           duration: durationInHours,
           status: status,
-          // อัปเดต SLA เป็น 168 ชั่วโมง (7 วัน)
+          // ⚠️ อัปเดต SLA เป็น 168 ชั่วโมง (7 วัน)
           isOverSLA: durationInHours > 168 && status === 'pending'
         });
 
@@ -347,12 +308,11 @@
   }
 
   // ==========================================
-  // 🟠 5. การแสดงผลหน้าจอ (Render UI)
+  // 🟠 5. Render UI
   // ==========================================
   function renderDashboard() {
     const keys = Object.keys(buildingMap);
     
-    // KPI
     let globalTotal = mainData.length;
     let globalPending = mainData.filter(d => d.status === 'pending').length;
     let globalComplete = globalTotal - globalPending;
@@ -363,7 +323,6 @@
     document.getElementById('complete').innerText = globalComplete;
     document.getElementById('sla').innerText = slaJobs.length;
 
-    // Buildings
     let buildingHTML = '';
     keys.forEach(k => {
       const b = buildingMap[k];
@@ -374,7 +333,6 @@
     });
     document.getElementById('buildingContainer').innerHTML = buildingHTML;
 
-    // SLA Notifications
     let slaHTML = '';
     slaJobs.slice(0, 6).forEach(d => {
       slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${buildingMap[d.buildingCode].name} | ค้าง ${formatDuration(d.duration)}</div>`;
@@ -382,7 +340,6 @@
     for(let i=slaJobs.length; i<6; i++) { slaHTML += `<div class="sla-badge" style="opacity:0.2; justify-content:center;">...</div>`; }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
-    // Recent Table
     const latest = [...mainData].sort((a,b) => b.start - a.start).slice(0, 10); 
     let tableHTML = '';
     latest.forEach((d) => {
@@ -397,7 +354,7 @@
   }
 
   // ==========================================
-  // 🟣 6. กราฟ (Chart.js)
+  // 🟣 6. Chart.js
   // ==========================================
   function renderChart() {
     const daysMap = {};
@@ -442,7 +399,7 @@
   }
 
   // ==========================================
-  // 🟤 7. ระบบ Popup และการอัปเดตข้อมูล (Modal & Refresh)
+  // 🟤 7. Modal & Refresh
   // ==========================================
   const modalOverlay = document.getElementById('buildingModal');
 
@@ -477,22 +434,19 @@
     if(e.target === modalOverlay) closeModal(); 
   });
 
-  // ฟังก์ชันกดอัปเดตแบบแมนนวล (ปุ่มอัปเดต)
   function refreshData() {
     const loadState = document.getElementById('loadingState');
     if(loadState) {
       loadState.style.display = 'flex';
       loadState.innerHTML = `<div class="dot" style="width: 20px; height: 20px; margin-bottom: 10px;"></div>กำลังดึงข้อมูลล่าสุด...`;
     }
-    loadData(false); // false = เปิดหน้าจอ Loading
+    loadData(false); 
   }
 
-  // ฟังก์ชันอัปเดตอัตโนมัติตามเวลาที่ตั้งไว้ (Auto-Refresh แบบ Silent)
   setInterval(() => {
-    loadData(true); // true = อัปเดตเงียบๆ เบื้องหลัง (ไม่รบกวนหน้าจอ Loading)
+    loadData(true); 
   }, AUTO_REFRESH_MINUTES * 60 * 1000);
 
-  // เริ่มโหลดข้อมูลทันทีที่เปิดเว็บ
   loadData();
 </script>
 </body>
