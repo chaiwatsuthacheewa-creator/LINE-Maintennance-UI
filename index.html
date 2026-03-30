@@ -33,7 +33,7 @@
   }
   
   /* Header */
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 10px; flex-wrap: wrap; gap: 15px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px; flex-wrap: wrap; gap: 15px; }
   .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .back-btn { display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 0.9rem; white-space: nowrap; }
   .back-btn:hover { background: var(--card-bg); color: var(--text-main); border-color: var(--primary); }
@@ -46,11 +46,17 @@
   .time { text-align: right; }
   .time-big { font-size: 1.2rem; color: var(--text-main); font-weight: 500;}
 
+  /* Filters */
+  .filter-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px; flex-wrap: wrap; gap: 10px; }
+  .filter-select { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-family: 'Kanit'; font-size: 1rem; cursor: pointer; outline: none; }
+  .filter-select:hover { border-color: var(--primary); }
+
   /* Grid & Cards */
   .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); overflow: hidden; }
   .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin-bottom: 16px; font-weight: 500; color: var(--text-main); }
   .span-2 { grid-column: span 2; }
+  .span-4 { grid-column: span 4; } /* คลาสใหม่ สำหรับขยายกว้างเต็มแถว */
 
   /* KPIs */
   .kpi-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
@@ -69,18 +75,15 @@
   .kpi-value { font-size: 2.5rem; font-weight: 600; margin-top: 10px;}
   .kpi-label { color: var(--text-muted); font-size: 0.9rem; }
 
-  /* Buildings */
-  .building-container { display: flex; justify-content: space-around; align-items: flex-end; height: 100%; padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-  .building-item { text-align: center; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; transition: transform 0.2s; min-width: 60px; }
-  .building-item:hover { transform: translateY(-5px); }
-  .building-icon { margin-bottom: 12px; }
-  .building-name { font-weight: 500; font-size: 0.9rem; }
-  .building-jobs { font-size: 0.8rem; margin-top: 4px; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
-  .jobs-active { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-  .jobs-clear { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-  
-  .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; width: max-content; z-index: 10; opacity: 0; transition: opacity 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: left; }
-  .building-item:hover .tooltip { visibility: visible; opacity: 1; }
+  /* Buildings - อัปเดตโครงสร้าง Grid ใหม่ให้สมดุล */
+  .building-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; width: 100%; }
+  .building-item { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.5); padding: 16px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; height: 100%; }
+  .building-item:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
+  .building-icon { margin-bottom: 8px; }
+  .building-name { font-weight: 500; font-size: 1rem; margin-bottom: 12px; color: var(--text-main); }
+  .building-stats-box { width: 100%; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; font-size: 0.85rem; text-align: left; }
+  .b-stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .b-stat-row:last-child { margin-bottom: 0; }
 
   /* Modal Popup */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; padding: 10px; }
@@ -90,7 +93,6 @@
   .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
   .modal-close:hover { color: var(--danger); }
   .modal-title { font-size: 1.2rem; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-main); border-bottom: 1px solid var(--card-border); padding-bottom: 12px; padding-right: 20px; }
-  .modal-stats-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; flex-wrap: wrap; gap: 8px; }
   
   .modal-job-list { overflow-y: auto; padding-right: 8px; flex-grow: 1; }
   .modal-job-list::-webkit-scrollbar { width: 6px; }
@@ -115,17 +117,24 @@
   .status-done { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
   .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
   
-  /* Loading Overlay */
   #loadingState { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-size: 1.2rem; transition: opacity 0.3s;}
 
   /* Responsive Adjustments */
-  @media (max-width: 1200px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 1200px) { 
+    .dashboard-grid { grid-template-columns: repeat(2, 1fr); } 
+    .span-4 { grid-column: span 2; } /* ลด Span ลงเมื่อหน้าจอเล็กลง */
+    .building-container { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 768px) { 
     .dashboard-grid { grid-template-columns: 1fr; } 
-    .span-2 { grid-column: span 1; } 
+    .span-2, .span-4 { grid-column: span 1; } 
     .sla-grid { grid-template-columns: 1fr; } 
     .header-right { width: 100%; justify-content: space-between; flex-direction: row-reverse; }
     .time { text-align: left; }
+    .building-container { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .building-container { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -158,6 +167,25 @@
   </div>
 </div>
 
+<div class="filter-bar">
+  <h3 style="font-weight: 500; font-size: 1.1rem; color: var(--text-main);">ภาพรวมสถิติการแจ้งซ่อม</h3>
+  <select id="monthFilter" class="filter-select" onchange="applyFilter()">
+    <option value="all">📊 รวมทุกเดือน (ปีนี้)</option>
+    <option value="0">มกราคม</option>
+    <option value="1">กุมภาพันธ์</option>
+    <option value="2">มีนาคม</option>
+    <option value="3">เมษายน</option>
+    <option value="4">พฤษภาคม</option>
+    <option value="5">มิถุนายน</option>
+    <option value="6">กรกฎาคม</option>
+    <option value="7">สิงหาคม</option>
+    <option value="8">กันยายน</option>
+    <option value="9">ตุลาคม</option>
+    <option value="10">พฤศจิกายน</option>
+    <option value="11">ธันวาคม</option>
+  </select>
+</div>
+
 <div class="dashboard-grid">
   <div class="card kpi-card kpi-total" onclick="openKpiModal('total')">
     <div class="kpi-header"><div><div class="kpi-label">งานทั้งหมด</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">📋</div></div>
@@ -176,14 +204,14 @@
     <div class="kpi-value" style="color: var(--danger)" id="sla">-</div>
   </div>
 
-  <div class="card span-2" style="display:flex; flex-direction:column;">
-    <div class="card-title">🏢 สถานะอาคารและการค้างงาน <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 300; margin-left: auto;">(คลิกเพื่อดูรายละเอียด)</span></div>
+  <div class="card span-4" style="display:flex; flex-direction:column;">
+    <div class="card-title">🏢 สถานะอาคารและการค้างงาน</div>
     <div class="building-container" id="buildingContainer"></div>
   </div>
 
-  <div class="card span-2">
-    <div class="card-title">📈 Trend เปรียบเทียบงาน (เรียงตามวันที่รับงาน)</div>
-    <div style="height: 200px; width: 100%;">
+  <div class="card span-4">
+    <div class="card-title">📈 Trend เปรียบเทียบงาน <span id="chartLabel" style="font-size:0.9rem; color:var(--text-muted); margin-left: 8px;">(รายเดือน)</span></div>
+    <div style="height: 250px; width: 100%;">
       <canvas id="trendChart"></canvas>
     </div>
   </div>
@@ -210,16 +238,8 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <div class="modal-title" id="modalTitle">🏢 ชื่ออาคาร</div>
-    
-    <div class="modal-stats-row" id="modalStatsRow">
-      <div style="color: var(--success);">📋 รับงาน: <span id="modalTotal">0</span></div>
-      <div style="color: var(--primary);">✅ เสร็จสิ้น: <span id="modalComplete">0</span></div>
-      <div style="color: var(--warning);">⏳ งานค้าง: <span id="modalPending">0</span></div>
-    </div>
-    
-    <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม (เรียงงานค้างก่อน):</div>
+    <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม (เรียงงานค้างขึ้นก่อน):</div>
     <div class="modal-job-list" id="modalJobList"></div>
-    
     <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: var(--card-border); color: var(--text-main); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s; flex-shrink: 0;">ปิดหน้าต่าง</button>
   </div>
 </div>
@@ -244,23 +264,20 @@
     return `${hours} ชม.`;
   }
 
-  // ปรับปรุงฟังก์ชันแปลงวันที่ให้แม่นยำและปลอดภัยขึ้น
   function parseCustomDate(dateStr) {
     if(!dateStr) return null;
     try {
-      // ตรวจสอบรูปแบบมาตรฐาน (YYYY-MM-DD หรืออื่น ๆ ที่ JS อ่านได้)
       let d = new Date(dateStr);
       if (!isNaN(d.getTime()) && dateStr.includes('-')) return d;
 
-      // กรณีรูปแบบจาก Google Sheets (เช่น DD/MM/YYYY HH:mm:ss หรือ MM/DD/YYYY HH:mm:ss)
       const parts = dateStr.split(' ');
       const dateParts = parts[0].includes('/') ? parts[0].split('/') : parts[0].split('-');
       const timeParts = parts[1] ? parts[1].split(':') : [0,0,0];
       
       let year, month, day;
-      if (dateParts[0].length === 4) { // YYYY/MM/DD
+      if (dateParts[0].length === 4) { 
           year = dateParts[0]; month = dateParts[1]; day = dateParts[2];
-      } else { // สมมติว่าเป็น DD/MM/YYYY ตามเครื่องส่วนใหญ่ในไทย
+      } else { 
           year = dateParts[2]; month = dateParts[1]; day = dateParts[0];
       }
       
@@ -282,18 +299,19 @@
   // ==========================================
   // 🟢 3. State Management
   // ==========================================
-  const svgAri = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 22h12M4 22h16M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>`;
-  const svgKSL = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V7l4-4 4 4v15M4 22h16M12 7v15M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 19h.01M15 19h.01"/></svg>`;
-  const svgESV = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M2 22h20M8 12h8M8 16h8M8 20h8"/></svg>`;
-  const svgSaphan = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V12l9-7 9 7v10M2 22h20M9 14h6M9 18h6M12 14v8"/></svg>`;
-  const svgRangsit = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V8h14v14M3 22h18M9 12h6M9 16h6M9 20h6"/></svg>`;
+  const svgAri = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 22h12M4 22h16M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>`;
+  const svgKSL = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V7l4-4 4 4v15M4 22h16M12 7v15M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 19h.01M15 19h.01"/></svg>`;
+  const svgESV = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M2 22h20M8 12h8M8 16h8M8 20h8"/></svg>`;
+  const svgSaphan = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V12l9-7 9 7v10M2 22h20M9 14h6M9 18h6M12 14v8"/></svg>`;
+  const svgRangsit = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V8h14v14M3 22h18M9 12h6M9 16h6M9 20h6"/></svg>`;
 
-  let buildingMap = {}; 
   let mainData = []; 
+  let filteredData = []; 
+  let buildingMap = {}; 
   let myChart = null; 
 
   // ==========================================
-  // 🟡 4. Fetch Data
+  // 🟡 4. Fetch Data & Filter
   // ==========================================
   async function loadData(isSilent = false) {
     const syncEl = document.getElementById('syncStatus');
@@ -306,14 +324,6 @@
       const response = await fetch(API_URL);
       const rawData = await response.json();
       
-      buildingMap = {
-        ari: { name: 'Ari Hills', icon: svgAri, total: 0, pending: 0, completed: 0 },
-        ksl: { name: 'KSL Tower', icon: svgKSL, total: 0, pending: 0, completed: 0 },
-        esv: { name: 'ESV Tower', icon: svgESV, total: 0, pending: 0, completed: 0 },
-        sph: { name: 'Saphan Mai', icon: svgSaphan, total: 0, pending: 0, completed: 0 },
-        rng: { name: 'Rangsit', icon: svgRangsit, total: 0, pending: 0, completed: 0 }
-      };
-
       mainData = [];
 
       rawData.forEach(row => {
@@ -335,7 +345,6 @@
           durationInHours = Math.floor((endTime - start) / (1000 * 60 * 60));
         }
 
-        // ⚠️ สร้างตัวแปรเก็บเวลาอัปเดตล่าสุด เพื่อใช้เรียงตาราง (ถ้ามี CloseTime ใช้ CloseTime ถ้าไม่มีใช้ Date)
         const lastActionDate = end ? end : (start ? start : new Date(0));
 
         mainData.push({
@@ -343,20 +352,16 @@
           buildingCode: bCode,
           detail: row.Detail || '-',
           start: start,
-          lastUpdate: lastActionDate, // ใช้สำหรับจัดเรียง
+          lastUpdate: lastActionDate,
           duration: durationInHours,
           status: status,
           isOverSLA: durationInHours > 168 && status === 'pending'
         });
-
-        buildingMap[bCode].total++;
-        if(status === 'completed') buildingMap[bCode].completed++;
-        else buildingMap[bCode].pending++;
       });
 
-      renderDashboard(); 
-      if (loadState) loadState.style.display = 'none'; 
+      applyFilter(); 
       
+      if (loadState) loadState.style.display = 'none'; 
       if (syncEl) {
         const now = new Date();
         const syncTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`;
@@ -372,16 +377,43 @@
     }
   }
 
+  function applyFilter() {
+    const monthSelect = document.getElementById('monthFilter').value;
+    
+    buildingMap = {
+      ari: { name: 'Ari Hills', icon: svgAri, total: 0, pending: 0, completed: 0 },
+      ksl: { name: 'KSL Tower', icon: svgKSL, total: 0, pending: 0, completed: 0 },
+      esv: { name: 'ESV Tower', icon: svgESV, total: 0, pending: 0, completed: 0 },
+      sph: { name: 'Saphan Mai', icon: svgSaphan, total: 0, pending: 0, completed: 0 },
+      rng: { name: 'Rangsit', icon: svgRangsit, total: 0, pending: 0, completed: 0 }
+    };
+
+    if (monthSelect === 'all') {
+      filteredData = [...mainData];
+    } else {
+      const targetMonth = parseInt(monthSelect);
+      filteredData = mainData.filter(d => d.start && d.start.getMonth() === targetMonth);
+    }
+
+    filteredData.forEach(d => {
+      buildingMap[d.buildingCode].total++;
+      if(d.status === 'completed') buildingMap[d.buildingCode].completed++;
+      else buildingMap[d.buildingCode].pending++;
+    });
+
+    renderDashboard(monthSelect);
+  }
+
   // ==========================================
   // 🟠 5. Render UI
   // ==========================================
-  function renderDashboard() {
+  function renderDashboard(monthSelect) {
     const keys = Object.keys(buildingMap);
     
-    let globalTotal = mainData.length;
-    let globalPending = mainData.filter(d => d.status === 'pending').length;
+    let globalTotal = filteredData.length;
+    let globalPending = filteredData.filter(d => d.status === 'pending').length;
     let globalComplete = globalTotal - globalPending;
-    const slaJobs = mainData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
+    const slaJobs = filteredData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
 
     document.getElementById('total').innerText = globalTotal;
     document.getElementById('open').innerText = globalPending;
@@ -391,10 +423,16 @@
     let buildingHTML = '';
     keys.forEach(k => {
       const b = buildingMap[k];
-      const statusClass = b.pending > 0 ? 'jobs-active' : 'jobs-clear';
-      const statusText = b.pending > 0 ? `${b.pending} งานค้าง` : `ไม่มีงานค้าง`;
-      const tooltipHTML = `<div class="tooltip"><div style="color:var(--success)">รับงาน: ${b.total}</div><div style="color:var(--primary)">เสร็จสิ้น: ${b.completed}</div><div style="color:var(--warning)">งานค้าง: ${b.pending}</div></div>`;
-      buildingHTML += `<div class="building-item" onclick="openModal('${k}')">${tooltipHTML}<div class="building-icon">${b.icon}</div><div class="building-name">${b.name}</div><div class="building-jobs ${statusClass}">${statusText}</div></div>`;
+      buildingHTML += `
+        <div class="building-item" onclick="openModal('${k}')">
+          <div class="building-icon">${b.icon}</div>
+          <div class="building-name">${b.name}</div>
+          <div class="building-stats-box">
+            <div class="b-stat-row"><span>📋 รับ:</span><span style="color: var(--text-main); font-weight: 500;">${b.total}</span></div>
+            <div class="b-stat-row"><span>✅ เสร็จ:</span><span style="color: var(--primary); font-weight: 500;">${b.completed}</span></div>
+            <div class="b-stat-row"><span>⏳ ค้าง:</span><span style="color: var(--warning); font-weight: 500;">${b.pending}</span></div>
+          </div>
+        </div>`;
     });
     document.getElementById('buildingContainer').innerHTML = buildingHTML;
 
@@ -405,8 +443,7 @@
     for(let i=slaJobs.length; i<6; i++) { slaHTML += `<div class="sla-badge" style="opacity:0.2; justify-content:center;">...</div>`; }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
-    // ⚠️ เรียงตารางตาม วันเวลาอัปเดตล่าสุด (lastUpdate) และตัดมา 5 รายการ
-    const latest = [...mainData].sort((a,b) => b.lastUpdate - a.lastUpdate).slice(0, 5); 
+    const latest = [...filteredData].sort((a,b) => b.lastUpdate - a.lastUpdate).slice(0, 5); 
     
     let tableHTML = '';
     latest.forEach((d) => {
@@ -419,50 +456,77 @@
     });
     document.getElementById('tableBody').innerHTML = tableHTML;
 
-    renderChart();
+    renderChart(monthSelect);
   }
 
   // ==========================================
-  // 🟣 6. Chart.js
+  // 🟣 6. Chart.js (เปลี่ยนเป็น Bar Chart)
   // ==========================================
-  function renderChart() {
-    const daysMap = {};
-    mainData.forEach(d => {
-      if(!d.start) return;
-      const day = d.start.getDate(); 
-      if(!daysMap[day]) daysMap[day] = { total: 0, completed: 0, pending: 0 };
-      daysMap[day].total++;
-      if(d.status === 'completed') daysMap[day].completed++;
-      if(d.status === 'pending') daysMap[day].pending++;
-    });
+  function renderChart(monthSelect) {
+    let labels = [];
+    let totalData = [];
+    let completedData = [];
+    let pendingData = [];
 
-    const sortedDays = Object.keys(daysMap).map(Number).sort((a,b) => a-b);
-    const labels = sortedDays.map(String);
-    const totalData = sortedDays.map(d => daysMap[d].total);
-    const completedData = sortedDays.map(d => daysMap[d].completed);
-    const pendingData = sortedDays.map(d => daysMap[d].pending);
+    const chartLabelEl = document.getElementById('chartLabel');
+
+    if (monthSelect === 'all') {
+      chartLabelEl.innerText = "(แสดง 12 เดือน)";
+      labels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      let monthStats = Array(12).fill(0).map(()=>({total:0, completed:0, pending:0}));
+      
+      filteredData.forEach(d => {
+        if(!d.start) return;
+        let m = d.start.getMonth();
+        monthStats[m].total++;
+        if(d.status === 'completed') monthStats[m].completed++;
+        if(d.status === 'pending') monthStats[m].pending++;
+      });
+
+      totalData = monthStats.map(m => m.total);
+      completedData = monthStats.map(m => m.completed);
+      pendingData = monthStats.map(m => m.pending);
+
+    } else {
+      chartLabelEl.innerText = "(แสดงรายวันของเดือนที่เลือก)";
+      let daysMap = {};
+      filteredData.forEach(d => {
+        if(!d.start) return;
+        let day = d.start.getDate();
+        if(!daysMap[day]) daysMap[day] = { total: 0, completed: 0, pending: 0 };
+        daysMap[day].total++;
+        if(d.status === 'completed') daysMap[day].completed++;
+        if(d.status === 'pending') daysMap[day].pending++;
+      });
+
+      const sortedDays = Object.keys(daysMap).map(Number).sort((a,b) => a-b);
+      labels = sortedDays.map(d => `วันที่ ${d}`);
+      totalData = sortedDays.map(d => daysMap[d].total);
+      completedData = sortedDays.map(d => daysMap[d].completed);
+      pendingData = sortedDays.map(d => daysMap[d].pending);
+    }
 
     const ctx = document.getElementById('trendChart').getContext('2d');
     if (myChart) myChart.destroy(); 
 
     myChart = new Chart(ctx, {
-      type: 'line',
+      type: 'bar', // เปลี่ยนตรงนี้เป็น Bar Chart
       data: {
         labels: labels,
         datasets: [
-          { label: 'งานทั้งหมด', data: totalData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 2, tension: 0.4, fill: true, order: 3 },
-          { label: 'เสร็จสิ้น', data: completedData, borderColor: '#3b82f6', borderWidth: 2, tension: 0.4, order: 2 },
-          { label: 'งานค้าง', data: pendingData, borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 5], tension: 0.4, order: 1 }
+          { label: 'งานทั้งหมด', data: totalData, backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: '#10b981', borderWidth: 1, order: 3 },
+          { label: 'เสร็จสิ้น', data: completedData, backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: '#3b82f6', borderWidth: 1, order: 2 },
+          { label: 'งานค้าง', data: pendingData, backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: '#f59e0b', borderWidth: 1, order: 1 }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 12, usePointStyle: true, font: {family: 'Kanit'} } }, tooltip: { titleFont: {family: 'Kanit'}, bodyFont: {family: 'Kanit'} } },
         scales: {
-          x: { title: { display: true, text: 'วันที่รับงาน', color: '#94a3b8', font: {family: 'Kanit'} }, grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'} } },
-          y: { title: { display: true, text: 'จำนวนงาน', color: '#94a3b8', font: {family: 'Kanit'} }, grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'} }, beginAtZero: true }
+          x: { grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'} } },
+          y: { grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'}, stepSize: 1 }, beginAtZero: true }
         },
-        elements: { point: { radius: 4, hoverRadius: 6 } }, interaction: { mode: 'index', intersect: false }
+        interaction: { mode: 'index', intersect: false }
       }
     });
   }
@@ -475,44 +539,40 @@
   function openModal(buildingKey) {
     const b = buildingMap[buildingKey];
     document.getElementById('modalTitle').innerHTML = `${b.icon} ${b.name}`;
-    document.getElementById('modalStatsRow').style.display = 'flex'; 
-    document.getElementById('modalTotal').innerText = b.total;
-    document.getElementById('modalComplete').innerText = b.completed;
-    document.getElementById('modalPending').innerText = b.pending;
     
-    const bData = mainData.filter(d => d.buildingCode === buildingKey);
+    const bData = filteredData.filter(d => d.buildingCode === buildingKey);
     renderJobList(bData);
     modalOverlay.classList.add('show');
   }
 
   function openKpiModal(type) {
-    document.getElementById('modalStatsRow').style.display = 'none'; 
-
-    let filteredData = [];
+    let modalData = [];
     let title = "";
 
     if(type === 'total') {
-      filteredData = [...mainData];
-      title = "📋 งานซ่อมทั้งหมด (ทุกอาคาร)";
+      modalData = [...filteredData];
+      title = "📋 งานซ่อมทั้งหมด";
     } else if(type === 'pending') {
-      filteredData = mainData.filter(d => d.status === 'pending');
-      title = "⏳ งานค้าง รอดำเนินการ (ทุกอาคาร)";
+      modalData = filteredData.filter(d => d.status === 'pending');
+      title = "⏳ งานค้าง รอดำเนินการ";
     } else if(type === 'completed') {
-      filteredData = mainData.filter(d => d.status === 'completed');
-      title = "✅ งานดำเนินการเสร็จสิ้น (ทุกอาคาร)";
+      modalData = filteredData.filter(d => d.status === 'completed');
+      title = "✅ งานดำเนินการเสร็จสิ้น";
     } else if(type === 'sla') {
-      filteredData = mainData.filter(d => d.isOverSLA);
-      title = "⚠️ งานค้างเกิน 7 วัน SLA (ทุกอาคาร)";
+      modalData = filteredData.filter(d => d.isOverSLA);
+      title = "⚠️ งานค้างเกิน 7 วัน SLA";
     }
 
-    document.getElementById('modalTitle').innerHTML = title;
-    renderJobList(filteredData, true); 
+    const monthSelect = document.getElementById('monthFilter');
+    const monthText = monthSelect.options[monthSelect.selectedIndex].text;
+    document.getElementById('modalTitle').innerHTML = `${title} <span style="font-size:0.85rem; color:var(--text-muted); font-weight: 300; margin-left: 8px;">(${monthText})</span>`;
+    
+    renderJobList(modalData, true); 
     modalOverlay.classList.add('show');
   }
 
   function renderJobList(dataList, showBuildingName = false) {
     
-    // เรียงให้ Pending ขึ้นก่อนเสมอ ถ้าสถานะเหมือนกันให้เรียงตามวันที่ใหม่สุด (start date)
     dataList.sort((a, b) => {
       if (a.status === 'pending' && b.status === 'completed') return -1;
       if (a.status === 'completed' && b.status === 'pending') return 1;
@@ -521,7 +581,7 @@
 
     let jobsHTML = '';
     if(dataList.length === 0) {
-      jobsHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">ไม่มีประวัติการแจ้งซ่อม</div>';
+      jobsHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">ไม่มีประวัติการแจ้งซ่อมในเวลาที่เลือก</div>';
     } else {
       dataList.forEach(job => {
         const badge = job.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จสิ้น</span>` : `<span class="status-badge status-pending">⏳ งานค้าง</span>`;
