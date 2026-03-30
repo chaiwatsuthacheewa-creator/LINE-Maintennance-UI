@@ -4,37 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Maintenance Dashboard</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-  :root { --bg-color: #0f172a; --card-bg: #1e293b; --card-border: #334155; --text-main: #f8fafc; --text-muted: #94a3b8; --primary: #3b82f6; --warning: #f59e0b; --success: #10b981; --danger: #ef4444; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Kanit', sans-serif; background-color: var(--bg-color); color: var(--text-main); padding: 20px; background-image: radial-gradient(circle at top right, rgba(30, 64, 175, 0.1), transparent 400px); }
+  /* ================= CSS Styles ================= */
+  :root { 
+    --bg-color: #0f172a; 
+    --card-bg: #1e293b; 
+    --card-border: #334155; 
+    --text-main: #f8fafc; 
+    --text-muted: #94a3b8; 
+    --primary: #3b82f6; 
+    --warning: #f59e0b; 
+    --success: #10b981; 
+    --danger: #ef4444; 
+  }
   
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 10px; }
-  .header-left { display: flex; align-items: center; gap: 16px; }
-  .back-btn { display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 0.9rem; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: 'Kanit', sans-serif; 
+    background-color: var(--bg-color); 
+    color: var(--text-main); 
+    padding: 20px; 
+    background-image: radial-gradient(circle at top right, rgba(30, 64, 175, 0.1), transparent 400px); 
+  }
+  
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 10px; flex-wrap: wrap; gap: 15px; }
+  .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .back-btn { display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 0.9rem; white-space: nowrap; }
   .back-btn:hover { background: var(--card-bg); color: var(--text-main); border-color: var(--primary); }
   .header-left h2 { font-weight: 600; font-size: 1.5rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px;}
+  
   .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
+  
   .header-right { display: flex; align-items: center; gap: 16px; color: var(--text-muted); font-weight: 300;}
   .time { text-align: right; }
   .time-big { font-size: 1.2rem; color: var(--text-main); font-weight: 500;}
 
+  /* Grid & Cards */
   .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
+  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); overflow: hidden; }
   .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin-bottom: 16px; font-weight: 500; color: var(--text-main); }
   .span-2 { grid-column: span 2; }
 
-  .kpi-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  /* KPIs */
+  .kpi-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); }
   .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
   .kpi-total::before { background: var(--success); }
   .kpi-pending::before { background: var(--warning); }
   .kpi-done::before { background: var(--primary); }
   .kpi-sla::before { background: var(--danger); }
   .kpi-header { display: flex; justify-content: space-between; align-items: flex-start;}
-  .kpi-icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px;}
+  .kpi-icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; flex-shrink: 0; }
   .kpi-total .kpi-icon-box { background: rgba(16, 185, 129, 0.1); color: var(--success); }
   .kpi-pending .kpi-icon-box { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
   .kpi-done .kpi-icon-box { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
@@ -42,49 +69,64 @@
   .kpi-value { font-size: 2.5rem; font-weight: 600; margin-top: 10px;}
   .kpi-label { color: var(--text-muted); font-size: 0.9rem; }
 
-  .building-container { display: flex; justify-content: space-around; align-items: flex-end; height: 100%; padding-bottom: 10px;}
-  .building-item { text-align: center; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; transition: transform 0.2s; }
+  /* Buildings */
+  .building-container { display: flex; justify-content: space-around; align-items: flex-end; height: 100%; padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+  .building-item { text-align: center; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; transition: transform 0.2s; min-width: 60px; }
   .building-item:hover { transform: translateY(-5px); }
   .building-icon { margin-bottom: 12px; }
   .building-name { font-weight: 500; font-size: 0.9rem; }
-  .building-jobs { font-size: 0.8rem; margin-top: 4px; padding: 2px 8px; border-radius: 4px; }
+  .building-jobs { font-size: 0.8rem; margin-top: 4px; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
   .jobs-active { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
   .jobs-clear { background: rgba(16, 185, 129, 0.2); color: var(--success); }
   
   .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; width: max-content; z-index: 10; opacity: 0; transition: opacity 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: left; }
   .building-item:hover .tooltip { visibility: visible; opacity: 1; }
 
-  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+  /* Modal Popup */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; padding: 10px; }
   .modal-overlay.show { display: flex; opacity: 1; }
-  .modal { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; width: 90%; max-width: 550px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; transform: translateY(-20px); transition: transform 0.3s; }
+  .modal { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; width: 100%; max-width: 550px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; transform: translateY(-20px); transition: transform 0.3s; max-height: 90vh; display: flex; flex-direction: column; }
   .modal-overlay.show .modal { transform: translateY(0); }
   .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
   .modal-close:hover { color: var(--danger); }
-  .modal-title { font-size: 1.3rem; font-weight: 500; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: var(--text-main); border-bottom: 1px solid var(--card-border); padding-bottom: 12px;}
-  .modal-stats-row { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 0.9rem; }
-  .modal-job-list { max-height: 250px; overflow-y: auto; padding-right: 8px; }
+  .modal-title { font-size: 1.2rem; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-main); border-bottom: 1px solid var(--card-border); padding-bottom: 12px; padding-right: 20px; }
+  .modal-stats-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; flex-wrap: wrap; gap: 8px; }
+  
+  .modal-job-list { overflow-y: auto; padding-right: 8px; flex-grow: 1; }
   .modal-job-list::-webkit-scrollbar { width: 6px; }
   .modal-job-list::-webkit-scrollbar-track { background: var(--card-bg); }
   .modal-job-list::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
-  .job-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem;}
-  .job-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-
-  .sla-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .sla-badge { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 10px 16px; border-radius: 99px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-  .sla-badge .alert-icon { background: var(--danger); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;}
   
-  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;}
-  th { color: var(--text-muted); padding-bottom: 12px; font-weight: 400; border-bottom: 1px solid var(--card-border); }
+  .job-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem;}
+  .job-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; align-items: flex-start; gap: 10px; }
+  .job-card-title { font-weight: 500; color: var(--text-main); flex-grow: 1; line-height: 1.4; }
+
+  /* SLA & Tables */
+  .sla-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sla-badge { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 10px 16px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; line-height: 1.4; }
+  .sla-badge .alert-icon { background: var(--danger); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
+  
+  .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; min-width: 600px; }
+  th { color: var(--text-muted); padding-bottom: 12px; font-weight: 400; border-bottom: 1px solid var(--card-border); white-space: nowrap; }
   td { padding: 12px 0; border-bottom: 1px solid rgba(51, 65, 85, 0.5); }
   tr:last-child td { border-bottom: none; }
-  .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; }
+  .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
   .status-done { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
   .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
   
+  /* Loading Overlay */
   #loadingState { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-size: 1.2rem; transition: opacity 0.3s;}
 
+  /* Responsive Adjustments */
   @media (max-width: 1200px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } .span-2 { grid-column: span 1; } .sla-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) { 
+    .dashboard-grid { grid-template-columns: 1fr; } 
+    .span-2 { grid-column: span 1; } 
+    .sla-grid { grid-template-columns: 1fr; } 
+    .header-right { width: 100%; justify-content: space-between; flex-direction: row-reverse; }
+    .time { text-align: left; }
+  }
 </style>
 </head>
 <body>
@@ -104,7 +146,7 @@
   </div>
   
   <div class="header-right">
-    <div class="time" style="text-align: right;">
+    <div class="time">
       <div class="time-big" id="timeEl">00:00 AM</div>
       <div id="dateEl">กำลังโหลด...</div>
       <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
@@ -112,25 +154,25 @@
         <button onclick="refreshData()" style="background: none; border: 1px solid var(--card-border); color: var(--primary); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.7rem; font-family: 'Kanit'; transition: all 0.2s;">อัปเดต</button>
       </div>
     </div>
-    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px;">👤</div>
+    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0;">👤</div>
   </div>
 </div>
 
 <div class="dashboard-grid">
-  <div class="card kpi-card kpi-total">
-    <div class="kpi-header"><div><div class="kpi-label">งานทั้งหมด</div><div style="color:var(--text-muted); font-size:0.8rem;">งานรวมทั้งหมด</div></div><div class="kpi-icon-box">📋</div></div>
+  <div class="card kpi-card kpi-total" onclick="openKpiModal('total')">
+    <div class="kpi-header"><div><div class="kpi-label">งานทั้งหมด</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">📋</div></div>
     <div class="kpi-value" style="color: var(--success)" id="total">-</div>
   </div>
-  <div class="card kpi-card kpi-pending">
-    <div class="kpi-header"><div><div class="kpi-label">งานค้าง</div><div style="color:var(--text-muted); font-size:0.8rem;">รอดำเนินการ</div></div><div class="kpi-icon-box">⏳</div></div>
+  <div class="card kpi-card kpi-pending" onclick="openKpiModal('pending')">
+    <div class="kpi-header"><div><div class="kpi-label">งานค้าง</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">⏳</div></div>
     <div class="kpi-value" style="color: var(--warning)" id="open">-</div>
   </div>
-  <div class="card kpi-card kpi-done">
-    <div class="kpi-header"><div><div class="kpi-label">เสร็จแล้ว</div><div style="color:var(--text-muted); font-size:0.8rem;">ดำเนินการเสร็จสิ้น</div></div><div class="kpi-icon-box">✅</div></div>
+  <div class="card kpi-card kpi-done" onclick="openKpiModal('completed')">
+    <div class="kpi-header"><div><div class="kpi-label">เสร็จแล้ว</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">✅</div></div>
     <div class="kpi-value" style="color: var(--primary)" id="complete">-</div>
   </div>
-  <div class="card kpi-card kpi-sla">
-    <div class="kpi-header"><div><div class="kpi-label">เกิน SLA</div><div style="color:var(--text-muted); font-size:0.8rem;">ต้องการดูแลด่วน</div></div><div class="kpi-icon-box">⚠️</div></div>
+  <div class="card kpi-card kpi-sla" onclick="openKpiModal('sla')">
+    <div class="kpi-header"><div><div class="kpi-label">เกิน SLA</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">⚠️</div></div>
     <div class="kpi-value" style="color: var(--danger)" id="sla">-</div>
   </div>
 
@@ -152,13 +194,15 @@
   </div>
 
   <div class="card span-2">
-    <div class="card-title">🛠️ งานล่าสุด (10 งาน)</div>
-    <table>
-      <thead>
-        <tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>Start</th><th>Status</th><th>Duration</th></tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+    <div class="card-title">🛠️ งานล่าสุด (5 งาน)</div>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>Start</th><th>Status</th><th>Duration</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -166,14 +210,17 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">×</button>
     <div class="modal-title" id="modalTitle">🏢 ชื่ออาคาร</div>
-    <div class="modal-stats-row">
+    
+    <div class="modal-stats-row" id="modalStatsRow">
       <div style="color: var(--success);">📋 รับงาน: <span id="modalTotal">0</span></div>
       <div style="color: var(--primary);">✅ เสร็จสิ้น: <span id="modalComplete">0</span></div>
       <div style="color: var(--warning);">⏳ งานค้าง: <span id="modalPending">0</span></div>
     </div>
-    <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม:</div>
+    
+    <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม (เรียงงานค้างก่อน):</div>
     <div class="modal-job-list" id="modalJobList"></div>
-    <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: var(--card-border); color: var(--text-main); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s;">ปิดหน้าต่าง</button>
+    
+    <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: var(--card-border); color: var(--text-main); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s; flex-shrink: 0;">ปิดหน้าต่าง</button>
   </div>
 </div>
 
@@ -280,7 +327,6 @@
           start: start,
           duration: durationInHours,
           status: status,
-          // ⚠️ อัปเดต SLA เป็น 168 ชั่วโมง (7 วัน)
           isOverSLA: durationInHours > 168 && status === 'pending'
         });
 
@@ -340,7 +386,7 @@
     for(let i=slaJobs.length; i<6; i++) { slaHTML += `<div class="sla-badge" style="opacity:0.2; justify-content:center;">...</div>`; }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
-    const latest = [...mainData].sort((a,b) => b.start - a.start).slice(0, 10); 
+    const latest = [...mainData].sort((a,b) => b.start - a.start).slice(0, 5); 
     let tableHTML = '';
     latest.forEach((d) => {
       const bName = buildingMap[d.buildingCode].name;
@@ -399,31 +445,87 @@
   }
 
   // ==========================================
-  // 🟤 7. Modal & Refresh
+  // 🟤 7. Modal & Sorting
   // ==========================================
   const modalOverlay = document.getElementById('buildingModal');
 
   function openModal(buildingKey) {
     const b = buildingMap[buildingKey];
     document.getElementById('modalTitle').innerHTML = `${b.icon} ${b.name}`;
+    document.getElementById('modalStatsRow').style.display = 'flex'; 
     document.getElementById('modalTotal').innerText = b.total;
     document.getElementById('modalComplete').innerText = b.completed;
     document.getElementById('modalPending').innerText = b.pending;
     
-    const bData = mainData.filter(d => d.buildingCode === buildingKey).sort((a,b) => b.start - a.start);
-    let jobsHTML = '';
+    // ดึงเฉพาะข้อมูลตึกนั้นๆ
+    const bData = mainData.filter(d => d.buildingCode === buildingKey);
+    renderJobList(bData);
+    modalOverlay.classList.add('show');
+  }
+
+  function openKpiModal(type) {
+    document.getElementById('modalStatsRow').style.display = 'none'; 
+
+    let filteredData = [];
+    let title = "";
+
+    if(type === 'total') {
+      filteredData = [...mainData];
+      title = "📋 งานซ่อมทั้งหมด (ทุกอาคาร)";
+    } else if(type === 'pending') {
+      filteredData = mainData.filter(d => d.status === 'pending');
+      title = "⏳ งานค้าง รอดำเนินการ (ทุกอาคาร)";
+    } else if(type === 'completed') {
+      filteredData = mainData.filter(d => d.status === 'completed');
+      title = "✅ งานดำเนินการเสร็จสิ้น (ทุกอาคาร)";
+    } else if(type === 'sla') {
+      filteredData = mainData.filter(d => d.isOverSLA);
+      title = "⚠️ งานค้างเกิน 7 วัน SLA (ทุกอาคาร)";
+    }
+
+    document.getElementById('modalTitle').innerHTML = title;
+    renderJobList(filteredData, true); 
+    modalOverlay.classList.add('show');
+  }
+
+  // ฟังก์ชันแสดงรายการงาน (พร้อมระบบเรียงงานค้างขึ้นก่อน)
+  function renderJobList(dataList, showBuildingName = false) {
     
-    if(bData.length === 0) {
+    // ⚠️ เรียงลำดับ (Sorting): ให้ Pending ขึ้นก่อนเสมอ ถ้าสถานะเหมือนกันให้เรียงตามวันที่ (ใหม่สุดขึ้นก่อน)
+    dataList.sort((a, b) => {
+      if (a.status === 'pending' && b.status === 'completed') return -1;
+      if (a.status === 'completed' && b.status === 'pending') return 1;
+      return b.start - a.start; // ถ้าสถานะเหมือนกัน เรียงตามวันที่
+    });
+
+    let jobsHTML = '';
+    if(dataList.length === 0) {
       jobsHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">ไม่มีประวัติการแจ้งซ่อม</div>';
     } else {
-      bData.forEach(job => {
+      dataList.forEach(job => {
         const badge = job.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จสิ้น</span>` : `<span class="status-badge status-pending">⏳ งานค้าง</span>`;
         const dateStr = job.start ? `${job.start.getDate().toString().padStart(2,'0')}/${(job.start.getMonth()+1).toString().padStart(2,'0')}/${job.start.getFullYear().toString().slice(-2)}` : '-';
-        jobsHTML += `<div class="job-card"><div class="job-card-header"><span style="font-weight: 500; color: var(--text-main);">${job.ticket} - ${job.detail}</span>${badge}</div><div style="display: flex; justify-content: space-between; color: var(--text-muted);"><span>📅 ${dateStr}</span><span>⏱ ใช้เวลา / ค้างมาแล้ว ${formatDuration(job.duration)}</span></div></div>`;
+        
+        let jobTitle = `${job.ticket} - ${job.detail}`;
+        if(showBuildingName) {
+          const bName = buildingMap[job.buildingCode] ? buildingMap[job.buildingCode].name : job.buildingCode;
+          jobTitle = `<span style="color: var(--primary);">[${bName}]</span> ${job.ticket} - ${job.detail}`;
+        }
+
+        jobsHTML += `
+          <div class="job-card">
+            <div class="job-card-header">
+              <span class="job-card-title">${jobTitle}</span>
+              ${badge}
+            </div>
+            <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+              <span>📅 ${dateStr}</span>
+              <span>⏱ ใช้เวลา / ค้างมาแล้ว ${formatDuration(job.duration)}</span>
+            </div>
+          </div>`;
       });
     }
     document.getElementById('modalJobList').innerHTML = jobsHTML;
-    modalOverlay.classList.add('show');
   }
 
   function closeModal() { 
