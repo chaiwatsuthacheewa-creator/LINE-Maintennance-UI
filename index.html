@@ -194,11 +194,11 @@
   </div>
 
   <div class="card span-2">
-    <div class="card-title">🛠️ งานล่าสุด (5 งาน)</div>
+    <div class="card-title">🛠️ งานอัปเดตล่าสุด (5 งาน)</div>
     <div class="table-responsive">
       <table>
         <thead>
-          <tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>Start</th><th>Status</th><th>Duration</th></tr>
+          <tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>อัปเดตล่าสุด</th><th>Status</th><th>Duration</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -244,13 +244,28 @@
     return `${hours} ชม.`;
   }
 
+  // ปรับปรุงฟังก์ชันแปลงวันที่ให้แม่นยำและปลอดภัยขึ้น
   function parseCustomDate(dateStr) {
     if(!dateStr) return null;
     try {
+      // ตรวจสอบรูปแบบมาตรฐาน (YYYY-MM-DD หรืออื่น ๆ ที่ JS อ่านได้)
+      let d = new Date(dateStr);
+      if (!isNaN(d.getTime()) && dateStr.includes('-')) return d;
+
+      // กรณีรูปแบบจาก Google Sheets (เช่น DD/MM/YYYY HH:mm:ss หรือ MM/DD/YYYY HH:mm:ss)
       const parts = dateStr.split(' ');
       const dateParts = parts[0].includes('/') ? parts[0].split('/') : parts[0].split('-');
       const timeParts = parts[1] ? parts[1].split(':') : [0,0,0];
-      return new Date(dateParts[2], parseInt(dateParts[1]) - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2] || 0);
+      
+      let year, month, day;
+      if (dateParts[0].length === 4) { // YYYY/MM/DD
+          year = dateParts[0]; month = dateParts[1]; day = dateParts[2];
+      } else { // สมมติว่าเป็น DD/MM/YYYY ตามเครื่องส่วนใหญ่ในไทย
+          year = dateParts[2]; month = dateParts[1]; day = dateParts[0];
+      }
+      
+      if(!year) return new Date(dateStr);
+      return new Date(year, parseInt(month) - 1, day, timeParts[0], timeParts[1], timeParts[2] || 0);
     } catch(e) { 
       return new Date(dateStr); 
     }
@@ -320,11 +335,15 @@
           durationInHours = Math.floor((endTime - start) / (1000 * 60 * 60));
         }
 
+        // ⚠️ สร้างตัวแปรเก็บเวลาอัปเดตล่าสุด เพื่อใช้เรียงตาราง (ถ้ามี CloseTime ใช้ CloseTime ถ้าไม่มีใช้ Date)
+        const lastActionDate = end ? end : (start ? start : new Date(0));
+
         mainData.push({
           ticket: row.Ticket || '-',
           buildingCode: bCode,
           detail: row.Detail || '-',
           start: start,
+          lastUpdate: lastActionDate, // ใช้สำหรับจัดเรียง
           duration: durationInHours,
           status: status,
           isOverSLA: durationInHours > 168 && status === 'pending'
@@ -386,12 +405,16 @@
     for(let i=slaJobs.length; i<6; i++) { slaHTML += `<div class="sla-badge" style="opacity:0.2; justify-content:center;">...</div>`; }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
-    const latest = [...mainData].sort((a,b) => b.start - a.start).slice(0, 5); 
+    // ⚠️ เรียงตารางตาม วันเวลาอัปเดตล่าสุด (lastUpdate) และตัดมา 5 รายการ
+    const latest = [...mainData].sort((a,b) => b.lastUpdate - a.lastUpdate).slice(0, 5); 
+    
     let tableHTML = '';
     latest.forEach((d) => {
       const bName = buildingMap[d.buildingCode].name;
-      const dateStr = d.start ? `${d.start.getHours().toString().padStart(2,'0')}:${d.start.getMinutes().toString().padStart(2,'0')} ${d.start.getDate().toString().padStart(2,'0')}/${(d.start.getMonth()+1).toString().padStart(2,'0')}/${d.start.getFullYear().toString().slice(-2)}` : '-';
+      const dateObj = d.lastUpdate;
+      const dateStr = dateObj && dateObj.getTime() !== 0 ? `${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')} ${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}/${dateObj.getFullYear().toString().slice(-2)}` : '-';
       let statusHTML = d.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จแล้ว</span>` : `<span class="status-badge status-pending">⏳ รอดำเนินการ</span>`;
+      
       tableHTML += `<tr><td>${d.ticket}</td><td>${bName}</td><td>${d.detail}</td><td style="color:var(--text-muted)">${dateStr}</td><td>${statusHTML}</td><td>${formatDuration(d.duration)}</td></tr>`;
     });
     document.getElementById('tableBody').innerHTML = tableHTML;
@@ -457,7 +480,6 @@
     document.getElementById('modalComplete').innerText = b.completed;
     document.getElementById('modalPending').innerText = b.pending;
     
-    // ดึงเฉพาะข้อมูลตึกนั้นๆ
     const bData = mainData.filter(d => d.buildingCode === buildingKey);
     renderJobList(bData);
     modalOverlay.classList.add('show');
@@ -488,14 +510,13 @@
     modalOverlay.classList.add('show');
   }
 
-  // ฟังก์ชันแสดงรายการงาน (พร้อมระบบเรียงงานค้างขึ้นก่อน)
   function renderJobList(dataList, showBuildingName = false) {
     
-    // ⚠️ เรียงลำดับ (Sorting): ให้ Pending ขึ้นก่อนเสมอ ถ้าสถานะเหมือนกันให้เรียงตามวันที่ (ใหม่สุดขึ้นก่อน)
+    // เรียงให้ Pending ขึ้นก่อนเสมอ ถ้าสถานะเหมือนกันให้เรียงตามวันที่ใหม่สุด (start date)
     dataList.sort((a, b) => {
       if (a.status === 'pending' && b.status === 'completed') return -1;
       if (a.status === 'completed' && b.status === 'pending') return 1;
-      return b.start - a.start; // ถ้าสถานะเหมือนกัน เรียงตามวันที่
+      return b.start - a.start; 
     });
 
     let jobsHTML = '';
@@ -519,8 +540,8 @@
               ${badge}
             </div>
             <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
-              <span>📅 ${dateStr}</span>
-              <span>⏱ ใช้เวลา / ค้างมาแล้ว ${formatDuration(job.duration)}</span>
+              <span>📅 เริ่ม: ${dateStr}</span>
+              <span>⏱ ${formatDuration(job.duration)}</span>
             </div>
           </div>`;
       });
