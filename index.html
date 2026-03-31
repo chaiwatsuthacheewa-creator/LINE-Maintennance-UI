@@ -56,7 +56,7 @@
   .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); overflow: hidden; }
   .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin-bottom: 16px; font-weight: 500; color: var(--text-main); }
   .span-2 { grid-column: span 2; }
-  .span-4 { grid-column: span 4; } /* คลาสใหม่ สำหรับขยายกว้างเต็มแถว */
+  .span-4 { grid-column: span 4; }
 
   /* KPIs */
   .kpi-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
@@ -75,7 +75,7 @@
   .kpi-value { font-size: 2.5rem; font-weight: 600; margin-top: 10px;}
   .kpi-label { color: var(--text-muted); font-size: 0.9rem; }
 
-  /* Buildings - อัปเดตโครงสร้าง Grid ใหม่ให้สมดุล */
+  /* Buildings */
   .building-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; width: 100%; }
   .building-item { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.5); padding: 16px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; height: 100%; }
   .building-item:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
@@ -116,13 +116,11 @@
   .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
   .status-done { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
   .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-  
-  #loadingState { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-size: 1.2rem; transition: opacity 0.3s;}
 
   /* Responsive Adjustments */
   @media (max-width: 1200px) { 
     .dashboard-grid { grid-template-columns: repeat(2, 1fr); } 
-    .span-4 { grid-column: span 2; } /* ลด Span ลงเมื่อหน้าจอเล็กลง */
+    .span-4 { grid-column: span 2; } 
     .building-container { grid-template-columns: repeat(3, 1fr); }
   }
   @media (max-width: 768px) { 
@@ -140,11 +138,6 @@
 </head>
 <body>
 
-<div id="loadingState">
-  <div class="dot" style="width: 20px; height: 20px; margin-bottom: 10px;"></div>
-  กำลังเชื่อมต่อข้อมูลจาก Google Sheets...
-</div>
-
 <div class="header">
   <div class="header-left">
     <a href="https://add00917-hue.github.io/GNR3-Building-MS/" class="back-btn">
@@ -159,7 +152,7 @@
       <div class="time-big" id="timeEl">00:00 AM</div>
       <div id="dateEl">กำลังโหลด...</div>
       <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-        <span id="syncStatus"><span class="dot" style="width: 8px; height: 8px; display: inline-block;"></span> กำลังซิงค์...</span>
+        <span id="syncStatus"><span class="dot" style="width: 8px; height: 8px; display: inline-block;"></span> กำลังเตรียมเชื่อมต่อ...</span>
         <button onclick="refreshData()" style="background: none; border: 1px solid var(--card-border); color: var(--primary); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.7rem; font-family: 'Kanit'; transition: all 0.2s;">อัปเดต</button>
       </div>
     </div>
@@ -189,19 +182,19 @@
 <div class="dashboard-grid">
   <div class="card kpi-card kpi-total" onclick="openKpiModal('total')">
     <div class="kpi-header"><div><div class="kpi-label">งานทั้งหมด</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">📋</div></div>
-    <div class="kpi-value" style="color: var(--success)" id="total">-</div>
+    <div class="kpi-value" style="color: var(--success)" id="total">0</div>
   </div>
   <div class="card kpi-card kpi-pending" onclick="openKpiModal('pending')">
     <div class="kpi-header"><div><div class="kpi-label">งานค้าง</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">⏳</div></div>
-    <div class="kpi-value" style="color: var(--warning)" id="open">-</div>
+    <div class="kpi-value" style="color: var(--warning)" id="open">0</div>
   </div>
   <div class="card kpi-card kpi-done" onclick="openKpiModal('completed')">
     <div class="kpi-header"><div><div class="kpi-label">เสร็จแล้ว</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">✅</div></div>
-    <div class="kpi-value" style="color: var(--primary)" id="complete">-</div>
+    <div class="kpi-value" style="color: var(--primary)" id="complete">0</div>
   </div>
   <div class="card kpi-card kpi-sla" onclick="openKpiModal('sla')">
     <div class="kpi-header"><div><div class="kpi-label">เกิน SLA</div><div style="color:var(--text-muted); font-size:0.8rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">⚠️</div></div>
-    <div class="kpi-value" style="color: var(--danger)" id="sla">-</div>
+    <div class="kpi-value" style="color: var(--danger)" id="sla">0</div>
   </div>
 
   <div class="card span-4" style="display:flex; flex-direction:column;">
@@ -218,7 +211,9 @@
 
   <div class="card span-2">
     <div class="card-title" style="color: var(--danger);">⚠️ งานค้างเกิน 7 วัน (SLA)</div>
-    <div class="sla-grid" id="slaContainer"></div>
+    <div class="sla-grid" id="slaContainer">
+      <div style="color: var(--text-muted); font-size: 0.9rem;">กำลังประมวลผล...</div>
+    </div>
   </div>
 
   <div class="card span-2">
@@ -228,7 +223,9 @@
         <thead>
           <tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>อัปเดตล่าสุด</th><th>Status</th><th>Duration</th></tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+          <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -249,7 +246,7 @@
   // 🔴 1. Config
   // ==========================================
   const API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec"; 
-  const AUTO_REFRESH_MINUTES = 5; 
+  const AUTO_REFRESH_SECONDS = 10; // รีเซ็ต/ซิงค์อัตโนมัติทุก 10 วินาที
 
   // ==========================================
   // 🔵 2. Utility Functions
@@ -310,16 +307,30 @@
   let buildingMap = {}; 
   let myChart = null; 
 
+  // เตรียมโครงสร้างเริ่มต้น เพื่อให้ UI วาดรูปตึกขึ้นมาทันทีโดยไม่ต้องรอโหลดเสร็จ
+  function initEmptyBuildingMap() {
+    buildingMap = {
+      ari: { name: 'Ari Hills', icon: svgAri, total: 0, pending: 0, completed: 0 },
+      ksl: { name: 'KSL Tower', icon: svgKSL, total: 0, pending: 0, completed: 0 },
+      esv: { name: 'ESV Tower', icon: svgESV, total: 0, pending: 0, completed: 0 },
+      sph: { name: 'Saphan Mai', icon: svgSaphan, total: 0, pending: 0, completed: 0 },
+      rng: { name: 'Rangsit', icon: svgRangsit, total: 0, pending: 0, completed: 0 }
+    };
+  }
+  initEmptyBuildingMap();
+  
+  // วาดหน้าจอว่างๆ รอก่อน 1 ครั้ง (เพื่อให้เปิดลิงก์ปุ๊บ UI โชว์ปั๊บ)
+  renderDashboard('all', true);
+
   // ==========================================
-  // 🟡 4. Fetch Data & Filter
+  // 🟡 4. Fetch Data (หลังบ้าน)
   // ==========================================
-  async function loadData(isSilent = false) {
+  async function loadData() {
     const syncEl = document.getElementById('syncStatus');
-    const loadState = document.getElementById('loadingState');
     
     try {
-      if (syncEl) syncEl.innerHTML = `<span class="dot" style="width: 8px; height: 8px; display: inline-block; background: var(--warning); box-shadow: 0 0 8px var(--warning);"></span> กำลังซิงค์...`;
-      if (!isSilent && loadState) loadState.style.display = 'flex';
+      // โชว์แค่ข้อความด้านขวาบนว่ากำลังดึงข้อมูล โดยไม่บล็อกหน้าจอ
+      if (syncEl) syncEl.innerHTML = `<span class="dot" style="width: 8px; height: 8px; display: inline-block; background: var(--warning); box-shadow: 0 0 8px var(--warning);"></span> กำลังอัปเดตข้อมูล...`;
 
       const response = await fetch(API_URL);
       const rawData = await response.json();
@@ -359,34 +370,25 @@
         });
       });
 
+      // ดึงค่าการกรอง และอัปเดต UI ให้เนียนๆ
       applyFilter(); 
       
-      if (loadState) loadState.style.display = 'none'; 
       if (syncEl) {
         const now = new Date();
-        const syncTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`;
-        syncEl.innerHTML = `<span class="dot" style="width: 8px; height: 8px; display: inline-block;"></span> ซิงค์ล่าสุด: ${syncTime}`;
+        const syncTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')} น.`;
+        syncEl.innerHTML = `<span class="dot" style="width: 8px; height: 8px; display: inline-block;"></span> อัปเดตล่าสุด: ${syncTime}`;
       }
       
     } catch (error) {
       console.error('Error loading data:', error);
-      if (!isSilent && loadState) {
-        loadState.innerHTML = `<div style="color:var(--danger)">เกิดข้อผิดพลาดในการโหลดข้อมูล <br><small>โปรดรีเฟรชหน้าเว็บ หรือตรวจสอบ Google Sheets API</small></div>`;
-      }
-      if (syncEl) syncEl.innerHTML = `<span style="color: var(--danger);">❌ ซิงค์ล้มเหลว</span>`;
+      if (syncEl) syncEl.innerHTML = `<span style="color: var(--danger);">❌ การซิงค์ล้มเหลว</span>`;
     }
   }
 
   function applyFilter() {
     const monthSelect = document.getElementById('monthFilter').value;
     
-    buildingMap = {
-      ari: { name: 'Ari Hills', icon: svgAri, total: 0, pending: 0, completed: 0 },
-      ksl: { name: 'KSL Tower', icon: svgKSL, total: 0, pending: 0, completed: 0 },
-      esv: { name: 'ESV Tower', icon: svgESV, total: 0, pending: 0, completed: 0 },
-      sph: { name: 'Saphan Mai', icon: svgSaphan, total: 0, pending: 0, completed: 0 },
-      rng: { name: 'Rangsit', icon: svgRangsit, total: 0, pending: 0, completed: 0 }
-    };
+    initEmptyBuildingMap(); // รีเซ็ตโครงสร้างตึก
 
     if (monthSelect === 'all') {
       filteredData = [...mainData];
@@ -401,15 +403,16 @@
       else buildingMap[d.buildingCode].pending++;
     });
 
-    renderDashboard(monthSelect);
+    renderDashboard(monthSelect, false);
   }
 
   // ==========================================
   // 🟠 5. Render UI
   // ==========================================
-  function renderDashboard(monthSelect) {
+  function renderDashboard(monthSelect, isInitial = false) {
     const keys = Object.keys(buildingMap);
     
+    // KPIs
     let globalTotal = filteredData.length;
     let globalPending = filteredData.filter(d => d.status === 'pending').length;
     let globalComplete = globalTotal - globalPending;
@@ -420,6 +423,7 @@
     document.getElementById('complete').innerText = globalComplete;
     document.getElementById('sla').innerText = slaJobs.length;
 
+    // Buildings
     let buildingHTML = '';
     keys.forEach(k => {
       const b = buildingMap[k];
@@ -436,31 +440,44 @@
     });
     document.getElementById('buildingContainer').innerHTML = buildingHTML;
 
+    // ป้องกันการทำงานซ้ำซ้อนถ้าเป็นจังหวะสร้างโครงเปล่าๆ ครั้งแรก
+    if(isInitial) return; 
+
+    // SLA Alerts
     let slaHTML = '';
-    slaJobs.slice(0, 6).forEach(d => {
-      slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${buildingMap[d.buildingCode].name} | ค้าง ${formatDuration(d.duration)}</div>`;
-    });
-    for(let i=slaJobs.length; i<6; i++) { slaHTML += `<div class="sla-badge" style="opacity:0.2; justify-content:center;">...</div>`; }
+    if (slaJobs.length === 0) {
+      slaHTML = `<div style="color: var(--success); font-size: 0.9rem; grid-column: span 2;">ไม่มีงานที่เกิน SLA ในเดือนที่เลือก 🎉</div>`;
+    } else {
+      slaJobs.slice(0, 6).forEach(d => {
+        slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${buildingMap[d.buildingCode].name} | ค้าง ${formatDuration(d.duration)}</div>`;
+      });
+      for(let i=slaJobs.length; i<6; i++) { slaHTML += `<div class="sla-badge" style="opacity:0.2; justify-content:center;">...</div>`; }
+    }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
+    // Table
     const latest = [...filteredData].sort((a,b) => b.lastUpdate - a.lastUpdate).slice(0, 5); 
-    
     let tableHTML = '';
-    latest.forEach((d) => {
-      const bName = buildingMap[d.buildingCode].name;
-      const dateObj = d.lastUpdate;
-      const dateStr = dateObj && dateObj.getTime() !== 0 ? `${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')} ${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}/${dateObj.getFullYear().toString().slice(-2)}` : '-';
-      let statusHTML = d.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จแล้ว</span>` : `<span class="status-badge status-pending">⏳ รอดำเนินการ</span>`;
-      
-      tableHTML += `<tr><td>${d.ticket}</td><td>${bName}</td><td>${d.detail}</td><td style="color:var(--text-muted)">${dateStr}</td><td>${statusHTML}</td><td>${formatDuration(d.duration)}</td></tr>`;
-    });
+    
+    if (latest.length === 0) {
+      tableHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">ไม่มีข้อมูลในเดือนที่เลือก</td></tr>`;
+    } else {
+      latest.forEach((d) => {
+        const bName = buildingMap[d.buildingCode].name;
+        const dateObj = d.lastUpdate;
+        const dateStr = dateObj && dateObj.getTime() !== 0 ? `${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')} ${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}/${dateObj.getFullYear().toString().slice(-2)}` : '-';
+        let statusHTML = d.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จแล้ว</span>` : `<span class="status-badge status-pending">⏳ รอดำเนินการ</span>`;
+        
+        tableHTML += `<tr><td>${d.ticket}</td><td>${bName}</td><td>${d.detail}</td><td style="color:var(--text-muted)">${dateStr}</td><td>${statusHTML}</td><td>${formatDuration(d.duration)}</td></tr>`;
+      });
+    }
     document.getElementById('tableBody').innerHTML = tableHTML;
 
     renderChart(monthSelect);
   }
 
   // ==========================================
-  // 🟣 6. Chart.js (เปลี่ยนเป็น Bar Chart)
+  // 🟣 6. Chart.js (Bar Chart)
   // ==========================================
   function renderChart(monthSelect) {
     let labels = [];
@@ -510,7 +527,7 @@
     if (myChart) myChart.destroy(); 
 
     myChart = new Chart(ctx, {
-      type: 'bar', // เปลี่ยนตรงนี้เป็น Bar Chart
+      type: 'bar', 
       data: {
         labels: labels,
         datasets: [
@@ -537,6 +554,7 @@
   const modalOverlay = document.getElementById('buildingModal');
 
   function openModal(buildingKey) {
+    if(mainData.length === 0) return; // กันกดตอนยังโหลดไม่เสร็จ
     const b = buildingMap[buildingKey];
     document.getElementById('modalTitle').innerHTML = `${b.icon} ${b.name}`;
     
@@ -546,6 +564,7 @@
   }
 
   function openKpiModal(type) {
+    if(mainData.length === 0) return; // กันกดตอนยังโหลดไม่เสร็จ
     let modalData = [];
     let title = "";
 
@@ -572,7 +591,6 @@
   }
 
   function renderJobList(dataList, showBuildingName = false) {
-    
     dataList.sort((a, b) => {
       if (a.status === 'pending' && b.status === 'completed') return -1;
       if (a.status === 'completed' && b.status === 'pending') return 1;
@@ -617,19 +635,17 @@
     if(e.target === modalOverlay) closeModal(); 
   });
 
+  // ปุ่มอัปเดตแมนนวลก็ดึงแบบเงียบๆ ไม่เด้งโหลด
   function refreshData() {
-    const loadState = document.getElementById('loadingState');
-    if(loadState) {
-      loadState.style.display = 'flex';
-      loadState.innerHTML = `<div class="dot" style="width: 20px; height: 20px; margin-bottom: 10px;"></div>กำลังดึงข้อมูลล่าสุด...`;
-    }
-    loadData(false); 
+    loadData(); 
   }
 
+  // ซิงค์อัตโนมัติทุกๆ 10 วินาทีตามที่ตั้งค่า
   setInterval(() => {
-    loadData(true); 
-  }, AUTO_REFRESH_MINUTES * 60 * 1000);
+    loadData(); 
+  }, AUTO_REFRESH_SECONDS * 1000);
 
+  // เริ่มดึงข้อมูลเบื้องหลังทันที
   loadData();
 </script>
 </body>
