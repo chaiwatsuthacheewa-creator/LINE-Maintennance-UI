@@ -28,85 +28,116 @@
     font-family: 'Kanit', sans-serif; 
     background-color: var(--bg-color); 
     color: var(--text-main); 
-    padding: 20px; 
+    padding: 15px 20px; 
     background-image: radial-gradient(circle at top right, rgba(30, 64, 175, 0.1), transparent 400px); 
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
-  
-  /* Header */
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px; flex-wrap: wrap; gap: 15px; }
-  .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .back-btn { display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 0.9rem; white-space: nowrap; }
-  .back-btn:hover { background: var(--card-bg); color: var(--text-main); border-color: var(--primary); }
-  .header-left h2 { font-weight: 600; font-size: 1.5rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px;}
-  
-  .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
-  
-  .header-right { display: flex; align-items: center; gap: 16px; color: var(--text-muted); font-weight: 300;}
-  .time { text-align: right; }
-  .time-big { font-size: 1.2rem; color: var(--text-main); font-weight: 500;}
 
-  /* Filters */
-  .filter-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px; flex-wrap: wrap; gap: 10px; }
-  .filter-select { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-family: 'Kanit'; font-size: 1rem; cursor: pointer; outline: none; }
+  /* 🎨 Custom Scrollbar (ตกแต่งแถบเลื่อนให้เข้าธีม) */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; border: 2px solid var(--bg-color); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+  /* ------------------------------------------- */
+  /* Sidebar & Auto Hide Overlay */
+  /* ------------------------------------------- */
+  .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(3px); }
+  .sidebar-overlay.show { opacity: 1; visibility: visible; }
+  
+  .sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.98); border-right: 1px solid var(--card-border); z-index: 2000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px; box-shadow: 5px 0 30px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 20px; overflow-y: auto;}
+  .sidebar.show { left: 0; }
+
+  .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; }
+  .close-sidebar { background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; transition: color 0.2s; line-height: 1; }
+  .close-sidebar:hover { color: var(--danger); }
+  
+  .back-btn { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-main); text-decoration: none; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 1rem; }
+  .back-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
+
+  .filter-select { padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-family: 'Kanit'; font-size: 1rem; cursor: pointer; outline: none; width: 100%; margin-top: 8px;}
   .filter-select:hover { border-color: var(--primary); }
 
-  /* Layout แยกลำดับ ซ้าย ขวา ให้เท่ากัน (1fr 1fr) */
-  .dashboard-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
-  .column-left { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-  .column-right { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 15px; border-top: 1px solid var(--card-border); padding-top: 20px; }
+  .time-big { font-size: 1.4rem; color: var(--text-main); font-weight: 500;}
+
+  /* ------------------------------------------- */
+  /* Top Header */
+  /* ------------------------------------------- */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+  .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .menu-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); font-size: 1rem; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Kanit'; }
+  .menu-btn:hover { background: var(--card-border); border-color: var(--primary); }
+  .dash-title { font-weight: 600; font-size: 1.4rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px; margin: 0;}
+  
+  .current-month-badge { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;}
+  
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
+  
+  .header-right { display: flex; align-items: center; gap: 15px; text-align: right;}
+
+  /* ------------------------------------------- */
+  /* Layout Dashboard (Grid 2 คอลัมน์แบบยืดหยุ่น) */
+  /* ------------------------------------------- */
+  .dashboard-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; align-items: stretch; flex-grow: 1;}
+  .column-left { display: flex; flex-direction: column; gap: 15px; }
+  .column-right { display: flex; flex-direction: column; gap: 15px; }
   .full-width { grid-column: span 2; }
 
   /* Cards */
-  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); overflow: hidden; }
-  .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin-bottom: 16px; font-weight: 500; color: var(--text-main); }
+  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column;}
+  .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; margin-bottom: 12px; font-weight: 500; color: var(--text-main); }
 
-  /* KPIs (จัดเป็นตาราง 2x2) */
-  .kpi-wrapper { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-  .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);}
-  .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); }
+  /* KPIs */
+  .kpi-wrapper { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
   .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
   .kpi-total::before { background: var(--success); }
   .kpi-pending::before { background: var(--warning); }
   .kpi-done::before { background: var(--primary); }
   .kpi-sla::before { background: var(--danger); }
   .kpi-header { display: flex; justify-content: space-between; align-items: flex-start;}
-  .kpi-icon-box { width: 42px; height: 42px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 20px; flex-shrink: 0; }
+  .kpi-icon-box { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 18px; flex-shrink: 0; }
   .kpi-total .kpi-icon-box { background: rgba(16, 185, 129, 0.1); color: var(--success); }
   .kpi-pending .kpi-icon-box { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
   .kpi-done .kpi-icon-box { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
   .kpi-sla .kpi-icon-box { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-  .kpi-value { font-size: 2rem; font-weight: 600; margin-top: 10px;}
+  .kpi-value { font-size: 2rem; font-weight: 600; margin-top: 8px; line-height: 1;}
   .kpi-label { color: var(--text-muted); font-size: 0.85rem; }
 
-  /* Buildings */
-  .building-container { display: flex; flex-wrap: wrap; gap: 12px; width: 100%; justify-content: center; }
-  .building-item { flex: 1 1 calc(33.333% - 12px); min-width: 120px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.5); padding: 14px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; }
-  .building-item:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
-  .building-icon { margin-bottom: 8px; }
-  .building-name { font-weight: 500; font-size: 0.95rem; margin-bottom: 12px; color: var(--text-main); }
-  .building-stats-box { width: 100%; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; font-size: 0.8rem; text-align: left; }
-  .b-stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  /* Buildings (3 top, 2 bottom grid) */
+  .building-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; width: 100%; flex-grow: 1; align-content: space-between;}
+  .building-item { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.5); padding: 12px; border-radius: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; height: 100%;}
+  .building-item:hover { transform: translateY(-3px); border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
+  .b-top { grid-column: span 2; } 
+  .b-bottom { grid-column: span 3; } 
+  .building-icon { margin-bottom: 6px; }
+  .building-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-main); }
+  .building-stats-box { width: 100%; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 8px; font-size: 0.75rem; text-align: left; }
+  .b-stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
   .b-stat-row:last-child { margin-bottom: 0; }
 
   /* Table */
-  .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; min-width: 500px; }
-  th { color: var(--text-muted); padding-bottom: 12px; font-weight: 400; border-bottom: 1px solid var(--card-border); white-space: nowrap; }
-  td { padding: 12px 0; border-bottom: 1px solid rgba(51, 65, 85, 0.5); }
+  .table-responsive { width: 100%; overflow-x: auto; flex-grow: 1;}
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 450px; }
+  th { color: var(--text-muted); padding-bottom: 8px; font-weight: 400; border-bottom: 1px solid var(--card-border); white-space: nowrap; }
+  td { padding: 10px 0; border-bottom: 1px solid rgba(51, 65, 85, 0.5); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
-  .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; }
-  .status-done { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
-  .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+  .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;}
+  .status-done { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); }
+  .status-pending { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--warning); }
 
-  /* SLA Warnings (Bottom row) */
-  .sla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-  .sla-badge { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; line-height: 1.4; }
-  .sla-badge .alert-icon { background: var(--danger); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+  /* SLA Warnings */
+  .sla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .sla-badge { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; line-height: 1.4; }
+  .sla-badge .alert-icon { background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
 
   /* Modal Popup */
-  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; padding: 10px; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 3000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; padding: 10px; }
   .modal-overlay.show { display: flex; opacity: 1; }
   .modal { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; width: 100%; max-width: 550px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; transform: translateY(-20px); transition: transform 0.3s; max-height: 90vh; display: flex; flex-direction: column; }
   .modal-overlay.show .modal { transform: translateY(0); }
@@ -114,24 +145,28 @@
   .modal-close:hover { color: var(--danger); }
   .modal-title { font-size: 1.2rem; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-main); border-bottom: 1px solid var(--card-border); padding-bottom: 12px; padding-right: 20px; }
   .modal-job-list { overflow-y: auto; padding-right: 8px; flex-grow: 1; }
-  .modal-job-list::-webkit-scrollbar { width: 6px; }
-  .modal-job-list::-webkit-scrollbar-track { background: var(--card-bg); }
-  .modal-job-list::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
   .job-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem;}
   .job-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; align-items: flex-start; gap: 10px; }
   .job-card-title { font-weight: 500; color: var(--text-main); flex-grow: 1; line-height: 1.4; }
 
-  /* Responsive Adjustments */
-  @media (max-width: 992px) { 
+  /* 📱 Responsive สำหรับ iPad และ มือถือ (รองรับการเลื่อนขึ้นลง) */
+  @media (max-width: 1024px) { 
     .dashboard-main { grid-template-columns: 1fr; } 
     .full-width { grid-column: span 1; } 
-    .header-right { width: 100%; justify-content: space-between; flex-direction: row-reverse; }
-    .time { text-align: left; }
+    .building-container { grid-template-columns: repeat(6, 1fr); }
   }
-  @media (max-width: 576px) {
-    .kpi-wrapper { grid-template-columns: 1fr; }
-    .building-item { flex: 1 1 100%; }
+  @media (max-width: 768px) {
+    .header-right { width: 100%; justify-content: space-between; flex-direction: row-reverse; text-align: left; margin-top: 10px;}
+    .building-container { grid-template-columns: 1fr 1fr; }
+    .b-top, .b-bottom { grid-column: span 1; }
+    .b-bottom:last-child { grid-column: span 2; } /* จัดตึกสุดท้ายให้อยู่ตรงกลางเวลาเหลือเศษ */
     .sla-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .kpi-wrapper { grid-template-columns: 1fr; }
+    .building-container { grid-template-columns: 1fr; }
+    .b-top, .b-bottom, .b-bottom:last-child { grid-column: span 1; }
+    .header-left h2 { font-size: 1.2rem; }
   }
 </style>
 </head>
@@ -139,80 +174,127 @@
 
 <div class="header">
   <div class="header-left">
-    <a href="https://add00917-hue.github.io/GNR3-Building-MS/" class="back-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      เมนูหลัก
-    </a>
-    <h2>🚀 Smart Maintenance Dashboard <div class="dot" style="display:inline-block; margin-left:8px;"></div></h2>
+    <button class="menu-btn" onclick="toggleSidebar()">
+      ☰ <span style="font-size: 0.95rem;">เมนู</span>
+    </button>
+    <h2 class="dash-title">
+      🚀 Smart Maintenance Dashboard 
+      <div class="dot" style="display:inline-block; margin-left:4px;"></div>
+    </h2>
+    <div class="current-month-badge" id="currentMonthBadge">📅 รวมทุกเดือน (ปีนี้)</div>
   </div>
   
   <div class="header-right">
-    <div class="time">
-      <div class="time-big" id="timeEl">00:00 AM</div>
-      <div id="dateEl">กำลังโหลด...</div>
-      <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-        <span id="syncStatus"><span class="dot" style="width: 8px; height: 8px; display: inline-block;"></span> กำลังเตรียมเชื่อมต่อ...</span>
-        <button onclick="refreshData()" style="background: none; border: 1px solid var(--card-border); color: var(--primary); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.7rem; font-family: 'Kanit'; transition: all 0.2s;">อัปเดต</button>
+    <div>
+      <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 2px;">
+        <span id="syncStatus">กำลังซิงค์...</span>
       </div>
+      <button onclick="refreshData()" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--text-main); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: 'Kanit'; transition: all 0.2s;">↻ อัปเดตทันที</button>
     </div>
-    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0;">👤</div>
+    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">👤</div>
   </div>
 </div>
 
-<div class="filter-bar">
-  <h3 style="font-weight: 500; font-size: 1.1rem; color: var(--text-main);">ภาพรวมสถิติการแจ้งซ่อม</h3>
-  <select id="monthFilter" class="filter-select" onchange="applyFilter()">
-    <option value="all">📊 รวมทุกเดือน (ปีนี้)</option>
-    <option value="0">มกราคม</option>
-    <option value="1">กุมภาพันธ์</option>
-    <option value="2">มีนาคม</option>
-    <option value="3">เมษายน</option>
-    <option value="4">พฤษภาคม</option>
-    <option value="5">มิถุนายน</option>
-    <option value="6">กรกฎาคม</option>
-    <option value="7">สิงหาคม</option>
-    <option value="8">กันยายน</option>
-    <option value="9">ตุลาคม</option>
-    <option value="10">พฤศจิกายน</option>
-    <option value="11">ธันวาคม</option>
-  </select>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  
+  <div class="sidebar-header">
+    <h3 style="font-weight: 500; font-size: 1.2rem; margin: 0; color: var(--text-main);">🛠️ ตั้งค่า & จัดการ</h3>
+    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+  </div>
+
+  <a href="https://add00917-hue.github.io/GNR3-Building-MS/" class="back-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    กลับไปหน้าหลัก
+  </a>
+
+  <div style="background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border);">
+    <label style="color: var(--text-muted); font-size: 0.9rem;">📅 เลือกช่วงเวลาสถิติ:</label>
+    <select id="monthFilter" class="filter-select" onchange="applyFilter(); toggleSidebar();">
+      <option value="all">📊 รวมทุกเดือน (ปีนี้)</option>
+      <option value="0">มกราคม</option>
+      <option value="1">กุมภาพันธ์</option>
+      <option value="2">มีนาคม</option>
+      <option value="3">เมษายน</option>
+      <option value="4">พฤษภาคม</option>
+      <option value="5">มิถุนายน</option>
+      <option value="6">กรกฎาคม</option>
+      <option value="7">สิงหาคม</option>
+      <option value="8">กันยายน</option>
+      <option value="9">ตุลาคม</option>
+      <option value="10">พฤศจิกายน</option>
+      <option value="11">ธันวาคม</option>
+    </select>
+  </div>
+
+  <div class="sidebar-footer">
+    <div style="display:flex; align-items:center; gap: 15px;">
+      <div style="width:48px; height:48px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:24px;">👤</div>
+      <div>
+        <div class="time-big" id="timeEl">00:00 AM</div>
+        <div id="dateEl" style="font-size: 0.85rem; color: var(--text-muted);">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="dashboard-main">
   
   <div class="column-left">
+    
     <div class="kpi-wrapper">
       <div class="kpi-card kpi-total" onclick="openKpiModal('total')">
-        <div class="kpi-header"><div><div class="kpi-label">งานทั้งหมด</div><div style="color:var(--text-muted); font-size:0.75rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">📋</div></div>
-        <div class="kpi-value" style="color: var(--success)" id="total">0</div>
+        <div class="kpi-header">
+          <div><div class="kpi-label">งานทั้งหมด <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div class="kpi-icon-box">📋</div>
+        </div>
+        <div class="kpi-value" id="total">0</div>
       </div>
       <div class="kpi-card kpi-pending" onclick="openKpiModal('pending')">
-        <div class="kpi-header"><div><div class="kpi-label">งานค้าง</div><div style="color:var(--text-muted); font-size:0.75rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">⏳</div></div>
-        <div class="kpi-value" style="color: var(--warning)" id="open">0</div>
+        <div class="kpi-header">
+          <div><div class="kpi-label">งานค้าง <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div class="kpi-icon-box">⏳</div>
+        </div>
+        <div class="kpi-value" id="open">0</div>
       </div>
       <div class="kpi-card kpi-done" onclick="openKpiModal('completed')">
-        <div class="kpi-header"><div><div class="kpi-label">เสร็จแล้ว</div><div style="color:var(--text-muted); font-size:0.75rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">✅</div></div>
-        <div class="kpi-value" style="color: var(--primary)" id="complete">0</div>
+        <div class="kpi-header">
+          <div><div class="kpi-label">เสร็จแล้ว <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div class="kpi-icon-box">✅</div>
+        </div>
+        <div class="kpi-value" id="complete">0</div>
       </div>
       <div class="kpi-card kpi-sla" onclick="openKpiModal('sla')">
-        <div class="kpi-header"><div><div class="kpi-label">เกิน SLA</div><div style="color:var(--text-muted); font-size:0.75rem;">(คลิกดูรายการ)</div></div><div class="kpi-icon-box">⚠️</div></div>
-        <div class="kpi-value" style="color: var(--danger)" id="sla">0</div>
+        <div class="kpi-header">
+          <div><div class="kpi-label">เกิน SLA <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div class="kpi-icon-box">⚠️</div>
+        </div>
+        <div class="kpi-value" id="sla">0</div>
       </div>
     </div>
 
-    <div class="card" style="display:flex; flex-direction:column; flex-grow: 1;">
+    <div class="card" style="flex-grow: 1;">
       <div class="card-title">🏢 สรุปสถานะแยกตามอาคาร</div>
-      <div class="building-container" id="buildingContainer"></div>
+      <div class="building-container" id="buildingContainer">
+        </div>
     </div>
+
   </div>
 
   <div class="column-right">
+    
     <div class="card">
       <div class="card-title">🛠️ งานอัปเดตล่าสุด (5 งาน)</div>
       <div class="table-responsive">
         <table>
           <thead>
-            <tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>อัปเดตล่าสุด</th><th>Status</th></tr>
+            <tr>
+              <th>Ticket</th>
+              <th>อาคาร</th>
+              <th style="min-width: 120px;">รายละเอียด</th>
+              <th>อัปเดตล่าสุด</th>
+              <th>Status</th>
+            </tr>
           </thead>
           <tbody id="tableBody">
             <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
@@ -221,12 +303,13 @@
       </div>
     </div>
 
-    <div class="card" style="flex-grow: 1; display: flex; flex-direction: column;">
-      <div class="card-title">📈 Trend เปรียบเทียบงาน <span id="chartLabel" style="font-size:0.9rem; color:var(--text-muted); margin-left: 8px;">(รายเดือน)</span></div>
-      <div style="height: 250px; width: 100%; min-height: 250px;">
+    <div class="card" style="flex-grow: 1;">
+      <div class="card-title">📈 Trend เปรียบเทียบงาน <span id="chartLabel" style="font-size:0.85rem; color:var(--text-muted); margin-left: 8px;">(แสดง 12 เดือน)</span></div>
+      <div style="position: relative; flex-grow: 1; min-height: 200px; width: 100%;">
         <canvas id="trendChart"></canvas>
       </div>
     </div>
+
   </div>
 
   <div class="card full-width">
@@ -244,16 +327,30 @@
     <div class="modal-title" id="modalTitle">🏢 ชื่ออาคาร</div>
     <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม (เรียงงานค้างขึ้นก่อน):</div>
     <div class="modal-job-list" id="modalJobList"></div>
-    <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: var(--card-border); color: var(--text-main); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s; flex-shrink: 0;">ปิดหน้าต่าง</button>
+    <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: rgba(59, 130, 246, 0.2); color: var(--primary); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s; flex-shrink: 0; font-weight:500;">ปิดหน้าต่าง</button>
   </div>
 </div>
 
 <script>
   // ==========================================
-  // 🔴 1. Config
+  // 🔴 1. Config & UI Handlers
   // ==========================================
   const API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec"; 
   const AUTO_REFRESH_SECONDS = 10; 
+
+  // ฟังก์ชัน เปิด-ปิด Sidebar
+  function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+  }
+
+  // เอาเมาส์ชนขอบซ้ายจอ แล้วเมนูเด้งออก (เฉพาะบนคอมพิวเตอร์)
+  document.addEventListener('mousemove', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      if(e.clientX < 15 && window.innerWidth > 1024 && !sidebar.classList.contains('show')) {
+          toggleSidebar();
+      }
+  });
 
   // ==========================================
   // 🔵 2. Utility Functions
@@ -303,16 +400,24 @@
   // ==========================================
   // 🟢 3. State Management
   // ==========================================
-  const svgAri = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 22h12M4 22h16M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>`;
-  const svgKSL = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V7l4-4 4 4v15M4 22h16M12 7v15M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 19h.01M15 19h.01"/></svg>`;
-  const svgESV = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M2 22h20M8 12h8M8 16h8M8 20h8"/></svg>`;
-  const svgSaphan = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V12l9-7 9 7v10M2 22h20M9 14h6M9 18h6M12 14v8"/></svg>`;
-  const svgRangsit = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V8h14v14M3 22h18M9 12h6M9 16h6M9 20h6"/></svg>`;
+  const svgAri = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 22h12M4 22h16M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>`;
+  const svgKSL = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V7l4-4 4 4v15M4 22h16M12 7v15M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 19h.01M15 19h.01"/></svg>`;
+  const svgESV = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M2 22h20M8 12h8M8 16h8M8 20h8"/></svg>`;
+  const svgSaphan = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V12l9-7 9 7v10M2 22h20M9 14h6M9 18h6M12 14v8"/></svg>`;
+  const svgRangsit = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V8h14v14M3 22h18M9 12h6M9 16h6M9 20h6"/></svg>`;
 
   let mainData = []; 
   let filteredData = []; 
   let buildingMap = {}; 
   let myChart = null; 
+
+  const buildOrder = [
+    { key: 'ari', class: 'b-top' },
+    { key: 'ksl', class: 'b-top' },
+    { key: 'esv', class: 'b-top' },
+    { key: 'sph', class: 'b-bottom' },
+    { key: 'rng', class: 'b-bottom' }
+  ];
 
   function initEmptyBuildingMap() {
     buildingMap = {
@@ -323,17 +428,18 @@
       rng: { name: 'Rangsit', icon: svgRangsit, total: 0, pending: 0, completed: 0 }
     };
   }
+  
   initEmptyBuildingMap();
   renderDashboard('all', true);
 
   // ==========================================
-  // 🟡 4. Fetch Data (หลังบ้าน)
+  // 🟡 4. Fetch Data
   // ==========================================
   async function loadData() {
     const syncEl = document.getElementById('syncStatus');
     
     try {
-      if (syncEl) syncEl.innerHTML = `<span class="dot" style="width: 8px; height: 8px; display: inline-block; background: var(--warning); box-shadow: 0 0 8px var(--warning);"></span> กำลังอัปเดตข้อมูล...`;
+      if (syncEl) syncEl.innerHTML = `<span style="color: var(--warning);">กำลังอัปเดต...</span>`;
 
       const response = await fetch(API_URL);
       const rawData = await response.json();
@@ -376,26 +482,29 @@
       applyFilter(); 
       
       if (syncEl) {
-        const now = new Date();
-        const syncTime = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')} น.`;
-        syncEl.innerHTML = `<span class="dot" style="width: 8px; height: 8px; display: inline-block;"></span> อัปเดตล่าสุด: ${syncTime}`;
+        syncEl.innerHTML = `<span style="color: var(--success);">อัปเดตล่าสุดแล้ว</span>`;
       }
       
     } catch (error) {
       console.error('Error loading data:', error);
-      if (syncEl) syncEl.innerHTML = `<span style="color: var(--danger);">❌ การซิงค์ล้มเหลว</span>`;
+      if (syncEl) syncEl.innerHTML = `<span style="color: var(--danger);">❌ ล้มเหลว</span>`;
     }
   }
 
   function applyFilter() {
-    const monthSelect = document.getElementById('monthFilter').value;
+    const monthSelect = document.getElementById('monthFilter');
+    const monthVal = monthSelect.value;
+    const monthText = monthSelect.options[monthSelect.selectedIndex].text;
     
+    // อัปเดตป้ายบอกเดือนบน Header
+    document.getElementById('currentMonthBadge').innerHTML = `📅 ${monthText}`;
+
     initEmptyBuildingMap(); 
 
-    if (monthSelect === 'all') {
+    if (monthVal === 'all') {
       filteredData = [...mainData];
     } else {
-      const targetMonth = parseInt(monthSelect);
+      const targetMonth = parseInt(monthVal);
       filteredData = mainData.filter(d => d.start && d.start.getMonth() === targetMonth);
     }
 
@@ -405,15 +514,13 @@
       else buildingMap[d.buildingCode].pending++;
     });
 
-    renderDashboard(monthSelect, false);
+    renderDashboard(monthVal, false);
   }
 
   // ==========================================
   // 🟠 5. Render UI
   // ==========================================
   function renderDashboard(monthSelect, isInitial = false) {
-    const keys = Object.keys(buildingMap);
-    
     // KPIs
     let globalTotal = filteredData.length;
     let globalPending = filteredData.filter(d => d.status === 'pending').length;
@@ -427,14 +534,14 @@
 
     // Buildings
     let buildingHTML = '';
-    keys.forEach(k => {
-      const b = buildingMap[k];
+    buildOrder.forEach(item => {
+      const b = buildingMap[item.key];
       buildingHTML += `
-        <div class="building-item" onclick="openModal('${k}')">
+        <div class="building-item ${item.class}" onclick="openModal('${item.key}')">
           <div class="building-icon">${b.icon}</div>
           <div class="building-name">${b.name}</div>
           <div class="building-stats-box">
-            <div class="b-stat-row"><span>📋 รับ:</span><span style="color: var(--text-main); font-weight: 500;">${b.total}</span></div>
+            <div class="b-stat-row"><span>📋 รับ:</span><span style="color: var(--success); font-weight: 500;">${b.total}</span></div>
             <div class="b-stat-row"><span>✅ เสร็จ:</span><span style="color: var(--primary); font-weight: 500;">${b.completed}</span></div>
             <div class="b-stat-row"><span>⏳ ค้าง:</span><span style="color: var(--warning); font-weight: 500;">${b.pending}</span></div>
           </div>
@@ -444,10 +551,10 @@
 
     if(isInitial) return; 
 
-    // SLA Alerts (แถวล่างสุด)
+    // SLA Alerts
     let slaHTML = '';
     if (slaJobs.length === 0) {
-      slaHTML = `<div style="color: var(--success); font-size: 0.9rem; grid-column: span 2;">ไม่มีงานที่ค้างเกิน 7 วันในเดือนที่เลือก 🎉</div>`;
+      slaHTML = `<div style="color: var(--success); font-size: 0.9rem; grid-column: span 2;">ไม่มีงานที่ค้างเกิน 7 วันในเวลาที่เลือก 🎉</div>`;
     } else {
       slaJobs.forEach(d => {
         slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${buildingMap[d.buildingCode].name} | ค้าง ${formatDuration(d.duration)}</div>`;
@@ -460,15 +567,25 @@
     let tableHTML = '';
     
     if (latest.length === 0) {
-      tableHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">ไม่มีข้อมูลในเดือนที่เลือก</td></tr>`;
+      tableHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">ไม่มีข้อมูลในเวลาที่เลือก</td></tr>`;
     } else {
       latest.forEach((d) => {
         const bName = buildingMap[d.buildingCode].name;
         const dateObj = d.lastUpdate;
         const dateStr = dateObj && dateObj.getTime() !== 0 ? `${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')} ${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}/${dateObj.getFullYear().toString().slice(-2)}` : '-';
-        let statusHTML = d.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จแล้ว</span>` : `<span class="status-badge status-pending">⏳ รอดำเนินการ</span>`;
         
-        tableHTML += `<tr><td>${d.ticket}</td><td>${bName}</td><td>${d.detail}</td><td style="color:var(--text-muted)">${dateStr}</td><td>${statusHTML}</td></tr>`;
+        let statusHTML = d.status === 'completed' 
+          ? `<span class="status-badge status-done">✓ เสร็จแล้ว</span>` 
+          : `<span class="status-badge status-pending">⏳ รอดำเนินการ</span>`;
+        
+        tableHTML += `
+          <tr>
+            <td>${d.ticket}</td>
+            <td style="font-weight: 500;">${bName}</td>
+            <td style="color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${d.detail}</td>
+            <td style="color:var(--text-muted)">${dateStr}</td>
+            <td>${statusHTML}</td>
+          </tr>`;
       });
     }
     document.getElementById('tableBody').innerHTML = tableHTML;
@@ -477,7 +594,7 @@
   }
 
   // ==========================================
-  // 🟣 6. Chart.js (Bar Chart)
+  // 🟣 6. Chart.js
   // ==========================================
   function renderChart(monthSelect) {
     let labels = [];
@@ -540,8 +657,8 @@
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 12, usePointStyle: true, font: {family: 'Kanit'} } }, tooltip: { titleFont: {family: 'Kanit'}, bodyFont: {family: 'Kanit'} } },
         scales: {
-          x: { grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'} } },
-          y: { grid: { color: 'rgba(51, 65, 85, 0.4)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'}, stepSize: 1 }, beginAtZero: true }
+          x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'} } },
+          y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'}, stepSize: 1 }, beginAtZero: true }
         },
         interaction: { mode: 'index', intersect: false }
       }
