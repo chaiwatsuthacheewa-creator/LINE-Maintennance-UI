@@ -35,7 +35,7 @@
     flex-direction: column;
   }
 
-  /* 🎨 Custom Scrollbar (ตกแต่งแถบเลื่อนให้เข้าธีม) */
+  /* 🎨 Custom Scrollbar */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 4px; }
   ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; border: 2px solid var(--bg-color); }
@@ -57,14 +57,11 @@
   .back-btn { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-main); text-decoration: none; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 1rem; }
   .back-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
 
-  .filter-select { padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-family: 'Kanit'; font-size: 1rem; cursor: pointer; outline: none; width: 100%; margin-top: 8px;}
-  .filter-select:hover { border-color: var(--primary); }
-
   .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 15px; border-top: 1px solid var(--card-border); padding-top: 20px; }
   .time-big { font-size: 1.4rem; color: var(--text-main); font-weight: 500;}
 
   /* ------------------------------------------- */
-  /* Top Header */
+  /* Top Header & Filters */
   /* ------------------------------------------- */
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
   .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -72,44 +69,53 @@
   .menu-btn:hover { background: var(--card-border); border-color: var(--primary); }
   .dash-title { font-weight: 600; font-size: 1.4rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px; margin: 0;}
   
-  .current-month-badge { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;}
-  
   .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
   
-  .header-right { display: flex; align-items: center; gap: 15px; text-align: right;}
+  .header-right { display: flex; align-items: center; gap: 15px; text-align: right; flex-wrap: wrap; justify-content: flex-end;}
+
+  /* Dropdown เลือกเดือนที่โชว์หน้าหลัก */
+  .filter-select { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.8); color: var(--text-main); font-family: 'Kanit'; font-size: 0.95rem; cursor: pointer; outline: none; transition: border 0.2s;}
+  .filter-select:hover, .filter-select:focus { border-color: var(--primary); background: var(--card-bg); }
 
   /* ------------------------------------------- */
-  /* Layout Dashboard (Grid 2 คอลัมน์แบบยืดหยุ่น) */
+  /* Layout Dashboard */
   /* ------------------------------------------- */
   .dashboard-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; align-items: stretch; flex-grow: 1;}
   .column-left { display: flex; flex-direction: column; gap: 15px; }
   .column-right { display: flex; flex-direction: column; gap: 15px; }
   .full-width { grid-column: span 2; }
 
+  /* Section Titles */
+  .section-title { font-size: 1rem; font-weight: 500; color: var(--text-main); margin: 5px 0 0 5px; display: flex; align-items: center; gap: 8px; border-left: 3px solid var(--primary); padding-left: 10px;}
+
   /* Cards */
   .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column;}
   .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; margin-bottom: 12px; font-weight: 500; color: var(--text-main); }
 
-  /* KPIs */
-  .kpi-wrapper { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  /* KPIs (Yearly 4 grids) */
+  .kpi-yearly-wrapper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi-yearly-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; position: relative; cursor: pointer; transition: 0.2s;}
+  .kpi-yearly-card:hover { transform: translateY(-3px); background: var(--card-bg); border-color: var(--primary);}
+  .kpi-yearly-value { font-size: 1.6rem; font-weight: 600; margin-top: 4px; line-height: 1;}
+
+  /* KPIs (Monthly 3 grids) */
+  .kpi-monthly-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
   .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
   .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
   .kpi-total::before { background: var(--success); }
   .kpi-pending::before { background: var(--warning); }
   .kpi-done::before { background: var(--primary); }
-  .kpi-sla::before { background: var(--danger); }
   .kpi-header { display: flex; justify-content: space-between; align-items: flex-start;}
   .kpi-icon-box { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 18px; flex-shrink: 0; }
   .kpi-total .kpi-icon-box { background: rgba(16, 185, 129, 0.1); color: var(--success); }
   .kpi-pending .kpi-icon-box { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
   .kpi-done .kpi-icon-box { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
-  .kpi-sla .kpi-icon-box { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-  .kpi-value { font-size: 2rem; font-weight: 600; margin-top: 8px; line-height: 1;}
+  .kpi-value { font-size: 2.2rem; font-weight: 600; margin-top: 8px; line-height: 1;}
   .kpi-label { color: var(--text-muted); font-size: 0.85rem; }
 
-  /* Buildings (3 top, 2 bottom grid) */
+  /* Buildings */
   .building-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; width: 100%; flex-grow: 1; align-content: space-between;}
   .building-item { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.5); padding: 12px; border-radius: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; height: 100%;}
   .building-item:hover { transform: translateY(-3px); border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
@@ -156,17 +162,19 @@
     .building-container { grid-template-columns: repeat(6, 1fr); }
   }
   @media (max-width: 768px) {
-    .header-right { width: 100%; justify-content: space-between; flex-direction: row-reverse; text-align: left; margin-top: 10px;}
+    .header-right { width: 100%; justify-content: space-between; text-align: left; margin-top: 5px;}
+    .kpi-yearly-wrapper { grid-template-columns: repeat(2, 1fr); }
     .building-container { grid-template-columns: 1fr 1fr; }
     .b-top, .b-bottom { grid-column: span 1; }
-    .b-bottom:last-child { grid-column: span 2; } /* จัดตึกสุดท้ายให้อยู่ตรงกลางเวลาเหลือเศษ */
+    .b-bottom:last-child { grid-column: span 2; }
     .sla-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 480px) {
-    .kpi-wrapper { grid-template-columns: 1fr; }
+    .kpi-monthly-wrapper { grid-template-columns: 1fr; }
     .building-container { grid-template-columns: 1fr; }
     .b-top, .b-bottom, .b-bottom:last-child { grid-column: span 1; }
     .header-left h2 { font-size: 1.2rem; }
+    .filter-select { width: 100%; } /* ปุ่มเดือนกางเต็มจอบนมือถือ */
   }
 </style>
 </head>
@@ -181,36 +189,10 @@
       🚀 Smart Maintenance Dashboard 
       <div class="dot" style="display:inline-block; margin-left:4px;"></div>
     </h2>
-    <div class="current-month-badge" id="currentMonthBadge">📅 รวมทุกเดือน (ปีนี้)</div>
   </div>
   
   <div class="header-right">
-    <div>
-      <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 2px;">
-        <span id="syncStatus">กำลังซิงค์...</span>
-      </div>
-      <button onclick="refreshData()" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--text-main); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: 'Kanit'; transition: all 0.2s;">↻ อัปเดตทันที</button>
-    </div>
-    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">👤</div>
-  </div>
-</div>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-<div class="sidebar" id="sidebar">
-  
-  <div class="sidebar-header">
-    <h3 style="font-weight: 500; font-size: 1.2rem; margin: 0; color: var(--text-main);">🛠️ ตั้งค่า & จัดการ</h3>
-    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
-  </div>
-
-  <a href="https://add00917-hue.github.io/GNR3-Building-MS/" class="back-btn">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    กลับไปหน้าหลัก
-  </a>
-
-  <div style="background: rgba(30, 41, 59, 0.5); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border);">
-    <label style="color: var(--text-muted); font-size: 0.9rem;">📅 เลือกช่วงเวลาสถิติ:</label>
-    <select id="monthFilter" class="filter-select" onchange="applyFilter(); toggleSidebar();">
+    <select id="monthFilter" class="filter-select" onchange="applyFilter()">
       <option value="all">📊 รวมทุกเดือน (ปีนี้)</option>
       <option value="0">มกราคม</option>
       <option value="1">กุมภาพันธ์</option>
@@ -225,7 +207,28 @@
       <option value="10">พฤศจิกายน</option>
       <option value="11">ธันวาคม</option>
     </select>
+    
+    <div style="display:flex; flex-direction:column; align-items:flex-end;">
+      <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+        <span id="syncStatus">กำลังซิงค์...</span>
+      </div>
+      <button onclick="refreshData()" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--text-main); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: 'Kanit'; transition: all 0.2s;">↻ อัปเดตทันที</button>
+    </div>
+    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">👤</div>
   </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3 style="font-weight: 500; font-size: 1.2rem; margin: 0; color: var(--text-main);">🛠️ ตั้งค่า & จัดการ</h3>
+    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+  </div>
+
+  <a href="https://add00917-hue.github.io/GNR3-Building-MS/" class="back-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    กลับไปหน้าหลัก
+  </a>
 
   <div class="sidebar-footer">
     <div style="display:flex; align-items:center; gap: 15px;">
@@ -242,39 +245,53 @@
   
   <div class="column-left">
     
-    <div class="kpi-wrapper">
-      <div class="kpi-card kpi-total" onclick="openKpiModal('total')">
+    <h4 class="section-title">🏆 ภาพรวมสถิติทั้งปี (Yearly)</h4>
+    <div class="kpi-yearly-wrapper">
+      <div class="kpi-yearly-card" onclick="openKpiModal('total', true)">
+        <span class="kpi-label">งานทั้งหมด</span>
+        <span class="kpi-yearly-value" style="color: var(--success);" id="y-total">0</span>
+      </div>
+      <div class="kpi-yearly-card" onclick="openKpiModal('pending', true)">
+        <span class="kpi-label">งานค้าง</span>
+        <span class="kpi-yearly-value" style="color: var(--warning);" id="y-open">0</span>
+      </div>
+      <div class="kpi-yearly-card" onclick="openKpiModal('completed', true)">
+        <span class="kpi-label">เสร็จแล้ว</span>
+        <span class="kpi-yearly-value" style="color: var(--primary);" id="y-complete">0</span>
+      </div>
+      <div class="kpi-yearly-card" onclick="openKpiModal('sla', true)">
+        <span class="kpi-label">เกิน SLA</span>
+        <span class="kpi-yearly-value" style="color: var(--danger);" id="y-sla">0</span>
+      </div>
+    </div>
+
+    <h4 class="section-title" id="monthlyTitle" style="margin-top: 5px;">🗓️ สรุปเดือนที่เลือก</h4>
+    <div class="kpi-monthly-wrapper">
+      <div class="kpi-card kpi-total" onclick="openKpiModal('total', false)">
         <div class="kpi-header">
-          <div><div class="kpi-label">งานทั้งหมด <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div><div class="kpi-label">งานรับเข้ามา (เดือนนี้)</div></div>
           <div class="kpi-icon-box">📋</div>
         </div>
-        <div class="kpi-value" id="total">0</div>
+        <div class="kpi-value" style="color: var(--success);" id="m-total">0</div>
       </div>
-      <div class="kpi-card kpi-pending" onclick="openKpiModal('pending')">
+      <div class="kpi-card kpi-pending" onclick="openKpiModal('pending', false)">
         <div class="kpi-header">
-          <div><div class="kpi-label">งานค้าง <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div><div class="kpi-label">งานค้าง (เดือนนี้)</div></div>
           <div class="kpi-icon-box">⏳</div>
         </div>
-        <div class="kpi-value" id="open">0</div>
+        <div class="kpi-value" style="color: var(--warning);" id="m-open">0</div>
       </div>
-      <div class="kpi-card kpi-done" onclick="openKpiModal('completed')">
+      <div class="kpi-card kpi-done" onclick="openKpiModal('completed', false)">
         <div class="kpi-header">
-          <div><div class="kpi-label">เสร็จแล้ว <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
+          <div><div class="kpi-label">เสร็จแล้ว (เดือนนี้)</div></div>
           <div class="kpi-icon-box">✅</div>
         </div>
-        <div class="kpi-value" id="complete">0</div>
-      </div>
-      <div class="kpi-card kpi-sla" onclick="openKpiModal('sla')">
-        <div class="kpi-header">
-          <div><div class="kpi-label">เกิน SLA <br><span style="font-size:0.7rem;">(คลิกดูรายการ)</span></div></div>
-          <div class="kpi-icon-box">⚠️</div>
-        </div>
-        <div class="kpi-value" id="sla">0</div>
+        <div class="kpi-value" style="color: var(--primary);" id="m-complete">0</div>
       </div>
     </div>
 
     <div class="card" style="flex-grow: 1;">
-      <div class="card-title">🏢 สรุปสถานะแยกตามอาคาร</div>
+      <div class="card-title">🏢 สรุปสถานะแยกตามอาคาร <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 300; margin-left: 8px;">(ตามเดือนที่เลือก)</span></div>
       <div class="building-container" id="buildingContainer">
         </div>
     </div>
@@ -312,8 +329,8 @@
 
   </div>
 
-  <div class="card full-width">
-    <div class="card-title" style="color: var(--danger);">⚠️ รายการงานค้างเกิน 7 วัน (SLA)</div>
+  <div class="card full-width" style="margin-top: 5px;">
+    <div class="card-title" style="color: var(--danger);">⚠️ รายการงานค้างเกิน 7 วัน (SLA ทั้งหมดของปีนี้)</div>
     <div class="sla-grid" id="slaContainer">
       <div style="color: var(--text-muted); font-size: 0.9rem;">กำลังประมวลผล...</div>
     </div>
@@ -333,10 +350,16 @@
 
 <script>
   // ==========================================
-  // 🔴 1. Config & UI Handlers
+  // 🔴 1. Config & Initial Setup
   // ==========================================
   const API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec"; 
   const AUTO_REFRESH_SECONDS = 10; 
+
+  // ⭐️ ฟังก์ชันตั้งค่าเดือนปัจจุบันอัตโนมัติ (เปิดปุ๊บ เลือกเดือนนี้เลย)
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentMonthIndex = new Date().getMonth(); // 0 = ม.ค., 11 = ธ.ค.
+    document.getElementById('monthFilter').value = currentMonthIndex.toString();
+  });
 
   // ฟังก์ชัน เปิด-ปิด Sidebar
   function toggleSidebar() {
@@ -430,7 +453,7 @@
   }
   
   initEmptyBuildingMap();
-  renderDashboard('all', true);
+  renderDashboard('all', true); // วาด UI หลอกๆ รอก่อนข้อมูลมา
 
   // ==========================================
   // 🟡 4. Fetch Data
@@ -479,7 +502,7 @@
         });
       });
 
-      applyFilter(); 
+      applyFilter(); // กรองข้อมูลตามเดือนที่ถูกเลือกไว้
       
       if (syncEl) {
         syncEl.innerHTML = `<span style="color: var(--success);">อัปเดตล่าสุดแล้ว</span>`;
@@ -496,8 +519,12 @@
     const monthVal = monthSelect.value;
     const monthText = monthSelect.options[monthSelect.selectedIndex].text;
     
-    // อัปเดตป้ายบอกเดือนบน Header
-    document.getElementById('currentMonthBadge').innerHTML = `📅 ${monthText}`;
+    // ⭐️ อัปเดต Title ตรงกล่องรายเดือนให้ผู้ใช้รู้ว่ากำลังดูเดือนอะไร
+    if(monthVal === 'all') {
+       document.getElementById('monthlyTitle').innerHTML = `🗓️ สรุปภาพรวม ${monthText}`;
+    } else {
+       document.getElementById('monthlyTitle').innerHTML = `🗓️ สรุปเดือน ${monthText}`;
+    }
 
     initEmptyBuildingMap(); 
 
@@ -521,18 +548,33 @@
   // 🟠 5. Render UI
   // ==========================================
   function renderDashboard(monthSelect, isInitial = false) {
-    // KPIs
-    let globalTotal = filteredData.length;
-    let globalPending = filteredData.filter(d => d.status === 'pending').length;
-    let globalComplete = globalTotal - globalPending;
-    const slaJobs = filteredData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
+    // -------------------------
+    // 1. คำนวณภาพรวมทั้งปี (Yearly) จาก mainData
+    // -------------------------
+    let yTotal = mainData.length;
+    let yPending = mainData.filter(d => d.status === 'pending').length;
+    let yComplete = yTotal - yPending;
+    let ySla = mainData.filter(d => d.isOverSLA).length;
 
-    document.getElementById('total').innerText = globalTotal;
-    document.getElementById('open').innerText = globalPending;
-    document.getElementById('complete').innerText = globalComplete;
-    document.getElementById('sla').innerText = slaJobs.length;
+    document.getElementById('y-total').innerText = yTotal;
+    document.getElementById('y-open').innerText = yPending;
+    document.getElementById('y-complete').innerText = yComplete;
+    document.getElementById('y-sla').innerText = ySla;
 
-    // Buildings
+    // -------------------------
+    // 2. คำนวณสรุปประจำเดือน (Monthly) จาก filteredData
+    // -------------------------
+    let mTotal = filteredData.length;
+    let mPending = filteredData.filter(d => d.status === 'pending').length;
+    let mComplete = mTotal - mPending;
+
+    document.getElementById('m-total').innerText = mTotal;
+    document.getElementById('m-open').innerText = mPending;
+    document.getElementById('m-complete').innerText = mComplete;
+
+    // -------------------------
+    // 3. Buildings
+    // -------------------------
     let buildingHTML = '';
     buildOrder.forEach(item => {
       const b = buildingMap[item.key];
@@ -551,18 +593,30 @@
 
     if(isInitial) return; 
 
-    // SLA Alerts
+    // -------------------------
+    // 4. SLA Alerts (ใช้ข้อมูลทั้งปีโชว์ด้านล่างสุด)
+    // -------------------------
+    const slaJobsAll = mainData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
     let slaHTML = '';
-    if (slaJobs.length === 0) {
-      slaHTML = `<div style="color: var(--success); font-size: 0.9rem; grid-column: span 2;">ไม่มีงานที่ค้างเกิน 7 วันในเวลาที่เลือก 🎉</div>`;
+    if (slaJobsAll.length === 0) {
+      slaHTML = `<div style="color: var(--success); font-size: 0.9rem; grid-column: span 2;">ไม่มีงานที่ค้างเกิน 7 วัน 🎉</div>`;
     } else {
-      slaJobs.forEach(d => {
-        slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${buildingMap[d.buildingCode].name} | ค้าง ${formatDuration(d.duration)}</div>`;
+      slaJobsAll.forEach(d => {
+        let bName = d.buildingCode;
+        if(bName === 'ari') bName = 'Ari Hills';
+        else if(bName === 'ksl') bName = 'KSL Tower';
+        else if(bName === 'esv') bName = 'ESV Tower';
+        else if(bName === 'sph') bName = 'Saphan Mai';
+        else if(bName === 'rng') bName = 'Rangsit';
+
+        slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${bName} | ค้าง ${formatDuration(d.duration)}</div>`;
       });
     }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
-    // Table
+    // -------------------------
+    // 5. Table (Latest 5 jobs จากเดือนที่เลือก)
+    // -------------------------
     const latest = [...filteredData].sort((a,b) => b.lastUpdate - a.lastUpdate).slice(0, 5); 
     let tableHTML = '';
     
@@ -675,33 +729,41 @@
     const b = buildingMap[buildingKey];
     document.getElementById('modalTitle').innerHTML = `${b.icon} ${b.name}`;
     
+    // โชว์งานตามเดือนที่เลือก
     const bData = filteredData.filter(d => d.buildingCode === buildingKey);
     renderJobList(bData);
     modalOverlay.classList.add('show');
   }
 
-  function openKpiModal(type) {
+  function openKpiModal(type, isYearly = false) {
     if(mainData.length === 0) return; 
+    
+    let sourceData = isYearly ? mainData : filteredData;
     let modalData = [];
     let title = "";
 
     if(type === 'total') {
-      modalData = [...filteredData];
-      title = "📋 งานซ่อมทั้งหมด";
+      modalData = [...sourceData];
+      title = isYearly ? "🏆 งานซ่อมทั้งหมด (ทั้งปี)" : "📋 งานซ่อมทั้งหมด (ประจำเดือน)";
     } else if(type === 'pending') {
-      modalData = filteredData.filter(d => d.status === 'pending');
-      title = "⏳ งานค้าง รอดำเนินการ";
+      modalData = sourceData.filter(d => d.status === 'pending');
+      title = isYearly ? "🏆 งานค้าง (ทั้งปี)" : "⏳ งานค้าง (ประจำเดือน)";
     } else if(type === 'completed') {
-      modalData = filteredData.filter(d => d.status === 'completed');
-      title = "✅ งานดำเนินการเสร็จสิ้น";
+      modalData = sourceData.filter(d => d.status === 'completed');
+      title = isYearly ? "🏆 งานเสร็จสิ้น (ทั้งปี)" : "✅ งานเสร็จสิ้น (ประจำเดือน)";
     } else if(type === 'sla') {
-      modalData = filteredData.filter(d => d.isOverSLA);
-      title = "⚠️ งานค้างเกิน 7 วัน SLA";
+      modalData = sourceData.filter(d => d.isOverSLA);
+      title = "⚠️ งานค้างเกิน 7 วัน SLA (ทั้งปี)";
     }
 
     const monthSelect = document.getElementById('monthFilter');
     const monthText = monthSelect.options[monthSelect.selectedIndex].text;
-    document.getElementById('modalTitle').innerHTML = `${title} <span style="font-size:0.85rem; color:var(--text-muted); font-weight: 300; margin-left: 8px;">(${monthText})</span>`;
+    
+    if(!isYearly) {
+        document.getElementById('modalTitle').innerHTML = `${title} <span style="font-size:0.85rem; color:var(--text-muted); font-weight: 300; margin-left: 8px;">(${monthText})</span>`;
+    } else {
+        document.getElementById('modalTitle').innerHTML = `${title}`;
+    }
     
     renderJobList(modalData, true); 
     modalOverlay.classList.add('show');
@@ -724,7 +786,13 @@
         
         let jobTitle = `${job.ticket} - ${job.detail}`;
         if(showBuildingName) {
-          const bName = buildingMap[job.buildingCode] ? buildingMap[job.buildingCode].name : job.buildingCode;
+          let bName = job.buildingCode;
+          if(bName === 'ari') bName = 'Ari Hills';
+          else if(bName === 'ksl') bName = 'KSL Tower';
+          else if(bName === 'esv') bName = 'ESV Tower';
+          else if(bName === 'sph') bName = 'Saphan Mai';
+          else if(bName === 'rng') bName = 'Rangsit';
+
           jobTitle = `<span style="color: var(--primary);">[${bName}]</span> ${job.ticket} - ${job.detail}`;
         }
 
@@ -756,10 +824,12 @@
     loadData(); 
   }
 
+  // ซิงค์ทุกๆ 10 วินาที
   setInterval(() => {
     loadData(); 
   }, AUTO_REFRESH_SECONDS * 1000);
 
+  // เริ่มดึงข้อมูล (ฟังก์ชันนี้จะทำงานหลังจาก set เดือนอัตโนมัติเรียบร้อยแล้ว)
   loadData();
 </script>
 </body>
