@@ -3,389 +3,460 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Maintenance Dashboard</title>
+<title>Smart Maintenance Pro</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  /* ================= CSS Styles ================= */
+  /* ================= 🎨 Theme Variables ================= */
   :root { 
-    --bg-color: #0f172a; 
-    --card-bg: #1e293b; 
-    --card-border: #334155; 
-    --text-main: #f8fafc; 
-    --text-muted: #94a3b8; 
-    --primary: #3b82f6; 
-    --warning: #f59e0b; 
-    --success: #10b981; 
-    --danger: #ef4444; 
+    --bg-base: #f4f9f5; --card-bg: #ffffff; --card-border: #e2e8f0;
+    --text-main: #1e293b; --text-muted: #64748b; 
+    --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; 
+    --sidebar-bg: linear-gradient(180deg, #10b981 0%, #047857 100%);
+    --sidebar-hover: rgba(255,255,255,0.2); --sidebar-active-line: #ffffff;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.05); --radius: 12px;
+  }
+  body.dark-theme {
+    --bg-base: #0f1423; --card-bg: #161e31; --card-border: #232d45; 
+    --text-main: #f8fafc; --text-muted: #94a3b8; 
+    --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; 
+    --sidebar-bg: #141b2d; --sidebar-hover: rgba(255,255,255,0.05); --sidebar-active-line: #f59e0b; 
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  
   body { 
-    font-family: 'Kanit', sans-serif; 
-    background-color: var(--bg-color); 
-    color: var(--text-main); 
-    padding: 15px 20px; 
-    background-image: radial-gradient(circle at top right, rgba(30, 64, 175, 0.1), transparent 400px); 
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, 'Kanit', sans-serif;
+    background-color: var(--bg-base); color: var(--text-main); 
+    height: 100vh; width: 100vw; overflow: hidden; display: flex; transition: background-color 0.3s;
   }
-
-  /* 🎨 Custom Scrollbar */
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; border: 2px solid var(--bg-color); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 10px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-  /* ------------------------------------------- */
-  /* Sidebar & Auto Hide Overlay */
-  /* ------------------------------------------- */
-  .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(3px); }
-  .sidebar-overlay.show { opacity: 1; visibility: visible; }
+  /* ================= 📱 Sidebar ================= */
+  .sidebar {
+    width: 72px; background: var(--sidebar-bg); flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; padding: 20px 0;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.1); z-index: 10; border-right: 1px solid var(--card-border);
+  }
+  .sidebar-logo {
+    width: 44px; height: 44px; background: rgba(255,255,255,0.1); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 30px; color: white; cursor: pointer; transition: 0.2s;
+  }
+  .sidebar-logo:hover { background: var(--primary); transform: scale(1.05); }
   
-  .sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: rgba(15, 23, 42, 0.98); border-right: 1px solid var(--card-border); z-index: 2000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px; box-shadow: 5px 0 30px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 20px; overflow-y: auto;}
-  .sidebar.show { left: 0; }
+  .menu-group { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; }
+  .menu-icon {
+    width: 100%; height: 50px; display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.6); cursor: pointer; transition: 0.2s; position: relative;
+  }
+  body:not(.dark-theme) .menu-icon { color: rgba(255,255,255,0.8); }
+  .menu-icon:hover { color: white; background: var(--sidebar-hover); }
+  .menu-icon.active { color: white; background: var(--sidebar-hover); }
+  .menu-icon.active::before {
+    content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px;
+    background: var(--sidebar-active-line); border-radius: 0 4px 4px 0;
+  }
+  .menu-icon.bottom { margin-top: auto; }
 
-  .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; }
-  .close-sidebar { background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; transition: color 0.2s; line-height: 1; }
-  .close-sidebar:hover { color: var(--danger); }
-  
-  .back-btn { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-main); text-decoration: none; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.5); transition: all 0.2s; font-size: 1rem; }
-  .back-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
+  /* ================= 🖥️ Main Layout ================= */
+  .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; padding: 16px 20px; height: 100vh; overflow: hidden; }
 
-  .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 15px; border-top: 1px solid var(--card-border); padding-top: 20px; }
-  .time-big { font-size: 1.4rem; color: var(--text-main); font-weight: 500;}
-
-  /* ------------------------------------------- */
-  /* Top Header & Filters */
-  /* ------------------------------------------- */
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
-  .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .menu-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); font-size: 1rem; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Kanit'; }
-  .menu-btn:hover { background: var(--card-border); border-color: var(--primary); }
-  .dash-title { font-weight: 600; font-size: 1.4rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px; margin: 0;}
-  
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.5s infinite; }
+  /* --- Header --- */
+  .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; height: 44px; }
+  .app-title { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
+
+  .header-controls { display: flex; align-items: center; gap: 12px; }
+  .btn-theme { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .btn-theme:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+  .select-month { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.95rem; cursor: pointer; outline: none; font-weight: 500; height: 38px; transition: 0.2s;}
+  .select-month:hover { border-color: var(--primary); }
+  .sync-btn { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; cursor: pointer; padding: 0 8px; transition: 0.2s;}
+  .sync-btn:hover { transform: scale(1.02); }
+  .user-avatar { width: 38px; height: 38px; background: rgba(100,116,139,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--card-border);}
+
+  /* ================= 🗂️ View Switching Logic ================= */
+  .view-section { display: none; flex-direction: column; flex-grow: 1; min-height: 0; animation: fadeSlide 0.4s ease forwards; }
+  .view-section.active { display: flex; }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---------------- COMMON STYLES ---------------- */
+  .widget-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .section-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-main); }
   
-  .header-right { display: flex; align-items: center; gap: 15px; text-align: right; flex-wrap: wrap; justify-content: flex-end;}
+  .pill { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 80px;}
+  .pill-done { background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.3); }
+  .pill-pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+  body:not(.dark-theme) .pill-done { background: var(--primary); color: white; border: none; }
+  body:not(.dark-theme) .pill-pending { background: var(--warning); color: white; border: none; }
 
-  /* Dropdown เลือกเดือนที่โชว์หน้าหลัก */
-  .filter-select { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(30, 41, 59, 0.8); color: var(--text-main); font-family: 'Kanit'; font-size: 0.95rem; cursor: pointer; outline: none; transition: border 0.2s;}
-  .filter-select:hover, .filter-select:focus { border-color: var(--primary); background: var(--card-bg); }
+  .table-scroll { overflow-y: auto; flex-grow: 1; padding-right: 4px; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+  th { color: var(--text-muted); font-weight: 500; padding: 8px 0 12px 0; border-bottom: 1px solid rgba(100,116,139,0.2); position: sticky; top: 0; background: var(--card-bg); z-index: 2;}
+  td { padding: 12px 0; border-bottom: 1px solid rgba(100,116,139,0.1); }
+  tr:hover td { background: rgba(100,116,139,0.05); cursor: pointer; }
+  .tb-ticket { font-weight: 600; color: var(--text-main); }
 
-  /* ------------------------------------------- */
-  /* Layout Dashboard */
-  /* ------------------------------------------- */
-  .dashboard-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; align-items: stretch; flex-grow: 1;}
-  .column-left { display: flex; flex-direction: column; gap: 15px; }
-  .column-right { display: flex; flex-direction: column; gap: 15px; }
-  .full-width { grid-column: span 2; }
+  /* ---------------- VIEW 1: DASHBOARD ---------------- */
+  .dashboard-layout { display: grid; grid-template-columns: 55% 43%; gap: 2%; flex-grow: 1; min-height: 0; }
+  .left-col { display: flex; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; padding-right: 4px;}
+  .right-col { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
 
-  /* Section Titles */
-  .section-title { font-size: 1rem; font-weight: 500; color: var(--text-main); margin: 5px 0 0 5px; display: flex; align-items: center; gap: 8px; border-left: 3px solid var(--primary); padding-left: 10px;}
+  .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi-card { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: 0.2s; }
+  .kpi-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow);}
+  .k-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+  .k-val { font-size: 1.8rem; font-weight: 600; line-height: 1; }
 
-  /* Cards */
-  .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column;}
-  .card-title { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; margin-bottom: 12px; font-weight: 500; color: var(--text-main); }
+  .kpi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .m-card { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+  .m-card:hover { border-color: var(--success); transform: translateY(-2px); box-shadow: var(--shadow);}
+  .m-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; }
 
-  /* KPIs (Yearly 4 grids) */
-  .kpi-yearly-wrapper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .kpi-yearly-card { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; position: relative; cursor: pointer; transition: 0.2s;}
-  .kpi-yearly-card:hover { transform: translateY(-3px); background: var(--card-bg); border-color: var(--primary);}
-  .kpi-yearly-value { font-size: 1.6rem; font-weight: 600; margin-top: 4px; line-height: 1;}
+  .b-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; flex-grow: 1; }
+  .b-item { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .b-item:hover { border-color: var(--warning); box-shadow: inset 0 0 0 1px var(--warning); transform: scale(1.02);}
+  .b-top { grid-column: span 2; } .b-bot { grid-column: span 3; }
+  .b-head { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;}
+  .b-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; align-items: center;}
 
-  /* KPIs (Monthly 3 grids) */
-  .kpi-monthly-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-  .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
-  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
-  .kpi-total::before { background: var(--success); }
-  .kpi-pending::before { background: var(--warning); }
-  .kpi-done::before { background: var(--primary); }
-  .kpi-header { display: flex; justify-content: space-between; align-items: flex-start;}
-  .kpi-icon-box { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 18px; flex-shrink: 0; }
-  .kpi-total .kpi-icon-box { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-  .kpi-pending .kpi-icon-box { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-  .kpi-done .kpi-icon-box { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
-  .kpi-value { font-size: 2.2rem; font-weight: 600; margin-top: 8px; line-height: 1;}
-  .kpi-label { color: var(--text-muted); font-size: 0.85rem; }
+  .table-box { display: flex; flex-direction: column; }
+  .chart-box { display: flex; flex-direction: column; }
 
-  /* Buildings */
-  .building-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; width: 100%; flex-grow: 1; align-content: space-between;}
-  .building-item { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(51, 65, 85, 0.5); padding: 12px; border-radius: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; height: 100%;}
-  .building-item:hover { transform: translateY(-3px); border-color: var(--primary); background: rgba(30, 41, 59, 0.8); }
-  .b-top { grid-column: span 2; } 
-  .b-bottom { grid-column: span 3; } 
-  .building-icon { margin-bottom: 6px; }
-  .building-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-main); }
-  .building-stats-box { width: 100%; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 8px; font-size: 0.75rem; text-align: left; }
-  .b-stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-  .b-stat-row:last-child { margin-bottom: 0; }
+  /* ---------------- VIEW 2: FULL JOB LIST ---------------- */
+  .full-table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;}
+  .search-input { 
+    padding: 10px 16px; border-radius: 10px; border: 1px solid var(--card-border); 
+    background: var(--bg-base); color: var(--text-main); font-family: inherit; width: 350px;
+    outline: none; transition: 0.2s; font-size: 0.95rem;
+  }
+  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); background: var(--card-bg);}
 
-  /* Table */
-  .table-responsive { width: 100%; overflow-x: auto; flex-grow: 1;}
-  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 450px; }
-  th { color: var(--text-muted); padding-bottom: 8px; font-weight: 400; border-bottom: 1px solid var(--card-border); white-space: nowrap; }
-  td { padding: 10px 0; border-bottom: 1px solid rgba(51, 65, 85, 0.5); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;}
-  .status-done { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); }
-  .status-pending { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--warning); }
+  /* ---------------- VIEW 3: BUILDINGS (Tabs) - WRAP FULL PAGE ---------------- */
+  .b-tabs-container { 
+    display: flex; gap: 10px; margin-bottom: 16px; 
+    flex-wrap: wrap; /* ทำให้ชื่อตึกปัดลงบรรทัดใหม่ ไม่ต้องเลื่อน Scroll */
+    flex-shrink: 0;
+  }
+  .b-tab { 
+    background: var(--bg-base); border: 1px solid var(--card-border); padding: 10px 20px; border-radius: 10px; 
+    cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.2s; 
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .b-tab:hover { background: var(--card-bg); border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  .b-tab.active { background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--primary); }
 
-  /* SLA Warnings */
-  .sla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-  .sla-badge { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; line-height: 1.4; }
-  .sla-badge .alert-icon { background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
+  /* ---------------- VIEW 4: ANALYTICS (Performance Grid) ---------------- */
+  .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; overflow-y: auto; padding-right: 4px; }
+  .b-progress-bg { width: 100%; height: 8px; background: var(--card-border); border-radius: 4px; overflow: hidden; margin-top: 4px;}
+  .b-progress-fill { height: 100%; background: var(--success); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 
-  /* Modal Popup */
-  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 3000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; padding: 10px; }
+  /* ---------------- VIEW 5: SETTINGS ---------------- */
+  .settings-container { display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin: 0 auto; width: 100%; padding-top: 20px;}
+  .set-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 16px 20px; border-radius: 12px; border: 1px solid var(--card-border); }
+  
+  .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--card-border); transition: .4s; border-radius: 34px; }
+  .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+  input:checked + .slider { background-color: var(--success); }
+  input:checked + .slider:before { transform: translateX(24px); }
+
+  .btn-primary {
+    background: var(--primary); color: white; border: none; padding: 14px 24px; border-radius: 10px;
+    font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; width: 100%;
+  }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+
+  /* ================= 🗔 Modal ================= */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 3000; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; }
   .modal-overlay.show { display: flex; opacity: 1; }
-  .modal { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; width: 100%; max-width: 550px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; transform: translateY(-20px); transition: transform 0.3s; max-height: 90vh; display: flex; flex-direction: column; }
-  .modal-overlay.show .modal { transform: translateY(0); }
-  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
+  .modal-content { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); width: 100%; max-width: 650px; max-height: 85vh; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: scale(0.95); transition: 0.3s;}
+  .modal-overlay.show .modal-content { transform: scale(1); }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: transparent; border: none; cursor: pointer; color: var(--text-muted); }
   .modal-close:hover { color: var(--danger); }
-  .modal-title { font-size: 1.2rem; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-main); border-bottom: 1px solid var(--card-border); padding-bottom: 12px; padding-right: 20px; }
-  .modal-job-list { overflow-y: auto; padding-right: 8px; flex-grow: 1; }
-  .job-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem;}
-  .job-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; align-items: flex-start; gap: 10px; }
-  .job-card-title { font-weight: 500; color: var(--text-main); flex-grow: 1; line-height: 1.4; }
+  .modal-list { overflow-y: auto; flex-grow: 1; padding-right: 4px; margin-top: 12px; display: flex; flex-direction: column; gap: 8px;}
+  .job-row { background: var(--bg-base); border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; font-size: 0.85rem;}
 
-  /* 📱 Responsive สำหรับ iPad และ มือถือ (รองรับการเลื่อนขึ้นลง) */
-  @media (max-width: 1024px) { 
-    .dashboard-main { grid-template-columns: 1fr; } 
-    .full-width { grid-column: span 1; } 
-    .building-container { grid-template-columns: repeat(6, 1fr); }
+  /* ================= 📱 Responsive ================= */
+  @media (max-width: 1024px) {
+    body { flex-direction: column; height: auto; overflow-y: auto; }
+    .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 20px; justify-content: space-between; border-right: none; border-bottom: 1px solid var(--card-border); }
+    .sidebar-logo { margin-bottom: 0; width: 40px; height: 40px; }
+    .menu-group { flex-direction: row; width: auto; gap: 4px; }
+    .menu-icon { width: 48px; height: 48px; }
+    .menu-icon.active::before { left: 10%; top: auto; bottom: 0; width: 80%; height: 4px; border-radius: 4px 4px 0 0; }
+    .menu-icon.bottom { margin-top: 0; margin-left: auto; }
+    .main-wrapper { height: auto; overflow: visible; }
+    .dashboard-layout { display: flex; flex-direction: column; }
+    .left-col, .right-col { min-height: auto; overflow: visible; }
+    .table-box { height: 350px; flex: none; }
+    .chart-box { height: 450px; flex: none; } 
   }
   @media (max-width: 768px) {
-    .header-right { width: 100%; justify-content: space-between; text-align: left; margin-top: 5px;}
-    .kpi-yearly-wrapper { grid-template-columns: repeat(2, 1fr); }
-    .building-container { grid-template-columns: 1fr 1fr; }
-    .b-top, .b-bottom { grid-column: span 1; }
-    .b-bottom:last-child { grid-column: span 2; }
-    .sla-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 480px) {
-    .kpi-monthly-wrapper { grid-template-columns: 1fr; }
-    .building-container { grid-template-columns: 1fr; }
-    .b-top, .b-bottom, .b-bottom:last-child { grid-column: span 1; }
-    .header-left h2 { font-size: 1.2rem; }
-    .filter-select { width: 100%; } /* ปุ่มเดือนกางเต็มจอบนมือถือ */
+    .kpi-grid-4, .kpi-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .b-top, .b-bot { grid-column: span 6; } 
+    .full-table-header { flex-direction: column; align-items: stretch; gap: 12px;}
+    .search-input { width: 100%; }
   }
 </style>
 </head>
-<body>
+<body class="dark-theme">
 
-<div class="header">
-  <div class="header-left">
-    <button class="menu-btn" onclick="toggleSidebar()">
-      ☰ <span style="font-size: 0.95rem;">เมนู</span>
-    </button>
-    <h2 class="dash-title">
-      🚀 Smart Maintenance Dashboard 
-      <div class="dot" style="display:inline-block; margin-left:4px;"></div>
-    </h2>
+<nav class="sidebar">
+  <div class="sidebar-logo" onclick="switchView('view-dashboard')"><i data-lucide="rocket"></i></div>
+  <div class="menu-group">
+    <div class="menu-icon active" data-target="view-dashboard" title="แดชบอร์ดหลัก"><i data-lucide="layout-dashboard"></i></div>
+    <div class="menu-icon" data-target="view-jobs" title="รายการงานทั้งหมด"><i data-lucide="clipboard-list"></i></div>
+    <div class="menu-icon" data-target="view-buildings" title="ข้อมูลอาคารเจาะลึก"><i data-lucide="building-2"></i></div>
+    <div class="menu-icon" data-target="view-analytics" title="ประเมินประสิทธิภาพรายตึก"><i data-lucide="activity"></i></div>
   </div>
+  <div class="menu-icon bottom" data-target="view-settings" title="ตั้งค่าระบบ"><i data-lucide="settings"></i></div>
+</nav>
+
+<div class="main-wrapper">
   
-  <div class="header-right">
-    <select id="monthFilter" class="filter-select" onchange="applyFilter()">
-      <option value="all">📊 รวมทุกเดือน (ปีนี้)</option>
-      <option value="0">มกราคม</option>
-      <option value="1">กุมภาพันธ์</option>
-      <option value="2">มีนาคม</option>
-      <option value="3">เมษายน</option>
-      <option value="4">พฤษภาคม</option>
-      <option value="5">มิถุนายน</option>
-      <option value="6">กรกฎาคม</option>
-      <option value="7">สิงหาคม</option>
-      <option value="8">กันยายน</option>
-      <option value="9">ตุลาคม</option>
-      <option value="10">พฤศจิกายน</option>
-      <option value="11">ธันวาคม</option>
-    </select>
+  <header class="app-header">
+    <div class="app-title"><i data-lucide="rocket" style="color:var(--primary); width:20px;"></i> Smart Maintenance <div class="dot" style="margin-left:4px;"></div></div>
     
-    <div style="display:flex; flex-direction:column; align-items:flex-end;">
-      <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
-        <span id="syncStatus">กำลังซิงค์...</span>
+    <div class="header-controls">
+      <button class="btn-theme" onclick="toggleTheme()" title="สลับโหมดสว่าง/มืด"><i data-lucide="moon" style="width:18px;"></i></button>
+      <select id="monthFilter" class="select-month" onchange="applyFilter()">
+        <option value="all">รวมทุกเดือน (ปีนี้)</option>
+        <option value="0">มกราคม</option> <option value="1">กุมภาพันธ์</option> <option value="2">มีนาคม</option>
+        <option value="3">เมษายน</option> <option value="4">พฤษภาคม</option> <option value="5">มิถุนายน</option>
+        <option value="6">กรกฎาคม</option> <option value="7">สิงหาคม</option> <option value="8">กันยายน</option>
+        <option value="9">ตุลาคม</option> <option value="10">พฤศจิกายน</option> <option value="11">ธันวาคม</option>
+      </select>
+      <div class="sync-btn" onclick="refreshData()">
+        <span style="font-size:0.7rem; color:var(--text-muted);" id="syncTime">อัปเดตล่าสุดแล้ว</span>
+        <span style="font-size:0.75rem; color:var(--primary); font-weight:600; display:flex; align-items:center; gap:4px;" class="text-primary"><i data-lucide="refresh-cw" style="width:10px;"></i> อัปเดตทันที</span>
       </div>
-      <button onclick="refreshData()" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--text-main); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: 'Kanit'; transition: all 0.2s;">↻ อัปเดตทันที</button>
+      <div class="user-avatar"><i data-lucide="user" style="color:var(--text-main); width:18px;"></i></div>
     </div>
-    <div style="width:40px; height:40px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">👤</div>
-  </div>
-</div>
+  </header>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <h3 style="font-weight: 500; font-size: 1.2rem; margin: 0; color: var(--text-main);">🛠️ ตั้งค่า & จัดการ</h3>
-    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
-  </div>
+  <div id="view-dashboard" class="view-section active">
+    <div class="dashboard-layout">
+      <div class="left-col">
+        <div class="widget-box">
+          <div class="section-title"><i data-lucide="trophy" style="color:var(--warning);"></i> ภาพรวมสถิติทั้งปี (Yearly)</div>
+          <div class="kpi-grid-4">
+            <div class="kpi-card" onclick="openKpiModal('total', true)">
+              <div class="k-label">งานทั้งหมด</div><div class="k-val" style="color:var(--success);" id="y-total">0</div>
+            </div>
+            <div class="kpi-card" onclick="openKpiModal('pending', true)">
+              <div class="k-label">งานค้าง</div><div class="k-val" style="color:var(--warning);" id="y-open">0</div>
+            </div>
+            <div class="kpi-card" onclick="openKpiModal('completed', true)">
+              <div class="k-label">เสร็จแล้ว</div><div class="k-val" style="color:var(--primary);" id="y-complete">0</div>
+            </div>
+            <div class="kpi-card" onclick="openKpiModal('sla', true)">
+              <div class="k-label">เกิน SLA</div><div class="k-val" style="color:var(--danger);" id="y-sla">0</div>
+            </div>
+          </div>
+        </div>
 
-  <a href="https://add00917-hue.github.io/GNR3-Building-MS/" class="back-btn">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    กลับไปหน้าหลัก
-  </a>
+        <div class="widget-box">
+          <div class="section-title" id="monthlyTitle"><i data-lucide="calendar" style="color:var(--primary);"></i> สรุปเดือนที่เลือก</div>
+          <div class="kpi-grid-3">
+            <div class="m-card" onclick="openKpiModal('total', false)">
+              <div><div class="k-label">รับเข้ามา (เดือนนี้)</div><div class="k-val" style="color:var(--success);" id="m-total">0</div></div>
+              <div class="m-icon" style="background:rgba(16,185,129,0.1); color:var(--success);"><i data-lucide="clipboard-list"></i></div>
+            </div>
+            <div class="m-card" onclick="openKpiModal('pending', false)">
+              <div><div class="k-label">งานค้าง (เดือนนี้)</div><div class="k-val" style="color:var(--warning);" id="m-open">0</div></div>
+              <div class="m-icon" style="background:rgba(245,158,11,0.1); color:var(--warning);"><i data-lucide="hourglass"></i></div>
+            </div>
+            <div class="m-card" onclick="openKpiModal('completed', false)">
+              <div><div class="k-label">เสร็จแล้ว (เดือนนี้)</div><div class="k-val" style="color:var(--primary);" id="m-complete">0</div></div>
+              <div class="m-icon" style="background:rgba(59,130,246,0.1); color:var(--primary);"><i data-lucide="check-square"></i></div>
+            </div>
+          </div>
+        </div>
 
-  <div class="sidebar-footer">
-    <div style="display:flex; align-items:center; gap: 15px;">
-      <div style="width:48px; height:48px; background:#334155; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:24px;">👤</div>
-      <div>
-        <div class="time-big" id="timeEl">00:00 AM</div>
-        <div id="dateEl" style="font-size: 0.85rem; color: var(--text-muted);">กำลังโหลด...</div>
+        <div class="widget-box b-wrapper" style="padding-bottom: 8px;">
+          <div class="section-title"><i data-lucide="layout-grid" style="color:var(--primary);"></i> สรุปสถานะแยกตามอาคาร <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400; margin-left:auto; cursor:pointer;" onclick="switchView('view-buildings')">ดูตารางรายตึก ></span></div>
+          <div class="b-grid" id="buildingContainer"></div>
+        </div>
+
+        <div class="widget-box" style="padding: 12px 16px; border-color: rgba(239, 68, 68, 0.4);">
+          <div style="color:var(--danger); font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+            <i data-lucide="alert-triangle" style="width:14px;"></i> งานค้างเกิน 7 วัน (SLA Alert)
+          </div>
+          <div id="slaContainer" style="max-height: 60px; overflow-y: auto; padding-right:5px; font-size: 0.8rem;"></div>
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="widget-box table-box" style="flex: 1;">
+          <div class="section-title">
+            <i data-lucide="wrench" style="color:var(--primary);"></i> งานอัปเดตล่าสุด
+            <span style="margin-left:auto; font-size:0.75rem; color:var(--primary); cursor:pointer; font-weight:400;" onclick="switchView('view-jobs')">ดูตารางเต็ม ></span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>เวลา</th><th>Status</th></tr></thead>
+              <tbody id="dashTableBody"><tr><td colspan="5" align="center">กำลังโหลด...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="widget-box chart-box" style="flex: 1.5; min-height: 0;">
+          <div class="section-title" style="flex-shrink:0;"><i data-lucide="trending-up" style="color:var(--success);"></i> Trend เปรียบเทียบงาน <span id="chartLabel" style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:8px;"></span></div>
+          <div class="chart-container" style="flex-grow:1; position:relative; min-height:0;"><canvas id="trendChart"></canvas></div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="dashboard-main">
-  
-  <div class="column-left">
+  <div id="view-jobs" class="view-section widget-box" style="margin-bottom: 0; padding: 20px;">
+    <div class="full-table-header">
+      <div class="section-title" style="margin-bottom: 0; font-size: 1.2rem;"><i data-lucide="clipboard-list" style="color:var(--primary); width:20px;"></i> รายการแจ้งซ่อมทั้งหมด</div>
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา Ticket, อาคาร หรือรายละเอียดปัญหา..." onkeyup="searchFullTable()">
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>อาคาร</th>
+            <th>รายละเอียดปัญหา</th>
+            <th>วันที่รับแจ้ง</th>
+            <th>ใช้เวลาดำเนินการ</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="fullTableBody">
+          <tr><td colspan="6" align="center">กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="view-buildings" class="view-section widget-box" style="margin-bottom: 0; padding: 20px;">
+    <div class="section-title" style="font-size: 1.2rem; margin-bottom: 10px;"><i data-lucide="building-2" style="color:var(--primary); width:20px;"></i> ข้อมูลเจาะลึกรายอาคาร (เดือนที่เลือก)</div>
     
-    <h4 class="section-title">🏆 ภาพรวมสถิติทั้งปี (Yearly)</h4>
-    <div class="kpi-yearly-wrapper">
-      <div class="kpi-yearly-card" onclick="openKpiModal('total', true)">
-        <span class="kpi-label">งานทั้งหมด</span>
-        <span class="kpi-yearly-value" style="color: var(--success);" id="y-total">0</span>
+    <div class="b-tabs-container" id="buildingTabsContainer">
       </div>
-      <div class="kpi-yearly-card" onclick="openKpiModal('pending', true)">
-        <span class="kpi-label">งานค้าง</span>
-        <span class="kpi-yearly-value" style="color: var(--warning);" id="y-open">0</span>
-      </div>
-      <div class="kpi-yearly-card" onclick="openKpiModal('completed', true)">
-        <span class="kpi-label">เสร็จแล้ว</span>
-        <span class="kpi-yearly-value" style="color: var(--primary);" id="y-complete">0</span>
-      </div>
-      <div class="kpi-yearly-card" onclick="openKpiModal('sla', true)">
-        <span class="kpi-label">เกิน SLA</span>
-        <span class="kpi-yearly-value" style="color: var(--danger);" id="y-sla">0</span>
-      </div>
-    </div>
 
-    <h4 class="section-title" id="monthlyTitle" style="margin-top: 5px;">🗓️ สรุปเดือนที่เลือก</h4>
-    <div class="kpi-monthly-wrapper">
-      <div class="kpi-card kpi-total" onclick="openKpiModal('total', false)">
-        <div class="kpi-header">
-          <div><div class="kpi-label">งานรับเข้ามา (เดือนนี้)</div></div>
-          <div class="kpi-icon-box">📋</div>
-        </div>
-        <div class="kpi-value" style="color: var(--success);" id="m-total">0</div>
-      </div>
-      <div class="kpi-card kpi-pending" onclick="openKpiModal('pending', false)">
-        <div class="kpi-header">
-          <div><div class="kpi-label">งานค้าง (เดือนนี้)</div></div>
-          <div class="kpi-icon-box">⏳</div>
-        </div>
-        <div class="kpi-value" style="color: var(--warning);" id="m-open">0</div>
-      </div>
-      <div class="kpi-card kpi-done" onclick="openKpiModal('completed', false)">
-        <div class="kpi-header">
-          <div><div class="kpi-label">เสร็จแล้ว (เดือนนี้)</div></div>
-          <div class="kpi-icon-box">✅</div>
-        </div>
-        <div class="kpi-value" style="color: var(--primary);" id="m-complete">0</div>
-      </div>
-    </div>
-
-    <div class="card" style="flex-grow: 1;">
-      <div class="card-title">🏢 สรุปสถานะแยกตามอาคาร <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 300; margin-left: 8px;">(ตามเดือนที่เลือก)</span></div>
-      <div class="building-container" id="buildingContainer">
-        </div>
-    </div>
-
-  </div>
-
-  <div class="column-right">
+    <div class="section-title" id="activeBuildingTitle" style="margin-top: 10px; color: var(--warning);"></div>
     
-    <div class="card">
-      <div class="card-title">🛠️ งานอัปเดตล่าสุด (5 งาน)</div>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Ticket</th>
-              <th>อาคาร</th>
-              <th style="min-width: 120px;">รายละเอียด</th>
-              <th>อัปเดตล่าสุด</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">กำลังโหลดข้อมูล...</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="table-scroll" style="border-top: 1px solid var(--card-border); padding-top: 10px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>รายละเอียดปัญหา</th>
+            <th>วันที่รับแจ้ง</th>
+            <th>ใช้เวลาดำเนินการ</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="buildingTableBody">
+          <tr><td colspan="5" align="center">กำลังโหลดข้อมูล...</td></tr>
+        </tbody>
+      </table>
     </div>
-
-    <div class="card" style="flex-grow: 1;">
-      <div class="card-title">📈 Trend เปรียบเทียบงาน <span id="chartLabel" style="font-size:0.85rem; color:var(--text-muted); margin-left: 8px;">(แสดง 12 เดือน)</span></div>
-      <div style="position: relative; flex-grow: 1; min-height: 200px; width: 100%;">
-        <canvas id="trendChart"></canvas>
-      </div>
-    </div>
-
   </div>
 
-  <div class="card full-width" style="margin-top: 5px;">
-    <div class="card-title" style="color: var(--danger);">⚠️ รายการงานค้างเกิน 7 วัน (SLA ทั้งหมดของปีนี้)</div>
-    <div class="sla-grid" id="slaContainer">
-      <div style="color: var(--text-muted); font-size: 0.9rem;">กำลังประมวลผล...</div>
+  <div id="view-analytics" class="view-section widget-box" style="margin-bottom: 0; padding: 20px;">
+    <div class="section-title" style="font-size: 1.2rem; margin-bottom: 20px;"><i data-lucide="activity" style="color:var(--primary); width:20px;"></i> ประเมินประสิทธิภาพรายอาคาร (Performance Report)</div>
+    
+    <div class="analytics-grid" id="analyticsGrid">
+      </div>
+  </div>
+
+  <div id="view-settings" class="view-section widget-box" style="margin-bottom: 0; padding: 20px; align-items: center; justify-content: center;">
+    <div class="section-title" style="font-size: 1.5rem; margin-bottom: 30px;"><i data-lucide="settings" style="color:var(--primary); width:28px;"></i> ตั้งค่าระบบ (Settings)</div>
+    
+    <div class="settings-container">
+      <div class="set-row">
+        <div>
+          <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">โหมดผู้ดูแลระบบ (Admin Mode)</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">เปิดใช้งานเพื่อแก้ไขข้อมูล หรือ Export Report</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="adminToggle" onchange="toggleAdmin()">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="set-row" style="margin-top: 20px; flex-direction: column; align-items: stretch; background: transparent; border: none; padding: 0;">
+        <button class="btn-primary" onclick="window.location.href='https://add00917-hue.github.io/GNR3-Building-MS/'">
+          <i data-lucide="external-link"></i> กลับสู่หน้าเมนูหลัก (Main Portal)
+        </button>
+      </div>
     </div>
   </div>
 
 </div>
 
 <div class="modal-overlay" id="buildingModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal()">×</button>
-    <div class="modal-title" id="modalTitle">🏢 ชื่ออาคาร</div>
-    <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">รายการงานซ่อม (เรียงงานค้างขึ้นก่อน):</div>
-    <div class="modal-job-list" id="modalJobList"></div>
-    <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; border-radius: 8px; border: none; background: rgba(59, 130, 246, 0.2); color: var(--primary); font-family: 'Kanit'; cursor: pointer; transition: background 0.2s; flex-shrink: 0; font-weight:500;">ปิดหน้าต่าง</button>
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
+    <div class="section-title" id="modalTitle" style="font-size: 1.2rem; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; margin-bottom: 0;">🏢 ชื่ออาคาร</div>
+    <div class="modal-list" id="modalJobList"></div>
   </div>
 </div>
 
 <script>
   // ==========================================
-  // 🔴 1. Config & Initial Setup
+  // Core JS Logic & View Switching
   // ==========================================
   const API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec"; 
-  const AUTO_REFRESH_SECONDS = 10; 
+  const AUTO_REFRESH_SECONDS = 15; 
 
-  // ⭐️ ฟังก์ชันตั้งค่าเดือนปัจจุบันอัตโนมัติ (เปิดปุ๊บ เลือกเดือนนี้เลย)
-  document.addEventListener('DOMContentLoaded', () => {
-    const currentMonthIndex = new Date().getMonth(); // 0 = ม.ค., 11 = ธ.ค.
-    document.getElementById('monthFilter').value = currentMonthIndex.toString();
-  });
-
-  // ฟังก์ชัน เปิด-ปิด Sidebar
-  function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('show');
-      document.getElementById('sidebarOverlay').classList.toggle('show');
+  function toggleTheme() {
+    document.body.classList.toggle('dark-theme');
+    if(document.getElementById('monthFilter').value) applyFilter(); 
   }
 
-  // เอาเมาส์ชนขอบซ้ายจอ แล้วเมนูเด้งออก (เฉพาะบนคอมพิวเตอร์)
-  document.addEventListener('mousemove', (e) => {
-      const sidebar = document.getElementById('sidebar');
-      if(e.clientX < 15 && window.innerWidth > 1024 && !sidebar.classList.contains('show')) {
-          toggleSidebar();
-      }
+  function switchView(targetId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.getElementById(targetId).classList.add('active');
+    
+    document.querySelectorAll('.menu-icon').forEach(icon => {
+      icon.classList.remove('active');
+      if(icon.getAttribute('data-target') === targetId) icon.classList.add('active');
+    });
+    
+    if(targetId === 'view-dashboard' && myChart) myChart.resize();
+  }
+
+  function toggleAdmin() {
+    const isAdmin = document.getElementById('adminToggle').checked;
+    if(isAdmin) alert("เปิดโหมดผู้ดูแลระบบเรียบร้อย (Simulation)");
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentMonthIndex = new Date().getMonth();
+    document.getElementById('monthFilter').value = currentMonthIndex.toString();
+    lucide.createIcons();
+    
+    document.querySelectorAll('.menu-icon[data-target]').forEach(icon => {
+      icon.addEventListener('click', function() { switchView(this.getAttribute('data-target')); });
+    });
   });
 
-  // ==========================================
-  // 🔵 2. Utility Functions
-  // ==========================================
-  function formatDuration(hours) {
-    if (hours < 0) return '0 ชม.';
-    if (hours >= 24) {
-      const days = Math.floor(hours / 24);
-      const remainHours = hours % 24;
-      return remainHours > 0 ? `${days} วัน ${remainHours} ชม.` : `${days} วัน`;
-    }
-    return `${hours} ชม.`;
+  // --- Utility Functions: คำนวณเป็นนาที และแสดง "วัน ชม. นาที" ---
+  function formatDuration(totalMinutes) {
+    if (totalMinutes <= 0) return '0 นาที';
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    let result = [];
+    if (days > 0) result.push(`${days} วัน`);
+    if (hours > 0) result.push(`${hours} ชม.`);
+    if (minutes > 0 || result.length === 0) result.push(`${minutes} นาที`);
+    return result.join(' ');
   }
 
   function parseCustomDate(dateStr) {
@@ -393,80 +464,46 @@
     try {
       let d = new Date(dateStr);
       if (!isNaN(d.getTime()) && dateStr.includes('-')) return d;
-
       const parts = dateStr.split(' ');
       const dateParts = parts[0].includes('/') ? parts[0].split('/') : parts[0].split('-');
       const timeParts = parts[1] ? parts[1].split(':') : [0,0,0];
-      
       let year, month, day;
-      if (dateParts[0].length === 4) { 
-          year = dateParts[0]; month = dateParts[1]; day = dateParts[2];
-      } else { 
-          year = dateParts[2]; month = dateParts[1]; day = dateParts[0];
-      }
-      
+      if (dateParts[0].length === 4) { year = dateParts[0]; month = dateParts[1]; day = dateParts[2]; } 
+      else { year = dateParts[2]; month = dateParts[1]; day = dateParts[0]; }
       if(!year) return new Date(dateStr);
       return new Date(year, parseInt(month) - 1, day, timeParts[0], timeParts[1], timeParts[2] || 0);
-    } catch(e) { 
-      return new Date(dateStr); 
-    }
+    } catch(e) { return new Date(dateStr); }
   }
 
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('timeEl').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const days = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-    document.getElementById('dateEl').innerText = `${days[now.getDay()]} ${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear().toString().slice(-2)}`;
-  }
-  setInterval(updateClock, 1000); updateClock();
-
-  // ==========================================
-  // 🟢 3. State Management
-  // ==========================================
-  const svgAri = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 22h12M4 22h16M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>`;
-  const svgKSL = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22V7l4-4 4 4v15M4 22h16M12 7v15M9 11h.01M15 11h.01M9 15h.01M15 15h.01M9 19h.01M15 19h.01"/></svg>`;
-  const svgESV = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12M2 22h20M8 12h8M8 16h8M8 20h8"/></svg>`;
-  const svgSaphan = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V12l9-7 9 7v10M2 22h20M9 14h6M9 18h6M12 14v8"/></svg>`;
-  const svgRangsit = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V8h14v14M3 22h18M9 12h6M9 16h6M9 20h6"/></svg>`;
-
-  let mainData = []; 
-  let filteredData = []; 
-  let buildingMap = {}; 
-  let myChart = null; 
+  // --- Global Variables ---
+  let mainData = []; let filteredData = []; let buildingMap = {}; 
+  let myChart = null; let activeBuildingTab = 'ari'; 
 
   const buildOrder = [
-    { key: 'ari', class: 'b-top' },
-    { key: 'ksl', class: 'b-top' },
-    { key: 'esv', class: 'b-top' },
-    { key: 'sph', class: 'b-bottom' },
-    { key: 'rng', class: 'b-bottom' }
+    { key: 'ari', icon: 'building-2', class: 'b-top' }, 
+    { key: 'ksl', icon: 'building', class: 'b-top' }, 
+    { key: 'esv', icon: 'factory', class: 'b-top' }, 
+    { key: 'sph', icon: 'home', class: 'b-bot' }, 
+    { key: 'rng', icon: 'warehouse', class: 'b-bot' }
   ];
 
   function initEmptyBuildingMap() {
     buildingMap = {
-      ari: { name: 'Ari Hills', icon: svgAri, total: 0, pending: 0, completed: 0 },
-      ksl: { name: 'KSL Tower', icon: svgKSL, total: 0, pending: 0, completed: 0 },
-      esv: { name: 'ESV Tower', icon: svgESV, total: 0, pending: 0, completed: 0 },
-      sph: { name: 'Saphan Mai', icon: svgSaphan, total: 0, pending: 0, completed: 0 },
-      rng: { name: 'Rangsit', icon: svgRangsit, total: 0, pending: 0, completed: 0 }
+      ari: { name: 'Ari Hills', icon: 'building-2', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#3b82f6' },
+      ksl: { name: 'KSL Tower', icon: 'building', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#a855f7' },
+      esv: { name: 'ESV Tower', icon: 'factory', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#10b981' },
+      sph: { name: 'Saphan Mai', icon: 'home', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#f59e0b' },
+      rng: { name: 'Rangsit', icon: 'warehouse', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#ef4444' }
     };
   }
-  
   initEmptyBuildingMap();
-  renderDashboard('all', true); // วาด UI หลอกๆ รอก่อนข้อมูลมา
 
-  // ==========================================
-  // 🟡 4. Fetch Data
-  // ==========================================
   async function loadData() {
-    const syncEl = document.getElementById('syncStatus');
-    
+    const syncEl = document.getElementById('syncTime');
     try {
-      if (syncEl) syncEl.innerHTML = `<span style="color: var(--warning);">กำลังอัปเดต...</span>`;
-
+      syncEl.innerText = "กำลังซิงค์...";
       const response = await fetch(API_URL);
       const rawData = await response.json();
-      
       mainData = [];
 
       rawData.forEach(row => {
@@ -482,354 +519,319 @@
         const end = row.CloseTime ? parseCustomDate(row.CloseTime) : null;
         const status = (row.Status && row.Status.toLowerCase() === 'complete') ? 'completed' : 'pending';
         
-        let durationInHours = 0;
-        if(start) {
-          const endTime = end ? end : new Date(); 
-          durationInHours = Math.floor((endTime - start) / (1000 * 60 * 60));
-        }
-
-        const lastActionDate = end ? end : (start ? start : new Date(0));
+        let durationInMinutes = start ? Math.floor(((end || new Date()) - start) / (1000 * 60)) : 0;
+        let isOver7Days = durationInMinutes > 10080 && status === 'pending';
 
         mainData.push({
-          ticket: row.Ticket || '-',
-          buildingCode: bCode,
-          detail: row.Detail || '-',
-          start: start,
-          lastUpdate: lastActionDate,
-          duration: durationInHours,
-          status: status,
-          isOverSLA: durationInHours > 168 && status === 'pending'
+          ticket: row.Ticket || '-', buildingCode: bCode, detail: row.Detail || '-',
+          start: start, lastUpdate: end || start || new Date(0), duration: durationInMinutes, status: status,
+          isOverSLA: isOver7Days,
+          dateStr: start ? `${start.getDate().toString().padStart(2,'0')}/${(start.getMonth()+1).toString().padStart(2,'0')}/${start.getFullYear().toString().slice(-2)}` : '-'
         });
       });
-
-      applyFilter(); // กรองข้อมูลตามเดือนที่ถูกเลือกไว้
       
-      if (syncEl) {
-        syncEl.innerHTML = `<span style="color: var(--success);">อัปเดตล่าสุดแล้ว</span>`;
-      }
-      
-    } catch (error) {
-      console.error('Error loading data:', error);
-      if (syncEl) syncEl.innerHTML = `<span style="color: var(--danger);">❌ ล้มเหลว</span>`;
-    }
+      mainData.sort((a,b) => b.lastUpdate - a.lastUpdate);
+      applyFilter(); 
+      syncEl.innerText = "อัปเดต: " + new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+    } catch (e) { syncEl.innerText = "การซิงค์ล้มเหลว"; }
   }
 
   function applyFilter() {
-    const monthSelect = document.getElementById('monthFilter');
-    const monthVal = monthSelect.value;
-    const monthText = monthSelect.options[monthSelect.selectedIndex].text;
-    
-    // ⭐️ อัปเดต Title ตรงกล่องรายเดือนให้ผู้ใช้รู้ว่ากำลังดูเดือนอะไร
-    if(monthVal === 'all') {
-       document.getElementById('monthlyTitle').innerHTML = `🗓️ สรุปภาพรวม ${monthText}`;
-    } else {
-       document.getElementById('monthlyTitle').innerHTML = `🗓️ สรุปเดือน ${monthText}`;
-    }
+    const monthVal = document.getElementById('monthFilter').value;
+    const monthText = document.getElementById('monthFilter').options[document.getElementById('monthFilter').selectedIndex].text;
+    document.getElementById('monthlyTitle').innerHTML = `<i data-lucide="calendar" style="color:var(--primary);"></i> สรุปเดือน ${monthText}`;
 
     initEmptyBuildingMap(); 
-
-    if (monthVal === 'all') {
-      filteredData = [...mainData];
-    } else {
-      const targetMonth = parseInt(monthVal);
-      filteredData = mainData.filter(d => d.start && d.start.getMonth() === targetMonth);
-    }
+    filteredData = monthVal === 'all' ? [...mainData] : mainData.filter(d => d.start && d.start.getMonth() === parseInt(monthVal));
 
     filteredData.forEach(d => {
-      buildingMap[d.buildingCode].total++;
-      if(d.status === 'completed') buildingMap[d.buildingCode].completed++;
-      else buildingMap[d.buildingCode].pending++;
+      let b = buildingMap[d.buildingCode];
+      b.total++;
+      if(d.status === 'completed') { 
+          b.completed++; 
+          b.totalMinutes += d.duration; 
+      } else { b.pending++; }
     });
-
-    renderDashboard(monthVal, false);
+    
+    renderDashboard(monthVal);
+    renderFullTable(filteredData);
+    renderBuildingTabsView();
+    renderAnalyticsView(); 
   }
 
-  // ==========================================
-  // 🟠 5. Render UI
-  // ==========================================
-  function renderDashboard(monthSelect, isInitial = false) {
-    // -------------------------
-    // 1. คำนวณภาพรวมทั้งปี (Yearly) จาก mainData
-    // -------------------------
-    let yTotal = mainData.length;
-    let yPending = mainData.filter(d => d.status === 'pending').length;
-    let yComplete = yTotal - yPending;
-    let ySla = mainData.filter(d => d.isOverSLA).length;
+  // --- RENDER VIEW 1: DASHBOARD ---
+  function renderDashboard(monthSelect) {
+    document.getElementById('y-total').innerText = mainData.length;
+    document.getElementById('y-open').innerText = mainData.filter(d => d.status === 'pending').length;
+    document.getElementById('y-complete').innerText = mainData.filter(d => d.status === 'completed').length;
+    document.getElementById('y-sla').innerText = mainData.filter(d => d.isOverSLA).length;
 
-    document.getElementById('y-total').innerText = yTotal;
-    document.getElementById('y-open').innerText = yPending;
-    document.getElementById('y-complete').innerText = yComplete;
-    document.getElementById('y-sla').innerText = ySla;
+    document.getElementById('m-total').innerText = filteredData.length;
+    document.getElementById('m-open').innerText = filteredData.filter(d => d.status === 'pending').length;
+    document.getElementById('m-complete').innerText = filteredData.filter(d => d.status === 'completed').length;
 
-    // -------------------------
-    // 2. คำนวณสรุปประจำเดือน (Monthly) จาก filteredData
-    // -------------------------
-    let mTotal = filteredData.length;
-    let mPending = filteredData.filter(d => d.status === 'pending').length;
-    let mComplete = mTotal - mPending;
-
-    document.getElementById('m-total').innerText = mTotal;
-    document.getElementById('m-open').innerText = mPending;
-    document.getElementById('m-complete').innerText = mComplete;
-
-    // -------------------------
-    // 3. Buildings
-    // -------------------------
-    let buildingHTML = '';
+    let bHTML = '';
     buildOrder.forEach(item => {
       const b = buildingMap[item.key];
-      buildingHTML += `
-        <div class="building-item ${item.class}" onclick="openModal('${item.key}')">
-          <div class="building-icon">${b.icon}</div>
-          <div class="building-name">${b.name}</div>
-          <div class="building-stats-box">
-            <div class="b-stat-row"><span>📋 รับ:</span><span style="color: var(--success); font-weight: 500;">${b.total}</span></div>
-            <div class="b-stat-row"><span>✅ เสร็จ:</span><span style="color: var(--primary); font-weight: 500;">${b.completed}</span></div>
-            <div class="b-stat-row"><span>⏳ ค้าง:</span><span style="color: var(--warning); font-weight: 500;">${b.pending}</span></div>
-          </div>
+      bHTML += `
+        <div class="b-item ${item.class}" onclick="openModal('${item.key}')">
+          <div class="b-head"><i data-lucide="${b.icon}" style="color:${b.color}; width:20px;"></i><span>${b.name}</span></div>
+          <div class="b-row"><span style="color:var(--text-muted);">รับ:</span><span style="color:var(--success); font-weight:600;">${b.total}</span></div>
+          <div class="b-row"><span style="color:var(--text-muted);">เสร็จ:</span><span style="color:var(--primary); font-weight:600;">${b.completed}</span></div>
+          <div class="b-row" style="margin-bottom:0;"><span style="color:var(--text-muted);">ค้าง:</span><span style="color:var(--warning); font-weight:600;">${b.pending}</span></div>
         </div>`;
     });
-    document.getElementById('buildingContainer').innerHTML = buildingHTML;
+    document.getElementById('buildingContainer').innerHTML = bHTML;
 
-    if(isInitial) return; 
-
-    // -------------------------
-    // 4. SLA Alerts (ใช้ข้อมูลทั้งปีโชว์ด้านล่างสุด)
-    // -------------------------
-    const slaJobsAll = mainData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
+    const slaJobs = mainData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
     let slaHTML = '';
-    if (slaJobsAll.length === 0) {
-      slaHTML = `<div style="color: var(--success); font-size: 0.9rem; grid-column: span 2;">ไม่มีงานที่ค้างเกิน 7 วัน 🎉</div>`;
-    } else {
-      slaJobsAll.forEach(d => {
-        let bName = d.buildingCode;
-        if(bName === 'ari') bName = 'Ari Hills';
-        else if(bName === 'ksl') bName = 'KSL Tower';
-        else if(bName === 'esv') bName = 'ESV Tower';
-        else if(bName === 'sph') bName = 'Saphan Mai';
-        else if(bName === 'rng') bName = 'Rangsit';
-
-        slaHTML += `<div class="sla-badge"><div class="alert-icon">!</div>${d.ticket} | ${bName} | ค้าง ${formatDuration(d.duration)}</div>`;
+    if (slaJobs.length === 0) slaHTML = `<div style="color:var(--success); font-weight:500;"><i data-lucide="check-circle" style="width:14px; vertical-align:middle;"></i> ไม่มีงานที่ค้างเกิน 7 วัน 🎉</div>`;
+    else {
+      slaJobs.forEach(d => {
+        slaHTML += `<div style="border-bottom:1px solid rgba(100,116,139,0.2); padding-bottom:4px; margin-bottom:4px; cursor:pointer;" onclick="openKpiModal('sla', true)">
+          <span style="color:var(--danger); font-weight:600;">${d.ticket}</span> - ${buildingMap[d.buildingCode].name} (ค้าง ${formatDuration(d.duration)})
+        </div>`;
       });
     }
     document.getElementById('slaContainer').innerHTML = slaHTML;
 
-    // -------------------------
-    // 5. Table (Latest 5 jobs จากเดือนที่เลือก)
-    // -------------------------
-    const latest = [...filteredData].sort((a,b) => b.lastUpdate - a.lastUpdate).slice(0, 5); 
+    const latest = [...filteredData].slice(0, 10); 
     let tableHTML = '';
-    
-    if (latest.length === 0) {
-      tableHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">ไม่มีข้อมูลในเวลาที่เลือก</td></tr>`;
-    } else {
+    if (latest.length === 0) tableHTML = `<tr><td colspan="5" align="center" style="color:var(--text-muted); padding: 20px;">ไม่มีข้อมูล</td></tr>`;
+    else {
       latest.forEach((d) => {
-        const bName = buildingMap[d.buildingCode].name;
-        const dateObj = d.lastUpdate;
-        const dateStr = dateObj && dateObj.getTime() !== 0 ? `${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')} ${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}/${dateObj.getFullYear().toString().slice(-2)}` : '-';
-        
-        let statusHTML = d.status === 'completed' 
-          ? `<span class="status-badge status-done">✓ เสร็จแล้ว</span>` 
-          : `<span class="status-badge status-pending">⏳ รอดำเนินการ</span>`;
-        
+        const badge = d.status === 'completed' ? `<span class="pill pill-done">✓ เสร็จแล้ว</span>` : `<span class="pill pill-pending">⏳ รอดำเนินการ</span>`;
         tableHTML += `
-          <tr>
-            <td>${d.ticket}</td>
-            <td style="font-weight: 500;">${bName}</td>
-            <td style="color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${d.detail}</td>
-            <td style="color:var(--text-muted)">${dateStr}</td>
-            <td>${statusHTML}</td>
+          <tr onclick="openModal('${d.buildingCode}')">
+            <td class="tb-ticket">${d.ticket}</td>
+            <td style="font-weight:500; color:${buildingMap[d.buildingCode].color};">${buildingMap[d.buildingCode].name}</td>
+            <td style="max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-muted);" title="${d.detail}">${d.detail}</td>
+            <td style="font-size:0.8rem;">${formatDuration(d.duration)}</td>
+            <td>${badge}</td>
           </tr>`;
       });
     }
-    document.getElementById('tableBody').innerHTML = tableHTML;
+    document.getElementById('dashTableBody').innerHTML = tableHTML;
 
     renderChart(monthSelect);
+    lucide.createIcons();
   }
 
-  // ==========================================
-  // 🟣 6. Chart.js
-  // ==========================================
-  function renderChart(monthSelect) {
-    let labels = [];
-    let totalData = [];
-    let completedData = [];
-    let pendingData = [];
+  // --- RENDER VIEW 2: FULL TABLE ---
+  function renderFullTable(data) {
+    let tableHTML = '';
+    if (data.length === 0) tableHTML = `<tr><td colspan="6" align="center" style="padding: 30px; color:var(--text-muted);">ไม่พบข้อมูล</td></tr>`;
+    else {
+      data.forEach(d => {
+        const badge = d.status === 'completed' ? `<span class="pill pill-done">เสร็จแล้ว</span>` : `<span class="pill pill-pending">รอดำเนินการ</span>`;
+        tableHTML += `
+          <tr onclick="openModal('${d.buildingCode}')">
+            <td class="tb-ticket">${d.ticket}</td>
+            <td style="font-weight:500; color:${buildingMap[d.buildingCode].color};">${buildingMap[d.buildingCode].name}</td>
+            <td style="color:var(--text-muted);">${d.detail}</td>
+            <td style="font-size:0.85rem;">${d.dateStr}</td>
+            <td style="font-size:0.85rem; font-weight:500; color: ${d.isOverSLA ? 'var(--danger)' : 'inherit'};">${formatDuration(d.duration)}</td>
+            <td>${badge}</td>
+          </tr>`;
+      });
+    }
+    document.getElementById('fullTableBody').innerHTML = tableHTML;
+  }
 
-    const chartLabelEl = document.getElementById('chartLabel');
+  function searchFullTable() {
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const result = filteredData.filter(d => 
+      d.ticket.toLowerCase().includes(input) || buildingMap[d.buildingCode].name.toLowerCase().includes(input) || d.detail.toLowerCase().includes(input)
+    );
+    renderFullTable(result);
+  }
+
+  // --- RENDER VIEW 3: BUILDINGS (TABS) - SORT & FULL PAGE ---
+  function renderBuildingTabsView() {
+    let tabsHTML = '';
+    buildOrder.forEach(item => {
+      const b = buildingMap[item.key];
+      const isActive = item.key === activeBuildingTab ? 'active' : '';
+      tabsHTML += `<div class="b-tab ${isActive}" onclick="selectBuildingTab('${item.key}')"><i data-lucide="${b.icon}" style="width:16px;"></i> ${b.name} (${b.total})</div>`;
+    });
+    document.getElementById('buildingTabsContainer').innerHTML = tabsHTML;
+    lucide.createIcons();
+    selectBuildingTab(activeBuildingTab); 
+  }
+
+  window.selectBuildingTab = function(bKey) {
+    activeBuildingTab = bKey;
+    document.querySelectorAll('.b-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.b-tab').forEach(tab => {
+        if(tab.innerText.includes(buildingMap[bKey].name)) tab.classList.add('active');
+    });
+
+    const b = buildingMap[bKey];
+    document.getElementById('activeBuildingTitle').innerHTML = `<i data-lucide="clock" style="color:var(--warning); width:20px;"></i> รายการแจ้งซ่อม: ${b.name} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400; margin-left:8px;">(เรียงจากงานที่ใช้เวลาซ่อมนานที่สุด)</span>`;
+    
+    // เรียงคิวจากใช้เวลามากสุด (ช้าสุด) ลงไปหาไวน้อยสุด
+    const bData = filteredData.filter(d => d.buildingCode === bKey);
+    bData.sort((a, b) => b.duration - a.duration);
+
+    let tableHTML = '';
+    if(bData.length === 0) tableHTML = `<tr><td colspan="5" align="center" style="padding:20px; color:var(--text-muted);">ไม่มีรายการงานในเดือนนี้</td></tr>`;
+    else {
+        bData.forEach(d => {
+            const badge = d.status === 'completed' ? `<span class="pill pill-done">เสร็จแล้ว</span>` : `<span class="pill pill-pending">รอดำเนินการ</span>`;
+            tableHTML += `
+              <tr>
+                <td class="tb-ticket">${d.ticket}</td>
+                <td style="color:var(--text-muted);">${d.detail}</td>
+                <td style="font-size:0.85rem;">${d.dateStr}</td>
+                <td style="font-size:0.85rem; font-weight:600; color: ${d.isOverSLA ? 'var(--danger)' : 'var(--warning)'};">${formatDuration(d.duration)}</td>
+                <td>${badge}</td>
+              </tr>`;
+        });
+    }
+    document.getElementById('buildingTableBody').innerHTML = tableHTML;
+    lucide.createIcons();
+  }
+
+  // --- RENDER VIEW 4: ANALYTICS (PERFORMANCE GRID) ---
+  function renderAnalyticsView() {
+    let html = '';
+    buildOrder.forEach(item => {
+        const b = buildingMap[item.key];
+        const bData = filteredData.filter(d => d.buildingCode === item.key && d.status === 'completed');
+
+        let avgTimeStr = "-";
+        let fastestJobStr = "-";
+        let percentDone = 0;
+
+        if (b.total > 0) {
+            percentDone = Math.round((b.completed / b.total) * 100);
+
+            if (bData.length > 0) {
+                let avgM = Math.floor(b.totalMinutes / b.completed);
+                avgTimeStr = formatDuration(avgM);
+
+                let fastestJob = bData.reduce((prev, curr) => prev.duration < curr.duration ? prev : curr);
+                fastestJobStr = `${fastestJob.ticket} (${formatDuration(fastestJob.duration)})`;
+            }
+
+            html += `
+            <div class="widget-box" style="border-color: ${b.color}50; display: flex; flex-direction: column; gap: 12px; transition: 0.3s;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:8px;"><i data-lucide="${b.icon}" style="color:${b.color}; width:22px;"></i> ${b.name}</div>
+                    <div style="font-size:1.4rem; font-weight:700; color:${b.color};">${percentDone}%</div>
+                </div>
+                <div class="b-progress-bg"><div class="b-progress-fill" style="width: ${percentDone}%; background-color: ${b.color};"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:4px;">
+                    <span style="color:var(--text-muted);">รับแจ้ง: <b style="color:var(--text-main);">${b.total}</b></span>
+                    <span style="color:var(--text-muted);">เสร็จ: <b style="color:var(--success);">${b.completed}</b></span>
+                    <span style="color:var(--text-muted);">ค้าง: <b style="color:var(--warning);">${b.pending}</b></span>
+                </div>
+                <div style="border-top: 1px solid var(--card-border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><i data-lucide="clock" style="width:14px;"></i> เวลาซ่อมเฉลี่ย:</span>
+                        <span style="font-weight:600;">${avgTimeStr}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><i data-lucide="zap" style="width:14px; color:var(--warning);"></i> งานที่ซ่อมไวที่สุด:</span>
+                        <span style="font-weight:600; color:var(--success);">${fastestJobStr}</span>
+                    </div>
+                </div>
+            </div>`;
+        } else {
+             html += `
+            <div class="widget-box" style="border-color: ${b.color}50; display: flex; flex-direction: column; gap: 12px; opacity: 0.7;">
+                <div style="font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:8px;"><i data-lucide="${b.icon}" style="color:${b.color}; width:20px;"></i> ${b.name}</div>
+                <div style="text-align:center; color:var(--text-muted); padding: 30px 0;">ไม่มีข้อมูลงานซ่อมในเดือนนี้</div>
+            </div>`;
+        }
+    });
+    document.getElementById('analyticsGrid').innerHTML = html;
+    lucide.createIcons();
+  }
+
+  // --- RENDER DASHBOARD CHART (Trend) ---
+  function renderChart(monthSelect) {
+    let labels = [], totalData = [], completedData = [], pendingData = [];
+    const isDark = document.body.classList.contains('dark-theme');
+    const cTotal = isDark ? '#10b981' : '#10b981', cDone = isDark ? '#3b82f6' : '#3b82f6', cPending = isDark ? '#f59e0b' : '#f59e0b';
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', textColor = isDark ? '#94a3b8' : '#64748b';
 
     if (monthSelect === 'all') {
-      chartLabelEl.innerText = "(แสดง 12 เดือน)";
+      document.getElementById('chartLabel').innerText = "(แสดง 12 เดือน)";
       labels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
       let monthStats = Array(12).fill(0).map(()=>({total:0, completed:0, pending:0}));
-      
-      filteredData.forEach(d => {
-        if(!d.start) return;
-        let m = d.start.getMonth();
-        monthStats[m].total++;
-        if(d.status === 'completed') monthStats[m].completed++;
-        if(d.status === 'pending') monthStats[m].pending++;
-      });
-
-      totalData = monthStats.map(m => m.total);
-      completedData = monthStats.map(m => m.completed);
-      pendingData = monthStats.map(m => m.pending);
-
+      filteredData.forEach(d => { if(d.start) { let m = d.start.getMonth(); monthStats[m].total++; if(d.status === 'completed') monthStats[m].completed++; if(d.status === 'pending') monthStats[m].pending++; } });
+      totalData = monthStats.map(m => m.total); completedData = monthStats.map(m => m.completed); pendingData = monthStats.map(m => m.pending);
     } else {
-      chartLabelEl.innerText = "(แสดงรายวันของเดือนที่เลือก)";
+      document.getElementById('chartLabel').innerText = "(แสดงเฉพาะวันที่)";
       let daysMap = {};
-      filteredData.forEach(d => {
-        if(!d.start) return;
-        let day = d.start.getDate();
-        if(!daysMap[day]) daysMap[day] = { total: 0, completed: 0, pending: 0 };
-        daysMap[day].total++;
-        if(d.status === 'completed') daysMap[day].completed++;
-        if(d.status === 'pending') daysMap[day].pending++;
-      });
-
+      filteredData.forEach(d => { if(d.start) { let day = d.start.getDate(); if(!daysMap[day]) daysMap[day] = { total: 0, completed: 0, pending: 0 }; daysMap[day].total++; if(d.status === 'completed') daysMap[day].completed++; if(d.status === 'pending') daysMap[day].pending++; } });
       const sortedDays = Object.keys(daysMap).map(Number).sort((a,b) => a-b);
-      labels = sortedDays.map(d => `วันที่ ${d}`);
-      totalData = sortedDays.map(d => daysMap[d].total);
-      completedData = sortedDays.map(d => daysMap[d].completed);
-      pendingData = sortedDays.map(d => daysMap[d].pending);
+      labels = sortedDays.map(d => d.toString());
+      totalData = sortedDays.map(d => daysMap[d].total); completedData = sortedDays.map(d => daysMap[d].completed); pendingData = sortedDays.map(d => daysMap[d].pending);
     }
 
     const ctx = document.getElementById('trendChart').getContext('2d');
     if (myChart) myChart.destroy(); 
-
     myChart = new Chart(ctx, {
       type: 'bar', 
-      data: {
-        labels: labels,
-        datasets: [
-          { label: 'งานทั้งหมด', data: totalData, backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: '#10b981', borderWidth: 1, order: 3 },
-          { label: 'เสร็จสิ้น', data: completedData, backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: '#3b82f6', borderWidth: 1, order: 2 },
-          { label: 'งานค้าง', data: pendingData, backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: '#f59e0b', borderWidth: 1, order: 1 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 12, usePointStyle: true, font: {family: 'Kanit'} } }, tooltip: { titleFont: {family: 'Kanit'}, bodyFont: {family: 'Kanit'} } },
-        scales: {
-          x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'} } },
-          y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8', font: {family: 'Kanit'}, stepSize: 1 }, beginAtZero: true }
-        },
-        interaction: { mode: 'index', intersect: false }
+      data: { labels: labels, datasets: [
+        { label: 'งานค้าง', data: pendingData, backgroundColor: cPending, borderColor: cPending, borderWidth: 1, order: 1, borderRadius: 2 },
+        { label: 'เสร็จสิ้น', data: completedData, backgroundColor: cDone, borderColor: cDone, borderWidth: 1, order: 2, borderRadius: 2 },
+        { label: 'งานทั้งหมด', data: totalData, backgroundColor: cTotal, borderColor: cTotal, borderWidth: 1, order: 3, borderRadius: 2 }
+      ]},
+      options: { 
+        responsive: true, maintainAspectRatio: false, 
+        plugins: { legend: { position: 'top', labels: { color: textColor, boxWidth: 10, usePointStyle: true, font: {family: 'inherit'} } } }, 
+        scales: { 
+            x: { grid: { display: false }, ticks: { color: textColor, font: {family: 'inherit', size: 13} } }, 
+            y: { grid: { color: gridColor }, ticks: { color: textColor, font: {family: 'inherit', size: 12}, stepSize: 1 }, beginAtZero: true } 
+        }, 
+        interaction: { mode: 'index', intersect: false } 
       }
     });
   }
 
-  // ==========================================
-  // 🟤 7. Modal & Sorting
-  // ==========================================
+  // --- MODALS ---
   const modalOverlay = document.getElementById('buildingModal');
-
   function openModal(buildingKey) {
     if(mainData.length === 0) return; 
     const b = buildingMap[buildingKey];
-    document.getElementById('modalTitle').innerHTML = `${b.icon} ${b.name}`;
-    
-    // โชว์งานตามเดือนที่เลือก
-    const bData = filteredData.filter(d => d.buildingCode === buildingKey);
-    renderJobList(bData);
-    modalOverlay.classList.add('show');
+    document.getElementById('modalTitle').innerHTML = `<i data-lucide="${b.icon}" style="color:${b.color}; width:20px;"></i> รายการงาน: ${b.name}`;
+    renderJobListModal(filteredData.filter(d => d.buildingCode === buildingKey));
+    modalOverlay.classList.add('show'); lucide.createIcons();
   }
 
   function openKpiModal(type, isYearly = false) {
     if(mainData.length === 0) return; 
-    
     let sourceData = isYearly ? mainData : filteredData;
-    let modalData = [];
-    let title = "";
-
-    if(type === 'total') {
-      modalData = [...sourceData];
-      title = isYearly ? "🏆 งานซ่อมทั้งหมด (ทั้งปี)" : "📋 งานซ่อมทั้งหมด (ประจำเดือน)";
-    } else if(type === 'pending') {
-      modalData = sourceData.filter(d => d.status === 'pending');
-      title = isYearly ? "🏆 งานค้าง (ทั้งปี)" : "⏳ งานค้าง (ประจำเดือน)";
-    } else if(type === 'completed') {
-      modalData = sourceData.filter(d => d.status === 'completed');
-      title = isYearly ? "🏆 งานเสร็จสิ้น (ทั้งปี)" : "✅ งานเสร็จสิ้น (ประจำเดือน)";
-    } else if(type === 'sla') {
-      modalData = sourceData.filter(d => d.isOverSLA);
-      title = "⚠️ งานค้างเกิน 7 วัน SLA (ทั้งปี)";
-    }
-
-    const monthSelect = document.getElementById('monthFilter');
-    const monthText = monthSelect.options[monthSelect.selectedIndex].text;
-    
-    if(!isYearly) {
-        document.getElementById('modalTitle').innerHTML = `${title} <span style="font-size:0.85rem; color:var(--text-muted); font-weight: 300; margin-left: 8px;">(${monthText})</span>`;
-    } else {
-        document.getElementById('modalTitle').innerHTML = `${title}`;
-    }
-    
-    renderJobList(modalData, true); 
-    modalOverlay.classList.add('show');
+    let modalData = []; let title = ""; let icon = "";
+    if(type === 'total') { modalData = [...sourceData]; title = "งานซ่อมทั้งหมด"; icon = "layers"; } 
+    else if(type === 'pending') { modalData = sourceData.filter(d => d.status === 'pending'); title = "งานค้าง"; icon = "clock"; } 
+    else if(type === 'completed') { modalData = sourceData.filter(d => d.status === 'completed'); title = "งานเสร็จสิ้น"; icon = "check-circle-2"; } 
+    else if(type === 'sla') { modalData = sourceData.filter(d => d.isOverSLA); title = "งานค้างเกิน SLA"; icon = "alert-triangle"; }
+    document.getElementById('modalTitle').innerHTML = `<i data-lucide="${icon}"></i> ${title}`;
+    renderJobListModal(modalData, true); modalOverlay.classList.add('show'); lucide.createIcons();
   }
 
-  function renderJobList(dataList, showBuildingName = false) {
-    dataList.sort((a, b) => {
-      if (a.status === 'pending' && b.status === 'completed') return -1;
-      if (a.status === 'completed' && b.status === 'pending') return 1;
-      return b.start - a.start; 
-    });
-
+  function renderJobListModal(dataList, showBuildingName = false) {
+    dataList.sort((a, b) => { if (a.status === 'pending' && b.status === 'completed') return -1; if (a.status === 'completed' && b.status === 'pending') return 1; return b.start - a.start; });
     let jobsHTML = '';
-    if(dataList.length === 0) {
-      jobsHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">ไม่มีประวัติการแจ้งซ่อมในเวลาที่เลือก</div>';
-    } else {
+    if(dataList.length === 0) { jobsHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">ไม่มีข้อมูล</div>'; } 
+    else {
       dataList.forEach(job => {
-        const badge = job.status === 'completed' ? `<span class="status-badge status-done">✓ เสร็จสิ้น</span>` : `<span class="status-badge status-pending">⏳ งานค้าง</span>`;
-        const dateStr = job.start ? `${job.start.getDate().toString().padStart(2,'0')}/${(job.start.getMonth()+1).toString().padStart(2,'0')}/${job.start.getFullYear().toString().slice(-2)}` : '-';
-        
-        let jobTitle = `${job.ticket} - ${job.detail}`;
-        if(showBuildingName) {
-          let bName = job.buildingCode;
-          if(bName === 'ari') bName = 'Ari Hills';
-          else if(bName === 'ksl') bName = 'KSL Tower';
-          else if(bName === 'esv') bName = 'ESV Tower';
-          else if(bName === 'sph') bName = 'Saphan Mai';
-          else if(bName === 'rng') bName = 'Rangsit';
-
-          jobTitle = `<span style="color: var(--primary);">[${bName}]</span> ${job.ticket} - ${job.detail}`;
-        }
-
-        jobsHTML += `
-          <div class="job-card">
-            <div class="job-card-header">
-              <span class="job-card-title">${jobTitle}</span>
-              ${badge}
-            </div>
-            <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
-              <span>📅 เริ่ม: ${dateStr}</span>
-              <span>⏱ ${formatDuration(job.duration)}</span>
-            </div>
-          </div>`;
+        const badge = job.status === 'completed' ? `<span class="pill pill-done">เสร็จสิ้น</span>` : `<span class="pill pill-pending">งานค้าง</span>`;
+        let bNameHtml = showBuildingName ? `<span style="color:var(--primary); font-weight:600; margin-right:8px;">[${buildingMap[job.buildingCode].name}]</span>` : '';
+        jobsHTML += `<div class="job-row"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-weight:600;">${bNameHtml}${job.ticket} - ${job.detail}</span>${badge}</div><div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.8rem;"><span>เริ่ม: ${job.dateStr}</span><span style="color: ${job.isOverSLA ? 'var(--danger)' : 'inherit'};">ใช้เวลา: ${formatDuration(job.duration)}</span></div></div>`;
       });
     }
     document.getElementById('modalJobList').innerHTML = jobsHTML;
   }
 
-  function closeModal() { 
-    modalOverlay.classList.remove('show'); 
-  }
-
-  modalOverlay.addEventListener('click', function(e) { 
-    if(e.target === modalOverlay) closeModal(); 
-  });
-
-  function refreshData() {
-    loadData(); 
-  }
-
-  // ซิงค์ทุกๆ 10 วินาที
-  setInterval(() => {
-    loadData(); 
-  }, AUTO_REFRESH_SECONDS * 1000);
-
-  // เริ่มดึงข้อมูล (ฟังก์ชันนี้จะทำงานหลังจาก set เดือนอัตโนมัติเรียบร้อยแล้ว)
+  function closeModal() { modalOverlay.classList.remove('show'); }
+  modalOverlay.addEventListener('click', function(e) { if(e.target === modalOverlay) closeModal(); });
+  function refreshData() { loadData(); }
+  setInterval(() => { loadData(); }, AUTO_REFRESH_SECONDS * 1000);
   loadData();
 </script>
 </body>
