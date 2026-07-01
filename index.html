@@ -1,838 +1,1873 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Smart Maintenance Pro</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts & Libraries -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: { extend: { fontFamily: { sans: ['Prompt', 'sans-serif'], num: ['Inter', 'sans-serif'] } } }
+    };
+</script>
 
 <style>
-  /* ================= 🎨 Theme Variables ================= */
+  /* ================= 🎨 Theme & Colors ================= */
   :root { 
-    --bg-base: #f4f9f5; --card-bg: #ffffff; --card-border: #e2e8f0;
-    --text-main: #1e293b; --text-muted: #64748b; 
-    --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; 
-    --sidebar-bg: linear-gradient(180deg, #10b981 0%, #047857 100%);
-    --sidebar-hover: rgba(255,255,255,0.2); --sidebar-active-line: #ffffff;
-    --shadow: 0 4px 15px rgba(0, 0, 0, 0.05); --radius: 12px;
+    --bg-base: #f7f8fa; --card-bg: #ffffff; --card-border: #ececef;
+    --text-main: #1a1c22; --text-muted: #6b7180; 
+    --primary: #5b63f0; --success: #16a34a; --warning: #d97706; --danger: #dc2626; --indigo: #5b63f0; --purple: #8b5cf6; --teal: #0d9488;
+    --line: #16a34a; --sc: #8b5cf6;
+    --sidebar-bg: #ffffff; --sidebar-border: #ececef; --sidebar-icon: #6b7180; --sidebar-active-bg: #f0f1fe;
+    --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.05), 0 1px 3px 0 rgb(16 24 40 / 0.04); 
+    --shadow-md: 0 12px 32px -10px rgb(16 24 40 / 0.14), 0 4px 12px -6px rgb(16 24 40 / 0.08); 
+    --radius-lg: 14px; --radius-md: 10px;
+    --input-bg: #ffffff; --input-text: #1a1c22;
   }
   body.dark-theme {
-    --bg-base: #0f1423; --card-bg: #161e31; --card-border: #232d45; 
-    --text-main: #f8fafc; --text-muted: #94a3b8; 
-    --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; 
-    --sidebar-bg: #141b2d; --sidebar-hover: rgba(255,255,255,0.05); --sidebar-active-line: #f59e0b; 
-    --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    --bg-base: #0a0b0f; --card-bg: #141620; --card-border: #23262f; 
+    --text-main: #e7e8ee; --text-muted: #8b90a0; 
+    --primary: #7c84ff; --success: #34d399; --warning: #fbbf24; --danger: #f87171; --indigo: #7c84ff; --purple: #a78bfa; --teal: #2dd4bf;
+    --line: #34d399; --sc: #a78bfa;
+    --sidebar-bg: #0e0f16; --sidebar-border: #1e212b; --sidebar-icon: #8b90a0; --sidebar-active-bg: #1b1d2b;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4); 
+    --shadow-md: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 4px 12px -6px rgb(0 0 0 / 0.4);
+    --input-bg: #0e0f16; --input-text: #e7e8ee;
   }
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { 
-    font-family: -apple-system, BlinkMacSystemFont, 'Kanit', sans-serif;
-    background-color: var(--bg-base); color: var(--text-main); 
-    height: 100vh; width: 100vw; overflow: hidden; display: flex; transition: background-color 0.3s;
-  }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+  body { font-family: 'Prompt', sans-serif; background-color: var(--bg-base); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; transition: background-color 0.3s, color 0.3s; }
+  .num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
 
-  /* ================= 📱 Sidebar ================= */
-  .sidebar {
-    width: 72px; background: var(--sidebar-bg); flex-shrink: 0;
-    display: flex; flex-direction: column; align-items: center; padding: 20px 0;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.1); z-index: 10; border-right: 1px solid var(--card-border);
-  }
-  .sidebar-logo {
-    width: 44px; height: 44px; background: rgba(255,255,255,0.1); border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; margin-bottom: 30px; color: white; cursor: pointer; transition: 0.2s;
-  }
-  .sidebar-logo:hover { background: var(--primary); transform: scale(1.05); }
-  
-  .menu-group { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; }
-  .menu-icon {
-    width: 100%; height: 50px; display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.6); cursor: pointer; transition: 0.2s; position: relative;
-  }
-  body:not(.dark-theme) .menu-icon { color: rgba(255,255,255,0.8); }
-  .menu-icon:hover { color: white; background: var(--sidebar-hover); }
-  .menu-icon.active { color: white; background: var(--sidebar-hover); }
-  .menu-icon.active::before {
-    content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px;
-    background: var(--sidebar-active-line); border-radius: 0 4px 4px 0;
-  }
+  /* ================= 🧭 Sidebar (expandable + collapsible) ================= */
+  .sidebar { width: 248px; background: var(--sidebar-bg); flex-shrink: 0; display: flex; flex-direction: column; align-items: stretch; padding: 16px 12px; border-right: 1px solid var(--sidebar-border); z-index: 40; transition: width 0.22s cubic-bezier(.2,.6,.3,1); gap: 2px; }
+  .sidebar.collapsed { width: 82px; align-items: center; padding: 16px 0; }
+  .sidebar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 4px; }
+  .sidebar.collapsed .sidebar-head { flex-direction: column; gap: 12px; padding: 0; }
+  .sidebar-logo { width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary), var(--indigo)); border-radius: 13px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 6px 18px -6px rgba(124,132,255,0.5); flex-shrink: 0; }
+  .sidebar-toggle { background: transparent; border: none; color: var(--sidebar-icon); cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+  .sidebar-toggle:hover { background: var(--sidebar-active-bg); color: var(--text-main); }
+  .menu-icon { width: auto; height: 44px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 0 12px; border-radius: 11px; color: var(--sidebar-icon); cursor: pointer; transition: 0.16s; }
+  .sidebar.collapsed .menu-icon { width: 52px; height: 52px; justify-content: center; padding: 0; margin: 0 auto 2px; }
+  .menu-icon:hover { color: var(--text-main); background: var(--sidebar-active-bg); }
+  .menu-icon.active { color: var(--primary); background: var(--sidebar-active-bg); }
+  .menu-icon i { flex-shrink: 0; width: 20px; height: 20px; }
+  .menu-label { font-size: 0.84rem; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .sidebar.collapsed .menu-label { display: none; }
+  .menu-sep { height: 1px; background: var(--sidebar-border); margin: 8px 8px; }
+  .sidebar.collapsed .menu-sep { width: 40px; margin: 8px auto; }
   .menu-icon.bottom { margin-top: auto; }
+  .sidebar.collapsed .menu-icon.bottom { margin-top: auto; }
 
-  /* ================= 🖥️ Main Layout ================= */
-  .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; padding: 16px 20px; height: 100vh; overflow: hidden; }
+  /* ================= 🖥️ Main Wrapper ================= */
+  .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative;}
+  .app-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--card-bg); border-bottom: 1px solid var(--card-border); flex-shrink: 0; z-index: 30; gap: 16px; flex-wrap: wrap; transition: 0.3s;}
+  .app-title { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+  .header-controls { display: flex; gap: 12px; flex-wrap: wrap;}
+  
+  .custom-input { padding: 0 16px; border-radius: var(--radius-md); border: 1px solid var(--card-border); background: var(--input-bg); color: var(--input-text); font-family: 'Prompt'; font-size: 0.9rem; outline: none; font-weight: 500; height: 42px; transition: 0.2s;}
+  .custom-input:focus, .custom-input:hover { border-color: var(--primary); }
+  select.custom-input { cursor: pointer; min-width: 120px; appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-right: 2.5rem; }
+  
+  .btn-icon { background: var(--bg-base); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .btn-icon:hover { border-color: var(--primary); color: var(--primary); background: var(--card-bg); }
 
-  /* --- Header --- */
-  .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0; height: 44px; }
-  .app-title { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0% {opacity: 1} 50% {opacity: 0.4} 100% {opacity: 1} }
-
-  .header-controls { display: flex; align-items: center; gap: 12px; }
-  .btn-theme { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-  .btn-theme:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
-  .select-month { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.95rem; cursor: pointer; outline: none; font-weight: 500; height: 38px; transition: 0.2s;}
-  .select-month:hover { border-color: var(--primary); }
-  .sync-btn { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; cursor: pointer; padding: 0 8px; transition: 0.2s;}
-  .sync-btn:hover { transform: scale(1.02); }
-  .user-avatar { width: 38px; height: 38px; background: rgba(100,116,139,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--card-border);}
-
-  /* ================= 🗂️ View Switching Logic ================= */
-  .view-section { display: none; flex-direction: column; flex-grow: 1; min-height: 0; animation: fadeSlide 0.4s ease forwards; }
+  /* ================= 📂 Views & Cards ================= */
+  .view-content-area { flex-grow: 1; overflow-y: auto; padding: 24px; }
+  .view-section { display: none; flex-direction: column; animation: fadeSlide 0.4s ease forwards; padding-bottom: 40px;}
   .view-section.active { display: flex; }
   @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ---------------- COMMON STYLES ---------------- */
-  .widget-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
-  .section-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-main); }
+  .widget-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); transition: 0.3s;}
+  .section-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--text-main); }
   
-  .pill { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 80px;}
-  .pill-done { background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.3); }
-  .pill-pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
-  body:not(.dark-theme) .pill-done { background: var(--primary); color: white; border: none; }
-  body:not(.dark-theme) .pill-pending { background: var(--warning); color: white; border: none; }
+  .grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px; }
+  
+  .kpi-card { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex: 1;}
+  .kpi-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); background: var(--card-bg);}
+  .k-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;}
+  .k-val { font-size: 2rem; font-weight: 700; line-height: 1; }
+  .card-bg-icon { position: absolute; right: -10px; bottom: -10px; opacity: 0.05; width: 80px; height: 80px; transition: 0.3s;}
+  .kpi-card:hover .card-bg-icon { transform: scale(1.1) rotate(-10deg); opacity: 0.1;}
 
-  .table-scroll { overflow-y: auto; flex-grow: 1; padding-right: 4px; }
+  .sc-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 20px; transition: 0.2s; }
+  .sc-card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); cursor: pointer; border-color: var(--indigo); }
+  .sc-gradient-card { background: linear-gradient(135deg, #a855f7, #6366f1); color: white; border: none; position: relative; overflow: hidden;}
+  .sc-gradient-card * { color: white !important; }
+  .mail-gradient-card { background: linear-gradient(135deg, #14b8a6, #0ea5e9); color: white; border: none; position: relative; overflow: hidden;}
+  .mail-gradient-card * { color: white !important; }
+  
+  .pill { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;}
+  .pill-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+  .pill-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+  .pill-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+  .pill-primary { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+
+  .tab-btn { padding: 8px 16px; border-radius: var(--radius-md); border: 1px solid var(--card-border); background: var(--bg-base); color: var(--text-muted); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; cursor: pointer; white-space: nowrap; font-size: 0.9rem;}
+  .tab-btn:hover { background: var(--card-bg); color: var(--primary); border-color: var(--primary); }
+  .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: var(--shadow-md); }
+  .tab-btn.active .num { color: #ffffff; opacity: 0.8; }
+  .tab-btn.active-purple { background: var(--purple); border-color: var(--purple); }
+  .tab-btn.active-teal { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+  .table-container { overflow-x: auto; border: 1px solid var(--card-border); border-radius: var(--radius-md); background: var(--bg-base); }
   table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
-  th { color: var(--text-muted); font-weight: 500; padding: 8px 0 12px 0; border-bottom: 1px solid rgba(100,116,139,0.2); position: sticky; top: 0; background: var(--card-bg); z-index: 2;}
-  td { padding: 12px 0; border-bottom: 1px solid rgba(100,116,139,0.1); }
-  tr:hover td { background: rgba(100,116,139,0.05); cursor: pointer; }
-  .tb-ticket { font-weight: 600; color: var(--text-main); }
+  th { color: var(--text-muted); font-weight: 600; padding: 12px 16px; border-bottom: 1px solid var(--card-border); background: var(--card-bg); position: sticky; top: 0; z-index: 10; white-space: nowrap;}
+  td { padding: 14px 16px; border-bottom: 1px solid var(--card-border); color: var(--text-main); }
+  tr.clickable { transition: 0.2s; }
+  tr.clickable:hover td { background: var(--sidebar-active-bg); cursor: pointer; }
 
-  /* ---------------- VIEW 1: DASHBOARD ---------------- */
-  .dashboard-layout { display: grid; grid-template-columns: 55% 43%; gap: 2%; flex-grow: 1; min-height: 0; }
-  .left-col { display: flex; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; padding-right: 4px;}
-  .right-col { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
-
-  .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .kpi-card { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: 0.2s; }
-  .kpi-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow);}
-  .k-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
-  .k-val { font-size: 1.8rem; font-weight: 600; line-height: 1; }
-
-  .kpi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .m-card { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-  .m-card:hover { border-color: var(--success); transform: translateY(-2px); box-shadow: var(--shadow);}
-  .m-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; }
-
-  .b-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; flex-grow: 1; }
-  .b-item { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: 0.2s; }
-  .b-item:hover { border-color: var(--warning); box-shadow: inset 0 0 0 1px var(--warning); transform: scale(1.02);}
-  .b-top { grid-column: span 2; } .b-bot { grid-column: span 3; }
-  .b-head { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;}
-  .b-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; align-items: center;}
-
-  .table-box { display: flex; flex-direction: column; }
-  .chart-box { display: flex; flex-direction: column; }
-
-  /* ---------------- VIEW 2: FULL JOB LIST ---------------- */
-  .full-table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;}
-  .search-input { 
-    padding: 10px 16px; border-radius: 10px; border: 1px solid var(--card-border); 
-    background: var(--bg-base); color: var(--text-main); font-family: inherit; width: 350px;
-    outline: none; transition: 0.2s; font-size: 0.95rem;
-  }
-  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); background: var(--card-bg);}
-
-  /* ---------------- VIEW 3: BUILDINGS (Tabs) - WRAP FULL PAGE ---------------- */
-  .b-tabs-container { 
-    display: flex; gap: 10px; margin-bottom: 16px; 
-    flex-wrap: wrap; /* ทำให้ชื่อตึกปัดลงบรรทัดใหม่ ไม่ต้องเลื่อน Scroll */
-    flex-shrink: 0;
-  }
-  .b-tab { 
-    background: var(--bg-base); border: 1px solid var(--card-border); padding: 10px 20px; border-radius: 10px; 
-    cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.2s; 
-    white-space: nowrap; flex-shrink: 0;
-  }
-  .b-tab:hover { background: var(--card-bg); border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-  .b-tab.active { background: rgba(59,130,246,0.1); border-color: var(--primary); color: var(--primary); }
-
-  /* ---------------- VIEW 4: ANALYTICS (Performance Grid) ---------------- */
-  .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; overflow-y: auto; padding-right: 4px; }
-  .b-progress-bg { width: 100%; height: 8px; background: var(--card-border); border-radius: 4px; overflow: hidden; margin-top: 4px;}
-  .b-progress-fill { height: 100%; background: var(--success); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-
-  /* ---------------- VIEW 5: SETTINGS ---------------- */
-  .settings-container { display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin: 0 auto; width: 100%; padding-top: 20px;}
-  .set-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 16px 20px; border-radius: 12px; border: 1px solid var(--card-border); }
-  
-  .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--card-border); transition: .4s; border-radius: 34px; }
-  .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
-  input:checked + .slider { background-color: var(--success); }
-  input:checked + .slider:before { transform: translateX(24px); }
-
-  .btn-primary {
-    background: var(--primary); color: white; border: none; padding: 14px 24px; border-radius: 10px;
-    font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; width: 100%;
-  }
-  .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
-
-  /* ================= 🗔 Modal ================= */
-  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 3000; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; }
+  /* ================= 🗔 Modals & Loader ================= */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); z-index: 1000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; padding: 20px; }
   .modal-overlay.show { display: flex; opacity: 1; }
-  .modal-content { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); width: 100%; max-width: 650px; max-height: 85vh; padding: 24px; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: scale(0.95); transition: 0.3s;}
+  .modal-content { background: var(--bg-base); border: 1px solid var(--card-border); border-radius: var(--radius-lg); width: 100%; max-width: 950px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: scale(0.95); transition: 0.3s; overflow: hidden; }
   .modal-overlay.show .modal-content { transform: scale(1); }
-  .modal-close { position: absolute; top: 16px; right: 16px; background: transparent; border: none; cursor: pointer; color: var(--text-muted); }
-  .modal-close:hover { color: var(--danger); }
-  .modal-list { overflow-y: auto; flex-grow: 1; padding-right: 4px; margin-top: 12px; display: flex; flex-direction: column; gap: 8px;}
-  .job-row { background: var(--bg-base); border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; font-size: 0.85rem;}
+  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); flex-shrink: 0;}
+  .btn-close { color: var(--text-muted); cursor: pointer; transition: 0.2s; background: var(--bg-base); border: 1px solid var(--card-border); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;} 
+  .btn-close:hover { color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1); }
+  
+  .ticket-modal-content { max-width: 700px; }
+  .ticket-field-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; }
+  .ticket-field-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+  .ticket-field-val { font-size: 0.95rem; font-weight: 500; color: var(--text-main); word-break: break-word;}
 
-  /* ================= 📱 Responsive ================= */
+  #initialLoader { position: fixed; inset: 0; background: var(--bg-base); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+  
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: white; padding: 12px 24px; border-radius: var(--radius-md); font-weight: 500; font-size: 0.9rem; box-shadow: var(--shadow-md); transform: translateY(100px); opacity: 0; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000; display: flex; align-items: center; gap: 8px; pointer-events: none;}
+  #toast.show { transform: translateY(0); opacity: 1; }
+
   @media (max-width: 1024px) {
-    body { flex-direction: column; height: auto; overflow-y: auto; }
-    .sidebar { width: 100%; height: 60px; flex-direction: row; padding: 0 20px; justify-content: space-between; border-right: none; border-bottom: 1px solid var(--card-border); }
-    .sidebar-logo { margin-bottom: 0; width: 40px; height: 40px; }
-    .menu-group { flex-direction: row; width: auto; gap: 4px; }
-    .menu-icon { width: 48px; height: 48px; }
-    .menu-icon.active::before { left: 10%; top: auto; bottom: 0; width: 80%; height: 4px; border-radius: 4px 4px 0 0; }
+    body { flex-direction: column; }
+    .sidebar, .sidebar.collapsed { width: 100%; height: 70px; flex-direction: row; align-items: center; padding: 0 16px; border-right: none; border-bottom: 1px solid var(--card-border); overflow-x: auto; justify-content: flex-start; gap: 8px;}
+    .sidebar-head { flex-direction: row; margin-bottom: 0; margin-right: 8px; padding: 0; }
+    .sidebar-toggle { display: none; }
+    .sidebar-logo { margin-bottom: 0; margin-right: 12px; width: 40px; height: 40px; flex-shrink: 0;}
+    .menu-icon, .sidebar.collapsed .menu-icon { width: 48px; height: 48px; margin: 0; padding: 0; justify-content: center; flex-shrink: 0;}
+    .menu-label { display: none !important; }
+    .menu-sep { display: none; }
     .menu-icon.bottom { margin-top: 0; margin-left: auto; }
-    .main-wrapper { height: auto; overflow: visible; }
-    .dashboard-layout { display: flex; flex-direction: column; }
-    .left-col, .right-col { min-height: auto; overflow: visible; }
-    .table-box { height: 350px; flex: none; }
-    .chart-box { height: 450px; flex: none; } 
+    .sc-layout-top, .sc-layout-mid, .sc-layout-bot { grid-template-columns: 1fr !important; }
   }
   @media (max-width: 768px) {
-    .kpi-grid-4, .kpi-grid-3 { grid-template-columns: repeat(2, 1fr); }
-    .b-top, .b-bot { grid-column: span 6; } 
-    .full-table-header { flex-direction: column; align-items: stretch; gap: 12px;}
-    .search-input { width: 100%; }
+    .app-header { flex-direction: column; align-items: stretch; height: auto; padding: 12px; }
+    .header-controls { justify-content: space-between; width: 100%; }
+    .custom-input { flex: 1; min-width: 0; padding: 0 12px;}
+    .view-content-area { padding: 16px; }
+    .widget-box, .sc-card { padding: 16px; }
+    .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; }
+    .tab-btn { flex: 1; justify-content: center; }
   }
+  /* ============================================================
+     ✦ LINEAR / VERCEL REFINEMENT LAYER (dark-first, pro-grade)
+     ไม่แตะ logic — ปรับเฉพาะรูปลักษณ์ให้สะดุล อ่านง่าย ระดับโลก
+     ============================================================ */
+
+  /* -- นิยาม utility classes ให้ผูกกับ design token -- */
+  .text-main   { color: var(--text-main) !important; }
+  .text-muted  { color: var(--text-muted) !important; }
+  .text-primary{ color: var(--primary) !important; }
+  .text-success{ color: var(--success) !important; }
+  .text-warning{ color: var(--warning) !important; }
+  .text-danger { color: var(--danger) !important; }
+  .bg-base     { background: var(--bg-base) !important; }
+  .bg-card-bg  { background: var(--card-bg) !important; }
+  .border-card-border { border-color: var(--card-border) !important; }
+  .border-primary { border-color: var(--primary) !important; }
+  .hover\:border-primary:hover { border-color: var(--primary) !important; }
+
+  /* -- Typography: จังหวะและน้ำหนักแบบมืออาชีพ -- */
+  body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; letter-spacing: -0.006em; }
+  .k-label { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.01em; color: var(--text-muted); margin-bottom: 10px; }
+  .k-val { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; }
+  .section-title { font-size: 0.98rem; font-weight: 650; letter-spacing: -0.01em; margin-bottom: 22px; }
+  .num { letter-spacing: -0.01em; }
+
+  /* -- Sidebar: เนียน มีเส้นบางๆ -- */
+  .sidebar { padding-top: 20px; }
+  .sidebar-logo { border-radius: 12px; box-shadow: 0 6px 18px -6px rgba(124,132,255,0.5); }
+  .sidebar.collapsed .menu-icon { border-radius: 12px; }
+  .menu-icon:hover { background: var(--sidebar-active-bg); color: var(--text-main); }
+  .menu-icon.active { color: var(--primary); background: var(--sidebar-active-bg); box-shadow: inset 0 0 0 1px var(--card-border); }
+
+  /* -- Header: บางลง โปร่ง -- */
+  .app-header { padding: 14px 28px; backdrop-filter: saturate(1.2); }
+  .app-title { font-weight: 700; letter-spacing: -0.02em; }
+
+  /* -- Cards: ขอบบาง เงานุ่ม hover ยกนิดเดียว -- */
+  .widget-box { border-radius: var(--radius-lg); padding: 22px; box-shadow: var(--shadow-sm); }
+  .widget-box, .sc-card, .kpi-card, .custom-input, .btn-icon, .tab-btn, .table-container { transition: transform .18s cubic-bezier(.2,.6,.3,1), box-shadow .18s ease, border-color .18s ease, background .18s ease; }
+  .kpi-card { background: var(--card-bg); border-radius: var(--radius-md); padding: 18px; box-shadow: none; }
+  body:not(.dark-theme) .kpi-card { background: #fbfbfc; }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in srgb, var(--primary) 40%, var(--card-border)); background: var(--card-bg); }
+  .kpi-card .card-bg-icon { opacity: .045; }
+  .sc-card { border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+  .sc-card-hover:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in srgb, var(--indigo) 40%, var(--card-border)); }
+
+  /* -- Pills: soft, semantic -- */
+  .pill { border-radius: 7px; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; letter-spacing: 0.01em; }
+
+  /* -- Tabs -- */
+  .tab-btn { border-radius: 9px; font-weight: 550; }
+  .tab-btn.active { box-shadow: var(--shadow-sm); }
+
+  /* -- Table: อ่านสบายตา หัวตารางเนียน -- */
+  .table-container { border-radius: var(--radius-md); }
+  th { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-muted); padding: 11px 16px; }
+  td { padding: 13px 16px; font-size: 0.86rem; }
+  tr.clickable:hover td { background: var(--sidebar-active-bg); }
+
+  /* -- Inputs & buttons -- */
+  .custom-input { border-radius: var(--radius-md); height: 40px; font-weight: 500; }
+  .custom-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+  .btn-icon { border-radius: var(--radius-md); }
+  .btn-icon:hover { box-shadow: var(--shadow-sm); }
+
+  /* -- Modal: กระจกนุ่ม -- */
+  .modal-overlay { background: color-mix(in srgb, var(--bg-base) 60%, rgba(0,0,0,0.6)); backdrop-filter: blur(8px) saturate(1.1); }
+  .modal-content { border-radius: 18px; box-shadow: var(--shadow-md); }
+
+  /* -- Scrollbar เนียน -- */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); background-clip: padding-box; }
+
+  /* -- Loader -- */
+  #initialLoader h2 { letter-spacing: -0.02em; }
+
+  /* ============================================================
+     ✦ SYSTEM IDENTITY — Line = เขียว, Smartcare = ม่วง
+     ============================================================ */
+  /* Line dashboard (แท็บ Line) */
+  #view-line .text-primary { color: var(--line) !important; }
+  #view-line .kpi-card:hover { border-color: color-mix(in srgb, var(--line) 45%, var(--card-border)); }
+  #view-line .section-title .text-primary { color: var(--line) !important; }
+
+  /* การ์ดสรุป Line ในหน้าภาพรวม (border-t-primary ใช้เฉพาะกล่องนี้) */
+  .border-t-primary { border-top-color: var(--line) !important; }
+  .border-t-primary .text-primary { color: var(--line) !important; }
+  .border-t-primary .section-title i { color: var(--line) !important; }
+
+  /* ป้าย "Line" (pill-primary ในบริบท Line) ให้เป็นเขียว — SC Submit ยังคงเป็นอินดิโก้ */
+  .border-t-primary .pill-primary, #view-line .pill-primary { background: color-mix(in srgb, var(--line) 16%, transparent); color: var(--line); }
+
+  /* Smartcare identity (ม่วง) — ตอกย้ำโทน */
+  .border-t-purple-500 { border-top-color: var(--sc) !important; }
+  .border-t-teal-500 { border-top-color: var(--teal) !important; }
+  #view-smartcare .sc-card-hover:hover { border-color: color-mix(in srgb, var(--sc) 45%, var(--card-border)); }
+
+  /* Buildings tabs ของ Line ให้ active เป็นเขียว */
+  #view-buildings-line .tab-btn.active { background: var(--line); border-color: var(--line); box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--line) 70%, transparent); }
+  #view-buildings-line .tab-btn:hover { color: var(--line); border-color: var(--line); }
+  /* Mail Service identity (teal) */
+  #view-mailservice .sc-card-hover:hover { border-color: color-mix(in srgb, var(--teal) 45%, var(--card-border)); }
+  #view-mailservice .section-title .text-teal-500, #view-mailservice .text-teal-500 { color: var(--teal) !important; }
+
+  /* ============================================================
+     ✦ FIT-TO-SCREEN (เดสก์ท็อป) — แต่ละหน้าพอดี 1 จอ, ตารางยาวเลื่อนในกล่อง
+     ============================================================ */
+  @media (min-width: 1024px) {
+    .view-content-area { overflow: hidden; padding: 14px 18px; display: flex; flex-direction: column; }
+    .view-section { padding-bottom: 0; }
+    .view-section.active { height: 100%; min-height: 0; }
+
+    /* บีบระยะให้กระชับ */
+    .widget-box { padding: 16px; }
+    .sc-card { padding: 13px; }
+    .section-title { margin-bottom: 12px; }
+    .grid-2, .grid-3, .grid-4, .grid-5 { gap: 12px; }
+    .k-val { font-size: 1.55rem; }
+    .k-label { margin-bottom: 6px; }
+    .kpi-card { padding: 13px; }
+
+    /* Dashboards Smartcare / Mail — ให้เต็มความสูงและจัดสัดส่วนภายใน */
+    #sc-dash-section, #mail-dash-section { flex: 1; min-height: 0; gap: 12px !important; }
+    #sc-dash-section > .grid-2:last-child, #mail-dash-section > .grid-2:last-child { flex: 1; min-height: 0; }
+    .sc-card.h-\[350px\] { height: 100% !important; min-height: 0; }
+
+    /* ตารางยาว: เลื่อนเฉพาะในกล่อง */
+    .table-container { overflow-y: auto; }
+
+    /* หน้าที่เป็นตารางเดี่ยว (เจาะลึก/ตั้งค่า/เกิดซ้ำ) ให้เลื่อนภายในหน้าได้ */
+    #view-buildings-line.view-section.active,
+    #view-buildings-sc.view-section.active,
+    #view-settings.view-section.active,
+    #view-recurring.view-section.active { overflow-y: auto; }
+    #view-buildings-line .table-container,
+    #view-buildings-sc .table-container { max-height: calc(100vh - 220px); }
+
+    /* หน้าภาพรวม/Line: ให้ตารางอัปเดตล่าสุดเลื่อนในกล่อง ไม่ดันหน้ายาว */
+    #view-line .grid-2 { flex: 1; min-height: 0; align-items: stretch; }
+    #view-line .grid-2 .table-container { max-height: calc(100vh - 430px); }
+    #view-unified { min-height: 0; }
+  }
+
+
+
 </style>
 </head>
 <body class="dark-theme">
 
-<nav class="sidebar">
-  <div class="sidebar-logo" onclick="switchView('view-dashboard')"><i data-lucide="rocket"></i></div>
-  <div class="menu-group">
-    <div class="menu-icon active" data-target="view-dashboard" title="แดชบอร์ดหลัก"><i data-lucide="layout-dashboard"></i></div>
-    <div class="menu-icon" data-target="view-jobs" title="รายการงานทั้งหมด"><i data-lucide="clipboard-list"></i></div>
-    <div class="menu-icon" data-target="view-buildings" title="ข้อมูลอาคารเจาะลึก"><i data-lucide="building-2"></i></div>
-    <div class="menu-icon" data-target="view-analytics" title="ประเมินประสิทธิภาพรายตึก"><i data-lucide="activity"></i></div>
+<!-- หน้าจอ Loading ตอนเข้าเว็บครั้งแรก -->
+<div id="initialLoader">
+    <i data-lucide="loader-2" class="w-16 h-16 text-primary animate-spin mb-6"></i>
+    <h2 class="text-2xl font-bold text-main mb-2">Smart Maintenance Pro</h2>
+    <p id="initialLoaderText" class="text-muted text-sm flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-success animate-pulse"></span> กำลังซิงค์ข้อมูลล่าสุดจาก Cloud...</p>
+</div>
+
+<nav class="sidebar" id="appSidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-logo" onclick="window.switchView('view-unified')" title="ภาพรวมทั้งระบบ"><i data-lucide="rocket"></i></div>
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="window.toggleSidebar()" title="ย่อ/ขยายเมนู"><i data-lucide="panel-left-close"></i></button>
   </div>
-  <div class="menu-icon bottom" data-target="view-settings" title="ตั้งค่าระบบ"><i data-lucide="settings"></i></div>
+  <div class="menu-icon active" onclick="window.switchView('view-unified')" data-target="view-unified" title="ภาพรวมทั้งระบบ"><i data-lucide="layout-dashboard"></i><span class="menu-label">ภาพรวมทั้งระบบ</span></div>
+  <div class="menu-icon" onclick="window.switchView('view-line')" data-target="view-line" title="แดชบอร์ด Line Bot"><i data-lucide="message-square"></i><span class="menu-label">Line Bot</span></div>
+  <div class="menu-icon" onclick="window.switchView('view-smartcare')" data-target="view-smartcare" title="แดชบอร์ด Smartcare"><i data-lucide="file-spreadsheet"></i><span class="menu-label">Smartcare</span></div>
+  <div class="menu-icon" onclick="window.switchView('view-mailservice')" data-target="view-mailservice" title="Smartcare (Mail Service)"><i data-lucide="truck"></i><span class="menu-label">Mail Service</span></div>
+  <div class="menu-sep"></div>
+  <div class="menu-icon" onclick="window.switchView('view-buildings-line')" data-target="view-buildings-line" title="เจาะลึกอาคาร (Line)"><i data-lucide="building-2"></i><span class="menu-label">เจาะลึกอาคาร</span></div>
+  <div class="menu-icon" onclick="window.switchView('view-buildings-sc')" data-target="view-buildings-sc" title="เจาะลึกหมวดหมู่ (Smartcare)"><i data-lucide="tags"></i><span class="menu-label">เจาะลึกหมวดหมู่</span></div>
+  <div class="menu-icon" onclick="window.switchView('view-buildings-mail')" data-target="view-buildings-mail" title="เจาะลึกหมวดหมู่ (Mail Service)"><i data-lucide="mail-search"></i><span class="menu-label">เจาะลึก Mail</span></div>
+  <div class="menu-icon" onclick="window.switchView('view-recurring')" data-target="view-recurring" title="วิเคราะห์งานเกิดซ้ำ"><i data-lucide="repeat"></i><span class="menu-label">งานเกิดซ้ำ</span></div>
+  <div class="menu-icon bottom" onclick="window.switchView('view-settings')" data-target="view-settings" title="ตั้งค่าระบบ/ส่งออกข้อมูล"><i data-lucide="settings"></i><span class="menu-label">ตั้งค่า</span></div>
+  <!-- 🏠 เมนูกลับสู่เมนูหลัก — URL ตั้งค่าที่ตัวแปร MAIN_MENU_URL ในสคริปต์ -->
+  <div class="menu-icon" onclick="window.goToMainMenu()" title="กลับสู่เมนูหลัก" style="color: var(--primary);"><i data-lucide="home"></i><span class="menu-label">กลับสู่เมนูหลัก</span></div>
 </nav>
 
 <div class="main-wrapper">
-  
   <header class="app-header">
-    <div class="app-title"><i data-lucide="rocket" style="color:var(--primary); width:20px;"></i> Smart Maintenance <div class="dot" style="margin-left:4px;"></div></div>
-    
+    <div class="app-title text-primary"><i data-lucide="rocket"></i> Smart Maintenance Pro</div>
     <div class="header-controls">
-      <button class="btn-theme" onclick="toggleTheme()" title="สลับโหมดสว่าง/มืด"><i data-lucide="moon" style="width:18px;"></i></button>
-      <select id="monthFilter" class="select-month" onchange="applyFilter()">
-        <option value="all">รวมทุกเดือน (ปีนี้)</option>
+      <select id="yearFilter" class="custom-input" onchange="window.applyGlobalFilter()">
+        <option value="all">ทุกปี</option>
+      </select>
+      <select id="monthFilter" class="custom-input" onchange="window.applyGlobalFilter()">
+        <option value="all" selected>รวมทุกเดือน</option>
         <option value="0">มกราคม</option> <option value="1">กุมภาพันธ์</option> <option value="2">มีนาคม</option>
         <option value="3">เมษายน</option> <option value="4">พฤษภาคม</option> <option value="5">มิถุนายน</option>
         <option value="6">กรกฎาคม</option> <option value="7">สิงหาคม</option> <option value="8">กันยายน</option>
         <option value="9">ตุลาคม</option> <option value="10">พฤศจิกายน</option> <option value="11">ธันวาคม</option>
       </select>
-      <div class="sync-btn" onclick="refreshData()">
-        <span style="font-size:0.7rem; color:var(--text-muted);" id="syncTime">อัปเดตล่าสุดแล้ว</span>
-        <span style="font-size:0.75rem; color:var(--primary); font-weight:600; display:flex; align-items:center; gap:4px;" class="text-primary"><i data-lucide="refresh-cw" style="width:10px;"></i> อัปเดตทันที</span>
-      </div>
-      <div class="user-avatar"><i data-lucide="user" style="color:var(--text-main); width:18px;"></i></div>
+      <button class="btn-icon" onclick="window.toggleTheme()" title="สลับโหมดสี"><i data-lucide="moon" id="themeIconMoon"></i><i data-lucide="sun" id="themeIconSun" style="display:none;"></i></button>
+      <button class="btn-icon text-primary hover:border-primary" onclick="window.syncData()" title="ซิงค์ข้อมูลล่าสุดจาก Cloud"><i data-lucide="refresh-cw"></i></button>
     </div>
   </header>
 
-  <div id="view-dashboard" class="view-section active">
-    <div class="dashboard-layout">
-      <div class="left-col">
-        <div class="widget-box">
-          <div class="section-title"><i data-lucide="trophy" style="color:var(--warning);"></i> ภาพรวมสถิติทั้งปี (Yearly)</div>
-          <div class="kpi-grid-4">
-            <div class="kpi-card" onclick="openKpiModal('total', true)">
-              <div class="k-label">งานทั้งหมด</div><div class="k-val" style="color:var(--success);" id="y-total">0</div>
+  <div class="view-content-area" id="mainScrollArea">
+    
+    <!-- 1. UNIFIED DASHBOARD -->
+    <div id="view-unified" class="view-section active">
+        <div class="section-title"><i data-lucide="globe" class="text-indigo-500"></i> สรุปภาพรวมทั้งระบบ (Line + Smartcare) <span class="text-sm font-normal text-muted ml-2 filter-label"></span></div>
+        <div class="grid-5 mb-8">
+            <div class="kpi-card border-indigo-500/30" onclick="window.openUniversalModal('grand', 'total')">
+                <div class="k-label text-indigo-500">งานทั้งหมด <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i></div>
+                <div class="k-val text-indigo-500 num" id="u-grand-total">0</div><i data-lucide="layers" class="card-bg-icon text-indigo-500"></i>
             </div>
-            <div class="kpi-card" onclick="openKpiModal('pending', true)">
-              <div class="k-label">งานค้าง</div><div class="k-val" style="color:var(--warning);" id="y-open">0</div>
+            <div class="kpi-card border-emerald-500/30" onclick="window.openUniversalModal('grand', 'completed')">
+                <div class="k-label text-emerald-500">เสร็จสมบูรณ์ <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i></div>
+                <div class="k-val text-emerald-500 num" id="u-grand-done">0</div><i data-lucide="check-circle" class="card-bg-icon text-emerald-500"></i>
             </div>
-            <div class="kpi-card" onclick="openKpiModal('completed', true)">
-              <div class="k-label">เสร็จแล้ว</div><div class="k-val" style="color:var(--primary);" id="y-complete">0</div>
+            <div class="kpi-card border-sky-500/30" onclick="window.openUniversalModal('grand', 'accept')">
+                <div class="k-label text-sky-500">กำลังดำเนินการ <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i></div>
+                <div class="k-val text-sky-500 num" id="u-grand-accept">0</div><i data-lucide="loader-2" class="card-bg-icon text-sky-500"></i>
             </div>
-            <div class="kpi-card" onclick="openKpiModal('sla', true)">
-              <div class="k-label">เกิน SLA</div><div class="k-val" style="color:var(--danger);" id="y-sla">0</div>
+            <div class="kpi-card border-amber-500/30" onclick="window.openUniversalModal('grand', 'pending')">
+                <div class="k-label text-amber-500">รอดำเนินการ <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i></div>
+                <div class="k-val text-amber-500 num" id="u-grand-pending">0</div><i data-lucide="clock" class="card-bg-icon text-amber-500"></i>
             </div>
-          </div>
+            <div class="kpi-card border-rose-500/30" onclick="window.openUniversalModal('grand', 'sla')">
+                <div class="k-label text-rose-500">เกิน SLA ถาวร <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i></div>
+                <div class="k-val text-rose-500 num" id="u-grand-sla">0</div><i data-lucide="alert-triangle" class="card-bg-icon text-rose-500"></i>
+            </div>
         </div>
 
-        <div class="widget-box">
-          <div class="section-title" id="monthlyTitle"><i data-lucide="calendar" style="color:var(--primary);"></i> สรุปเดือนที่เลือก</div>
-          <div class="kpi-grid-3">
-            <div class="m-card" onclick="openKpiModal('total', false)">
-              <div><div class="k-label">รับเข้ามา (เดือนนี้)</div><div class="k-val" style="color:var(--success);" id="m-total">0</div></div>
-              <div class="m-icon" style="background:rgba(16,185,129,0.1); color:var(--success);"><i data-lucide="clipboard-list"></i></div>
+        <div class="widget-box mb-8">
+            <div class="section-title" style="margin-bottom:16px;"><i data-lucide="pie-chart" class="text-indigo-500"></i> อัตรางานทันเวลา (SLA) รวมทั้งระบบ <span class="text-sm font-normal text-muted ml-2 filter-label"></span></div>
+            <div style="display:flex; align-items:center; gap:28px; flex-wrap:wrap;">
+                <div style="position:relative; width:120px; height:120px; flex-shrink:0;">
+                    <svg viewBox="0 0 120 120" style="width:100%; height:100%; transform:rotate(-90deg);">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="var(--card-border)" stroke-width="12"></circle>
+                        <circle id="grand-sla-ring" cx="60" cy="60" r="52" fill="none" stroke="var(--success)" stroke-width="12" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="transition:stroke-dashoffset 1s ease, stroke 0.4s;"></circle>
+                    </svg>
+                    <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                        <span class="num" id="grand-sla-pct" style="font-size:1.6rem; font-weight:700;">–</span>
+                        <span style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted);">on-time</span>
+                    </div>
+                </div>
+                <div style="flex:1; min-width:220px; display:flex; flex-direction:column; gap:10px; font-size:0.9rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span style="width:9px;height:9px;border-radius:50%;background:var(--success);display:inline-block;"></span> ตรงเวลา</span><span class="num font-bold" id="grand-sla-met">0</span></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;"><span style="display:flex; align-items:center; gap:8px;"><span style="width:9px;height:9px;border-radius:50%;background:var(--danger);display:inline-block;"></span> เกินเวลา</span><span class="num font-bold" id="grand-sla-breach">0</span></div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid var(--card-border); padding-top:10px; color:var(--text-muted);"><span>วัดผลได้ทั้งหมด (Line + Smartcare)</span><span class="num" id="grand-sla-measured">0</span></div>
+                </div>
             </div>
-            <div class="m-card" onclick="openKpiModal('pending', false)">
-              <div><div class="k-label">งานค้าง (เดือนนี้)</div><div class="k-val" style="color:var(--warning);" id="m-open">0</div></div>
-              <div class="m-icon" style="background:rgba(245,158,11,0.1); color:var(--warning);"><i data-lucide="hourglass"></i></div>
-            </div>
-            <div class="m-card" onclick="openKpiModal('completed', false)">
-              <div><div class="k-label">เสร็จแล้ว (เดือนนี้)</div><div class="k-val" style="color:var(--primary);" id="m-complete">0</div></div>
-              <div class="m-icon" style="background:rgba(59,130,246,0.1); color:var(--primary);"><i data-lucide="check-square"></i></div>
-            </div>
-          </div>
         </div>
 
-        <div class="widget-box b-wrapper" style="padding-bottom: 8px;">
-          <div class="section-title"><i data-lucide="layout-grid" style="color:var(--primary);"></i> สรุปสถานะแยกตามอาคาร <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400; margin-left:auto; cursor:pointer;" onclick="switchView('view-buildings')">ดูตารางรายตึก ></span></div>
-          <div class="b-grid" id="buildingContainer"></div>
+        <div class="grid-3">
+            <!-- Line Summary -->
+            <div class="widget-box border-t-4 border-t-primary">
+                <div class="section-title"><i data-lucide="message-square" class="text-primary"></i> ข้อมูลระบบ Line Bot <span class="text-sm font-normal text-muted ml-auto filter-label"></span></div>
+                <div class="grid-2">
+                    <div class="kpi-card" onclick="window.openUniversalModal('line', 'total')"><div class="k-label">รับแจ้ง <span class="pill pill-primary ml-2">Line</span></div><div class="k-val text-primary num" id="u-line-total">0</div></div>
+                    <div class="kpi-card" onclick="window.openUniversalModal('line', 'pending')"><div class="k-label">รอดำเนินการ <span class="pill pill-warning ml-2">Line</span></div><div class="k-val text-warning num" id="u-line-pending">0</div></div>
+                    <div class="kpi-card" onclick="window.openUniversalModal('line', 'completed')"><div class="k-label">เสร็จสิ้น <span class="pill pill-success ml-2">Line</span></div><div class="k-val text-success num" id="u-line-done">0</div></div>
+                    <div class="kpi-card border-rose-500/20" onclick="window.openUniversalModal('line', 'sla')"><div class="k-label text-rose-500">เกิน SLA <span class="pill pill-danger ml-2">Line</span></div><div class="k-val text-danger num" id="u-line-sla">0</div></div>
+                </div>
+            </div>
+
+            <!-- Smartcare Summary -->
+            <div class="widget-box border-t-4 border-t-purple-500">
+                <div class="section-title"><i data-lucide="file-spreadsheet" class="text-purple-500"></i> ข้อมูลระบบ Smartcare <span class="text-sm font-normal text-muted ml-auto filter-label"></span></div>
+                <div id="u-smartcare-empty" class="text-center py-8 text-muted">
+                    <i data-lucide="cloud-off" class="mx-auto mb-2 opacity-50" style="width:40px; height:40px;"></i><p class="text-sm">ไม่มีข้อมูลใน Cloud กรุณาให้ Admin วางข้อมูลใน Sheet Ticket และ Activity</p>
+                </div>
+                <div id="u-smartcare-data" style="display: none; flex-direction: column;">
+                    <div class="grid-2 flex-grow">
+                        <div class="kpi-card border-purple-500/20" onclick="window.openUniversalModal('smartcare', 'total')"><div class="k-label">รับแจ้ง <span class="pill ml-2" style="background:rgba(139,92,246,0.1); color:var(--purple);">SC</span></div><div class="k-val text-purple-500 num" id="u-sc-total">0</div></div>
+                        <div class="kpi-card border-warning/20" onclick="window.openUniversalModal('smartcare', 'pending')"><div class="k-label">ค้างทั้งหมด <span class="pill pill-warning ml-2">SC</span></div><div class="k-val text-warning num" id="u-sc-pending">0</div></div>
+                        <div class="kpi-card border-success/20" onclick="window.openUniversalModal('smartcare', 'completed')"><div class="k-label">เสร็จสิ้น <span class="pill pill-success ml-2">SC</span></div><div class="k-val text-success num" id="u-sc-done">0</div></div>
+                        <div class="kpi-card border-danger/20" onclick="window.openUniversalModal('smartcare', 'sla')"><div class="k-label text-rose-500">เกิน SLA <span class="pill pill-danger ml-2">SC</span></div><div class="k-val text-danger num" id="u-sc-sla">0</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mail Service Summary -->
+            <div class="widget-box border-t-4 border-t-teal-500">
+                <div class="section-title"><i data-lucide="truck" class="text-teal-500"></i> ระบบขนส่งเอกสาร (Mail) <span class="text-sm font-normal text-muted ml-auto filter-label"></span></div>
+                <div id="u-mail-empty" class="text-center py-8 text-muted">
+                    <i data-lucide="cloud-off" class="mx-auto mb-2 opacity-50" style="width:40px; height:40px;"></i><p class="text-sm">ยังไม่มีงานขนส่งเอกสาร</p>
+                </div>
+                <div id="u-mail-data" style="display: none; flex-direction: column;">
+                    <div class="grid-2 flex-grow">
+                        <div class="kpi-card" style="border-color:rgba(20,184,166,0.2)" onclick="window.openUniversalModal('mailservice', 'total')"><div class="k-label">รับแจ้ง <span class="pill ml-2" style="background:rgba(20,184,166,0.12); color:var(--teal);">Mail</span></div><div class="k-val num" style="color:var(--teal)" id="u-mail-total">0</div></div>
+                        <div class="kpi-card border-warning/20" onclick="window.openUniversalModal('mailservice', 'pending')"><div class="k-label">ค้างทั้งหมด <span class="pill pill-warning ml-2">Mail</span></div><div class="k-val text-warning num" id="u-mail-pending">0</div></div>
+                        <div class="kpi-card border-success/20" onclick="window.openUniversalModal('mailservice', 'completed')"><div class="k-label">เสร็จสิ้น <span class="pill pill-success ml-2">Mail</span></div><div class="k-val text-success num" id="u-mail-done">0</div></div>
+                        <div class="kpi-card border-danger/20" onclick="window.openUniversalModal('mailservice', 'sla')"><div class="k-label text-rose-500">เกิน SLA <span class="pill pill-danger ml-2">Mail</span></div><div class="k-val text-danger num" id="u-mail-sla">0</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. LINE BOT DASHBOARD -->
+    <div id="view-line" class="view-section">
+        <div class="section-title text-primary"><i data-lucide="message-square"></i> แดชบอร์ดข้อมูล Line Bot <span class="text-sm font-normal text-muted ml-2 filter-label"></span></div>
+        
+        <div class="grid-5 mb-6">
+            <div class="kpi-card" onclick="window.openUniversalModal('line', 'total')"><div class="k-label">งานรับแจ้งทั้งหมด</div><div class="k-val text-primary num" id="line-full-total">0</div><i data-lucide="clipboard-list" class="card-bg-icon text-primary"></i></div>
+            <div class="kpi-card" onclick="window.openUniversalModal('line', 'pending')"><div class="k-label">รอดำเนินการ (Pending)</div><div class="k-val text-warning num" id="line-full-pending">0</div><i data-lucide="clock" class="card-bg-icon text-warning"></i></div>
+            <div class="kpi-card" onclick="window.openUniversalModal('line', 'completed')"><div class="k-label">เสร็จสิ้น (Completed)</div><div class="k-val text-success num" id="line-full-done">0</div><i data-lucide="check-circle" class="card-bg-icon text-success"></i></div>
+            <div class="kpi-card" onclick="window.openUniversalModal('line', 'sla')"><div class="k-label text-rose-500">เกิน SLA ถาวร</div><div class="k-val text-danger num" id="line-full-sla">0</div><i data-lucide="alert-triangle" class="card-bg-icon text-danger"></i></div>
+            <div class="kpi-card" style="align-items:center; text-align:center;">
+                <div class="k-label" style="width:100%; justify-content:center;">ทันเวลา (SLA)</div>
+                <div style="position:relative; width:78px; height:78px; margin:2px auto 0;">
+                    <svg viewBox="0 0 120 120" style="width:100%; height:100%; transform:rotate(-90deg);">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="var(--card-border)" stroke-width="14"></circle>
+                        <circle id="line-sla-ring" cx="60" cy="60" r="52" fill="none" stroke="var(--success)" stroke-width="14" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="transition:stroke-dashoffset 1s ease, stroke 0.4s;"></circle>
+                    </svg>
+                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+                        <span class="num" id="line-sla-pct" style="font-size:1.15rem; font-weight:700;">–</span>
+                    </div>
+                </div>
+                <div class="num" style="font-size:0.7rem; color:var(--text-muted); margin-top:6px;"><span id="line-sla-met">0</span>/<span id="line-sla-measured">0</span> งาน</div>
+                <span id="line-sla-breach" style="display:none;"></span>
+            </div>
         </div>
 
-        <div class="widget-box" style="padding: 12px 16px; border-color: rgba(239, 68, 68, 0.4);">
-          <div style="color:var(--danger); font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-            <i data-lucide="alert-triangle" style="width:14px;"></i> งานค้างเกิน 7 วัน (SLA Alert)
-          </div>
-          <div id="slaContainer" style="max-height: 60px; overflow-y: auto; padding-right:5px; font-size: 0.8rem;"></div>
-        </div>
-      </div>
 
-      <div class="right-col">
-        <div class="widget-box table-box" style="flex: 1;">
-          <div class="section-title">
-            <i data-lucide="wrench" style="color:var(--primary);"></i> งานอัปเดตล่าสุด
-            <span style="margin-left:auto; font-size:0.75rem; color:var(--primary); cursor:pointer; font-weight:400;" onclick="switchView('view-jobs')">ดูตารางเต็ม ></span>
-          </div>
-          <div class="table-scroll">
+        <div class="grid-2">
+            <div class="flex flex-col gap-4">
+                <div class="widget-box">
+                    <div class="font-medium mb-4 text-muted flex justify-between">สรุปแยกตามอาคาร <span class="text-primary text-sm cursor-pointer hover:underline" onclick="window.switchView('view-buildings-line')">เจาะลึก ></span></div>
+                    <div class="grid-3" id="lineBuildingContainer"></div>
+                </div>
+                <div class="widget-box flex-grow">
+                    <div class="font-medium mb-4 text-muted">Trend เปรียบเทียบงาน</div>
+                    <div class="relative h-[250px]"><canvas id="lineTrendChart"></canvas></div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="widget-box flex-grow flex flex-col">
+                    <div class="font-medium mb-4 text-muted flex justify-between items-center"><span class="flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4 text-warning"></i> อัปเดตล่าสุด (งานค้างขึ้นก่อน)</span></div>
+                    <div class="table-container flex-grow h-[550px]">
+                        <table>
+                            <thead><tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>สถานะ</th><th>SLA</th></tr></thead>
+                            <tbody id="lineLatestTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. SMARTCARE DASHBOARD -->
+    <div id="view-smartcare" class="view-section">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <div class="section-title text-purple-500 m-0"><i data-lucide="file-spreadsheet"></i> แดชบอร์ดประมวลผล Smartcare <span class="text-sm font-normal text-muted ml-2 filter-label"></span></div>
+        </div>
+
+        <div id="sc-dash-section" style="display: none; flex-direction: column; gap: 16px;">
+            <!-- Top KPI Row -->
+            <div class="grid grid-cols-4 gap-4 sc-layout-top">
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('smartcare', 'total')">
+                    <div><div class="text-sm font-medium text-muted mb-1">งานที่เข้าเกณฑ์ SLA</div><div class="sc-kpi-val num text-main text-2xl font-bold" id="sc-ui-total">0</div><div class="text-[10px] text-muted mt-1">Submit -> Accept -> Done</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"><i data-lucide="clipboard-list"></i></div>
+                </div>
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('smartcare', 'completed')">
+                    <div><div class="text-sm font-medium text-muted mb-1">เสร็จสิ้น (Done)</div><div class="sc-kpi-val num text-emerald-500 text-2xl font-bold" id="sc-ui-done">0</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i data-lucide="check-circle-2"></i></div>
+                </div>
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('smartcare', 'accept')">
+                    <div><div class="text-sm font-medium text-muted mb-1">กำลังดำเนินการ</div><div class="sc-kpi-val num text-amber-500 text-2xl font-bold" id="sc-ui-accept">0</div><div class="text-[10px] text-muted mt-1">Accept Task</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500"><i data-lucide="loader"></i></div>
+                </div>
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('smartcare', 'submit')">
+                    <div><div class="text-sm font-medium text-muted mb-1">รอดำเนินการ</div><div class="sc-kpi-val num text-sky-500 text-2xl font-bold" id="sc-ui-submit">0</div><div class="text-[10px] text-muted mt-1">Submit</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-500"><i data-lucide="inbox"></i></div>
+                </div>
+            </div>
+
+            <!-- Middle Row (Donut, Over/Vote, Bars) -->
+            <div class="grid grid-cols-3 gap-4 sc-layout-mid">
+                <!-- Donut -->
+                <div class="sc-card">
+                    <div class="font-bold text-sm mb-1 flex items-center gap-2 text-main"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i> ภาพรวม SLA (วันทำงาน)</div>
+                    <div class="text-[10px] text-muted mb-6">คำนวณจากเวลาที่ Accept จนถึง Done</div>
+                    <div class="flex items-center gap-6">
+                        <div class="relative w-28 h-28 shrink-0">
+                            <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                                <circle cx="60" cy="60" r="52" fill="none" stroke-width="12" class="stroke-slate-100 dark:stroke-slate-800"></circle>
+                                <circle id="sc-ui-ring" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-linecap="round" class="stroke-emerald-500 transition-all duration-1000" stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-bold num text-main" id="sc-ui-pct">–</span><span class="text-[9px] uppercase tracking-wider text-muted">on-time</span></div>
+                        </div>
+                        <div class="flex-grow space-y-2 text-xs">
+                            <div class="flex justify-between"><span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> ตรงเวลา</span><span class="font-bold num" id="sc-ui-met">0</span></div>
+                            <div class="flex justify-between"><span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-rose-500"></div> เกินเวลา</span><span class="font-bold num" id="sc-ui-breach">0</span></div>
+                            <div class="flex justify-between border-t border-card-border pt-2 text-muted"><span>วัดผลได้ทั้งหมด</span><span class="num" id="sc-ui-measured">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Over SLA & Vote -->
+                <div class="flex flex-col gap-4">
+                    <div class="sc-card sc-card-hover flex-1 flex flex-col justify-center" onclick="window.openUniversalModal('smartcare', 'sla')">
+                        <div class="flex justify-between items-start">
+                            <div><div class="text-xs font-medium text-muted mb-1">งานที่เกิน SLA ทั้งหมด (ถาวร)</div><div class="text-3xl font-bold num text-rose-500" id="sc-ui-sla-total">0</div><div class="text-[10px] text-muted mt-1"><span id="sc-ui-sla-done" class="num">0</span> ปิดช้า · <span id="sc-ui-sla-pend" class="num">0</span> ค้างเกินเวลา</div></div>
+                            <div class="w-8 h-8 rounded-md bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-500"><i data-lucide="alert-triangle" class="w-4 h-4"></i></div>
+                        </div>
+                    </div>
+                    <!-- Vote Card (Independent) -->
+                    <div class="sc-card sc-gradient-card flex-1 flex flex-col justify-center shadow-lg shadow-purple-500/30">
+                        <i data-lucide="star" class="absolute -right-4 -bottom-4 w-24 h-24 opacity-20"></i>
+                        <div class="text-xs font-medium mb-1 opacity-90">คะแนนโหวตเฉลี่ย (CSAT)</div>
+                        <div class="flex items-end justify-between relative z-10">
+                            <div class="text-4xl font-bold num leading-none" id="sc-ui-vote-avg">0.0<span class="text-sm font-normal opacity-70"> / 5.0</span></div>
+                            <div class="flex gap-1" id="sc-ui-vote-stars"></div>
+                        </div>
+                        <div class="text-[10px] opacity-70 mt-1 relative z-10">มีผู้โหวต <span class="num" id="sc-ui-vote-count">0</span> งาน · อ่านอิสระจาก Sheet Ticket</div>
+                    </div>
+                </div>
+
+                <!-- Category Bars -->
+                <div class="sc-card flex flex-col">
+                    <div class="font-bold text-sm mb-1 flex items-center gap-2 text-main"><i data-lucide="list-check" class="w-4 h-4 text-indigo-500"></i> SLA แยกตามประเภทงาน</div>
+                    <div class="text-[10px] text-muted mb-4">อัตราส่วนงานที่เสร็จตรงเวลา (%)</div>
+                    <div id="sc-ui-cat-list" class="flex-grow space-y-3 overflow-y-auto max-h-[160px] pr-2"></div>
+                </div>
+            </div>
+
+            <!-- Category Cards (4 cols) -->
+            <div>
+                <h3 class="text-sm font-bold text-main mb-3 flex items-center gap-2"><i data-lucide="tags" class="w-4 h-4 text-indigo-500"></i> สรุปงานซ่อมแยกประเภทหลัก</h3>
+                <div class="grid grid-cols-4 gap-4 sc-layout-bot" id="sc-ui-cat-cards"></div>
+            </div>
+
+            <!-- Bottom Row (Chart & Table) -->
+            <div class="grid grid-cols-2 gap-4 sc-layout-bot">
+                <div class="sc-card flex flex-col h-[350px]">
+                    <h3 class="text-sm font-bold text-main mb-4 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-500"></i> สถิติการใช้บริการแยกตามฝ่าย (Top 10)</h3>
+                    <div class="relative flex-grow"><canvas id="sc-ui-chart"></canvas></div>
+                </div>
+                <div class="sc-card flex flex-col h-[350px]">
+                    <h3 class="text-sm font-bold text-main mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-amber-500"></i> สถานะงานปัจจุบัน (Pending Tasks)</h3>
+                    <div class="table-container flex-grow">
+                        <table>
+                            <thead><tr><th class="py-2">Ticket No.</th><th class="py-2">ประเภทงาน</th><th class="py-2 text-center">SLA สถานะ</th><th class="py-2 text-center">ขั้นตอน</th></tr></thead>
+                            <tbody id="sc-ui-pending-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="text-[10px] text-muted mt-2">* คลิกแถวเพื่อดูรายละเอียดเต็มแบบ (Full Detail)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 3B. SMARTCARE MAIL SERVICE -->
+    <div id="view-mailservice" class="view-section">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <div class="section-title text-teal-500 m-0"><i data-lucide="truck"></i> แดชบอร์ดประมวลผล Smartcare (Mail Service) <span class="text-sm font-normal text-muted ml-2 filter-label"></span></div>
+        </div>
+
+        <div id="mail-dash-section" style="display: none; flex-direction: column; gap: 16px;">
+            <!-- Top KPI Row -->
+            <div class="grid grid-cols-4 gap-4 sc-layout-top">
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('mailservice', 'total')">
+                    <div><div class="text-sm font-medium text-muted mb-1">งานที่เข้าเกณฑ์ SLA</div><div class="sc-kpi-val num text-main text-2xl font-bold" id="mail-ui-total">0</div><div class="text-[10px] text-muted mt-1">Submit -> Accept -> Done</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"><i data-lucide="clipboard-list"></i></div>
+                </div>
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('mailservice', 'completed')">
+                    <div><div class="text-sm font-medium text-muted mb-1">เสร็จสิ้น (Done)</div><div class="sc-kpi-val num text-emerald-500 text-2xl font-bold" id="mail-ui-done">0</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i data-lucide="check-circle-2"></i></div>
+                </div>
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('mailservice', 'accept')">
+                    <div><div class="text-sm font-medium text-muted mb-1">กำลังดำเนินการ</div><div class="sc-kpi-val num text-amber-500 text-2xl font-bold" id="mail-ui-accept">0</div><div class="text-[10px] text-muted mt-1">Accept Task</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500"><i data-lucide="loader"></i></div>
+                </div>
+                <div class="sc-card sc-card-hover flex justify-between items-start" onclick="window.openUniversalModal('mailservice', 'submit')">
+                    <div><div class="text-sm font-medium text-muted mb-1">รอดำเนินการ</div><div class="sc-kpi-val num text-sky-500 text-2xl font-bold" id="mail-ui-submit">0</div><div class="text-[10px] text-muted mt-1">Submit</div></div>
+                    <div class="w-10 h-10 rounded-lg bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-500"><i data-lucide="inbox"></i></div>
+                </div>
+            </div>
+
+            <!-- Middle Row (Donut, Over/Vote, Bars) -->
+            <div class="grid grid-cols-3 gap-4 sc-layout-mid">
+                <!-- Donut -->
+                <div class="sc-card">
+                    <div class="font-bold text-sm mb-1 flex items-center gap-2 text-main"><i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i> ภาพรวม SLA (วันทำงาน)</div>
+                    <div class="text-[10px] text-muted mb-6">คำนวณจากเวลาที่ Accept จนถึง Done</div>
+                    <div class="flex items-center gap-6">
+                        <div class="relative w-28 h-28 shrink-0">
+                            <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                                <circle cx="60" cy="60" r="52" fill="none" stroke-width="12" class="stroke-slate-100 dark:stroke-slate-800"></circle>
+                                <circle id="mail-ui-ring" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-linecap="round" class="stroke-emerald-500 transition-all duration-1000" stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-bold num text-main" id="mail-ui-pct">–</span><span class="text-[9px] uppercase tracking-wider text-muted">on-time</span></div>
+                        </div>
+                        <div class="flex-grow space-y-2 text-xs">
+                            <div class="flex justify-between"><span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> ตรงเวลา</span><span class="font-bold num" id="mail-ui-met">0</span></div>
+                            <div class="flex justify-between"><span class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-rose-500"></div> เกินเวลา</span><span class="font-bold num" id="mail-ui-breach">0</span></div>
+                            <div class="flex justify-between border-t border-card-border pt-2 text-muted"><span>วัดผลได้ทั้งหมด</span><span class="num" id="mail-ui-measured">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Over SLA & Vote -->
+                <div class="flex flex-col gap-4">
+                    <div class="sc-card sc-card-hover flex-1 flex flex-col justify-center" onclick="window.openUniversalModal('mailservice', 'sla')">
+                        <div class="flex justify-between items-start">
+                            <div><div class="text-xs font-medium text-muted mb-1">งานที่เกิน SLA ทั้งหมด (ถาวร)</div><div class="text-3xl font-bold num text-rose-500" id="mail-ui-sla-total">0</div><div class="text-[10px] text-muted mt-1"><span id="mail-ui-sla-done" class="num">0</span> ปิดช้า · <span id="mail-ui-sla-pend" class="num">0</span> ค้างเกินเวลา</div></div>
+                            <div class="w-8 h-8 rounded-md bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-500"><i data-lucide="alert-triangle" class="w-4 h-4"></i></div>
+                        </div>
+                    </div>
+                    <!-- Vote Card (Independent) -->
+                    <div class="sc-card mail-gradient-card flex-1 flex flex-col justify-center shadow-lg shadow-teal-500/30">
+                        <i data-lucide="star" class="absolute -right-4 -bottom-4 w-24 h-24 opacity-20"></i>
+                        <div class="text-xs font-medium mb-1 opacity-90">คะแนนโหวตเฉลี่ย (CSAT)</div>
+                        <div class="flex items-end justify-between relative z-10">
+                            <div class="text-4xl font-bold num leading-none" id="mail-ui-vote-avg">0.0<span class="text-sm font-normal opacity-70"> / 5.0</span></div>
+                            <div class="flex gap-1" id="mail-ui-vote-stars"></div>
+                        </div>
+                        <div class="text-[10px] opacity-70 mt-1 relative z-10">มีผู้โหวต <span class="num" id="mail-ui-vote-count">0</span> งาน · อ่านอิสระจาก Sheet Ticket</div>
+                    </div>
+                </div>
+
+                <!-- Category Bars -->
+                <div class="sc-card flex flex-col">
+                    <div class="font-bold text-sm mb-1 flex items-center gap-2 text-main"><i data-lucide="list-check" class="w-4 h-4 text-indigo-500"></i> SLA แยกตามประเภทงาน</div>
+                    <div class="text-[10px] text-muted mb-4">อัตราส่วนงานที่เสร็จตรงเวลา (%)</div>
+                    <div id="mail-ui-cat-list" class="flex-grow space-y-3 overflow-y-auto max-h-[160px] pr-2"></div>
+                </div>
+            </div>
+
+            <!-- Category Cards (4 cols) -->
+            <div>
+                <h3 class="text-sm font-bold text-main mb-3 flex items-center gap-2"><i data-lucide="tags" class="w-4 h-4 text-indigo-500"></i> สรุปงานซ่อมแยกประเภทหลัก</h3>
+                <div class="grid grid-cols-4 gap-4 sc-layout-bot" id="mail-ui-cat-cards"></div>
+            </div>
+
+            <!-- Bottom Row (Chart & Table) -->
+            <div class="grid grid-cols-2 gap-4 sc-layout-bot">
+                <div class="sc-card flex flex-col h-[350px]">
+                    <h3 class="text-sm font-bold text-main mb-4 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-500"></i> สถิติการใช้บริการแยกตามฝ่าย (Top 10)</h3>
+                    <div class="relative flex-grow"><canvas id="mail-ui-chart"></canvas></div>
+                </div>
+                <div class="sc-card flex flex-col h-[350px]">
+                    <h3 class="text-sm font-bold text-main mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-amber-500"></i> สถานะงานปัจจุบัน (Pending Tasks)</h3>
+                    <div class="table-container flex-grow">
+                        <table>
+                            <thead><tr><th class="py-2">Ticket No.</th><th class="py-2">ประเภทงาน</th><th class="py-2 text-center">SLA สถานะ</th><th class="py-2 text-center">ขั้นตอน</th></tr></thead>
+                            <tbody id="mail-ui-pending-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="text-[10px] text-muted mt-2">* คลิกแถวเพื่อดูรายละเอียดเต็มแบบ (Full Detail)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 4. LINE BUILDINGS -->
+    <div id="view-buildings-line" class="view-section widget-box">
+        <div class="section-title mb-4"><i data-lucide="building-2" class="text-primary"></i> ข้อมูลเจาะลึกรายอาคาร (Line)</div>
+        <div class="flex gap-2 flex-wrap mb-6" id="lineBuildingTabs"></div>
+        <div class="table-container" style="max-height: 60vh;">
             <table>
-              <thead><tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>เวลา</th><th>Status</th></tr></thead>
-              <tbody id="dashTableBody"><tr><td colspan="5" align="center">กำลังโหลด...</td></tr></tbody>
+                <thead><tr><th>Ticket</th><th>รายละเอียดปัญหา</th><th>วันที่แจ้ง</th><th>สถานะ</th><th>SLA</th></tr></thead>
+                <tbody id="lineBuildingTableBody"></tbody>
             </table>
-          </div>
         </div>
+        <div class="text-xs text-muted mt-3">* คลิกแถวเพื่อดูรายละเอียดแบบเต็ม (Full Detail)</div>
+    </div>
 
-        <div class="widget-box chart-box" style="flex: 1.5; min-height: 0;">
-          <div class="section-title" style="flex-shrink:0;"><i data-lucide="trending-up" style="color:var(--success);"></i> Trend เปรียบเทียบงาน <span id="chartLabel" style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:8px;"></span></div>
-          <div class="chart-container" style="flex-grow:1; position:relative; min-height:0;"><canvas id="trendChart"></canvas></div>
+    <!-- 5. SMARTCARE CATEGORIES -->
+    <div id="view-buildings-sc" class="view-section widget-box">
+        <div class="section-title mb-4"><i data-lucide="tags" class="text-purple-500"></i> ข้อมูลเจาะลึกรายหมวดหมู่งาน (Smartcare)</div>
+        <div class="flex gap-2 flex-wrap mb-6" id="scBuildingTabs"></div>
+        <div class="table-container" style="max-height: 60vh;">
+            <table>
+                <thead><tr><th>Ticket</th><th>ฝ่ายแจ้ง (Faction)</th><th>รายละเอียด (Description)</th><th>สถานะ</th><th>SLA</th></tr></thead>
+                <tbody id="scBuildingTableBody"></tbody>
+            </table>
         </div>
-      </div>
+        <div class="text-xs text-muted mt-3">* คลิกแถวเพื่อดูรายละเอียดแบบเต็ม (Full Detail)</div>
     </div>
-  </div>
 
-  <div id="view-jobs" class="view-section widget-box" style="margin-bottom: 0; padding: 20px;">
-    <div class="full-table-header">
-      <div class="section-title" style="margin-bottom: 0; font-size: 1.2rem;"><i data-lucide="clipboard-list" style="color:var(--primary); width:20px;"></i> รายการแจ้งซ่อมทั้งหมด</div>
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 ค้นหา Ticket, อาคาร หรือรายละเอียดปัญหา..." onkeyup="searchFullTable()">
-    </div>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Ticket</th>
-            <th>อาคาร</th>
-            <th>รายละเอียดปัญหา</th>
-            <th>วันที่รับแจ้ง</th>
-            <th>ใช้เวลาดำเนินการ</th>
-            <th>สถานะ</th>
-          </tr>
-        </thead>
-        <tbody id="fullTableBody">
-          <tr><td colspan="6" align="center">กำลังโหลด...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="view-buildings" class="view-section widget-box" style="margin-bottom: 0; padding: 20px;">
-    <div class="section-title" style="font-size: 1.2rem; margin-bottom: 10px;"><i data-lucide="building-2" style="color:var(--primary); width:20px;"></i> ข้อมูลเจาะลึกรายอาคาร (เดือนที่เลือก)</div>
-    
-    <div class="b-tabs-container" id="buildingTabsContainer">
-      </div>
-
-    <div class="section-title" id="activeBuildingTitle" style="margin-top: 10px; color: var(--warning);"></div>
-    
-    <div class="table-scroll" style="border-top: 1px solid var(--card-border); padding-top: 10px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Ticket</th>
-            <th>รายละเอียดปัญหา</th>
-            <th>วันที่รับแจ้ง</th>
-            <th>ใช้เวลาดำเนินการ</th>
-            <th>สถานะ</th>
-          </tr>
-        </thead>
-        <tbody id="buildingTableBody">
-          <tr><td colspan="5" align="center">กำลังโหลดข้อมูล...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="view-analytics" class="view-section widget-box" style="margin-bottom: 0; padding: 20px;">
-    <div class="section-title" style="font-size: 1.2rem; margin-bottom: 20px;"><i data-lucide="activity" style="color:var(--primary); width:20px;"></i> ประเมินประสิทธิภาพรายอาคาร (Performance Report)</div>
-    
-    <div class="analytics-grid" id="analyticsGrid">
-      </div>
-  </div>
-
-  <div id="view-settings" class="view-section widget-box" style="margin-bottom: 0; padding: 20px; align-items: center; justify-content: center;">
-    <div class="section-title" style="font-size: 1.5rem; margin-bottom: 30px;"><i data-lucide="settings" style="color:var(--primary); width:28px;"></i> ตั้งค่าระบบ (Settings)</div>
-    
-    <div class="settings-container">
-      <div class="set-row">
-        <div>
-          <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">โหมดผู้ดูแลระบบ (Admin Mode)</div>
-          <div style="font-size: 0.85rem; color: var(--text-muted);">เปิดใช้งานเพื่อแก้ไขข้อมูล หรือ Export Report</div>
+    <!-- 5B. MAIL SERVICE CATEGORIES -->
+    <div id="view-buildings-mail" class="view-section widget-box">
+        <div class="section-title mb-4"><i data-lucide="truck" class="text-teal-500"></i> ข้อมูลเจาะลึกรายหมวดหมู่งาน (Mail Service)</div>
+        <div class="flex gap-2 flex-wrap mb-6" id="mailBuildingTabs"></div>
+        <div class="table-container" style="max-height: 60vh;">
+            <table>
+                <thead><tr><th>Ticket</th><th>ฝ่ายแจ้ง (Faction)</th><th>รายละเอียด (Description)</th><th>สถานะ</th><th>SLA</th></tr></thead>
+                <tbody id="mailBuildingTableBody"></tbody>
+            </table>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="adminToggle" onchange="toggleAdmin()">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="set-row" style="margin-top: 20px; flex-direction: column; align-items: stretch; background: transparent; border: none; padding: 0;">
-        <button class="btn-primary" onclick="window.location.href='https://add00917-hue.github.io/GNR3-Building-MS/'">
-          <i data-lucide="external-link"></i> กลับสู่หน้าเมนูหลัก (Main Portal)
-        </button>
-      </div>
+        <div class="text-xs text-muted mt-3">* คลิกแถวเพื่อดูรายละเอียดแบบเต็ม (Full Detail)</div>
     </div>
-  </div>
 
+    <!-- 6. RECURRING JOBS -->
+    <div id="view-recurring" class="view-section">
+        <div class="section-title text-teal-500 mb-2"><i data-lucide="repeat"></i> วิเคราะห์งานเกิดซ้ำ (Recurring Jobs) <span class="text-sm font-normal text-muted ml-2 filter-label"></span></div>
+        <p class="text-sm text-muted mb-6">กรองฉลาด: แยกตึก, แยกเดือน และจับกลุ่ม Keyword อัตโนมัติ (คลิกที่แถวเพื่อดูรายการ Ticket)</p>
+        
+        <div class="grid-2">
+            <!-- Line Recurring -->
+            <div class="widget-box border-t-4 border-primary flex flex-col">
+                <div class="font-bold text-primary mb-4 flex items-center gap-2"><i data-lucide="message-square"></i> ระบบ Line Bot</div>
+                <div class="table-container flex-grow h-[450px]">
+                    <table>
+                        <thead><tr><th>เดือน/ปี</th><th>อาคาร</th><th>ปัญหาที่พบ (กลุ่มคำ)</th><th class="text-center">ซ้ำ (ครั้ง)</th></tr></thead>
+                        <tbody id="recurringLineBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Smartcare Recurring -->
+            <div class="widget-box border-t-4 border-purple-500 flex flex-col">
+                <div class="font-bold text-purple-500 mb-4 flex items-center gap-2"><i data-lucide="file-spreadsheet"></i> ระบบ Smartcare</div>
+                <div class="table-container flex-grow h-[450px]">
+                    <table>
+                        <thead><tr><th>เดือน/ปี</th><th>หมวดหมู่งาน (Category)</th><th class="text-center">ซ้ำ (ครั้ง)</th></tr></thead>
+                        <tbody id="recurringScBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. SETTINGS (SLA Configuration & Export) -->
+    <div id="view-settings" class="view-section widget-box max-w-4xl mx-auto w-full mt-8">
+        <div class="section-title justify-center text-xl mb-8 border-b border-card-border pb-4"><i data-lucide="settings" class="text-primary"></i> ระบบตั้งค่าเป้าหมาย SLA (แยก 2 ระบบ)</div>
+        
+        <div class="grid-2 gap-8">
+            <!-- Line SLA Settings -->
+            <div>
+                <h3 class="font-bold text-primary mb-4 flex items-center gap-2"><i data-lucide="message-square" class="w-5 h-5"></i> Line Bot (เป้าหมายแยกตามตึก)</h3>
+                <div class="border border-card-border rounded-lg bg-base overflow-hidden">
+                    <div class="grid grid-cols-2 gap-4 p-3 border-b border-card-border bg-card-bg text-sm font-semibold text-muted">
+                        <div>ชื่ออาคาร</div><div class="text-right pr-6">เป้าหมาย (วัน)</div>
+                    </div>
+                    <div id="setting-line-sla-list" class="max-h-[400px] overflow-y-auto p-2 space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Smartcare SLA Settings -->
+            <div>
+                <h3 class="font-bold text-purple-500 mb-4 flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Smartcare (เป้าหมายแยกตามหมวดหมู่)</h3>
+                <div class="border border-card-border rounded-lg bg-base overflow-hidden">
+                    <div class="grid grid-cols-2 gap-4 p-3 border-b border-card-border bg-card-bg text-sm font-semibold text-muted">
+                        <div>หมวดหมู่งาน</div><div class="text-right pr-6">เป้าหมาย (วันทำการ)</div>
+                    </div>
+                    <div id="setting-sc-sla-list" class="max-h-[400px] overflow-y-auto p-2 space-y-2">
+                        <div class="text-center py-6 text-muted text-sm">กำลังโหลดหมวดหมู่จาก Cloud...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="mt-8 w-full py-3 bg-primary text-white rounded-lg font-bold text-lg hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition transform hover:-translate-y-1" onclick="window.saveSlaSettings()">บันทึกการตั้งค่า</button>
+
+        <!-- Export Over SLA Reports -->
+        <div class="section-title justify-center text-xl mb-6 mt-16 border-b border-card-border pb-4"><i data-lucide="download" class="text-teal-500"></i> ส่งออกข้อมูลงานล่าช้า (Export Over SLA)</div>
+        <div class="grid-2 gap-8">
+            <!-- Export Line -->
+            <div class="border border-[var(--card-border)] rounded-lg bg-[var(--card-bg)] p-6 text-center flex flex-col items-center justify-center transition hover:border-primary shadow-sm hover:shadow-md">
+                <i data-lucide="message-square" class="w-10 h-10 text-primary mb-3"></i>
+                <h3 class="font-bold text-lg mb-1 text-main">Line Bot (เกิน SLA)</h3>
+                <p class="text-sm text-muted mb-6">ส่งออกรายงานงานซ่อมจาก Line ที่ใช้เวลาแก้ไขเกินเป้าหมาย</p>
+                <div class="flex gap-4">
+                    <button onclick="window.exportOverSLA('line', 'excel')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-emerald-500/20"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
+                    <button onclick="window.exportOverSLA('line', 'pdf')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-rose-500/20"><i data-lucide="file-text" class="w-4 h-4"></i> PDF</button>
+                </div>
+            </div>
+            <!-- Export Smartcare -->
+            <div class="border border-[var(--card-border)] rounded-lg bg-[var(--card-bg)] p-6 text-center flex flex-col items-center justify-center transition hover:border-purple-500 shadow-sm hover:shadow-md">
+                <i data-lucide="file-spreadsheet" class="w-10 h-10 text-purple-500 mb-3"></i>
+                <h3 class="font-bold text-lg mb-1 text-purple-500">Smartcare (เกิน SLA)</h3>
+                <p class="text-sm text-muted mb-6">ส่งออกรายงานงานซ่อมจากระบบ Excel ที่ใช้เวลาดำเนินการเกินเป้าหมาย</p>
+                <div class="flex gap-4">
+                    <button onclick="window.exportOverSLA('sc', 'excel')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-emerald-500/20"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
+                    <button onclick="window.exportOverSLA('sc', 'pdf')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-rose-500/20"><i data-lucide="file-text" class="w-4 h-4"></i> PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
 </div>
 
-<div class="modal-overlay" id="buildingModal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
-    <div class="section-title" id="modalTitle" style="font-size: 1.2rem; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; margin-bottom: 0;">🏢 ชื่ออาคาร</div>
-    <div class="modal-list" id="modalJobList"></div>
-  </div>
+<!-- ================= MODALS ================= -->
+
+<!-- Universal List Modal (Popup สำหรับกดจากการ์ด) -->
+<div class="modal-overlay" id="universalModal" onclick="if(event.target===this) window.closeUniversalModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="flex flex-col"><div class="font-bold text-lg flex items-center gap-2 text-main" id="um-title"><i data-lucide="list"></i> รายละเอียด</div><div class="text-sm text-muted font-medium" id="um-subtitle">กำลังโหลด...</div></div>
+            <button class="btn-close" onclick="window.closeUniversalModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-grow bg-base">
+            <div class="table-container max-h-[500px] shadow-sm bg-card-bg">
+                <table id="um-table"><thead id="um-thead"></thead><tbody id="um-tbody"></tbody></table>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Full Detail Ticket Modal -->
+<div class="modal-overlay" id="ticketModal" onclick="if(event.target===this) window.closeTicketModal()">
+    <div class="modal-content ticket-modal-content">
+        <div class="modal-header">
+            <div class="flex flex-col"><div class="text-xs text-muted mb-1" id="tm-system-label">รายละเอียดงานซ่อมแบบเจาะลึก</div><div class="font-bold text-xl text-indigo-600 num" id="tm-no">Ticket No</div></div>
+            <button class="btn-close" onclick="window.closeTicketModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto" id="tm-body"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"><i data-lucide="check-circle" id="toastIcon"></i> <span id="toastText">สำเร็จ</span></div>
+
+<!-- ================= JAVASCRIPT ================= -->
 <script>
-  // ==========================================
-  // Core JS Logic & View Switching
-  // ==========================================
-  const API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec"; 
-  const AUTO_REFRESH_SECONDS = 15; 
+// ================= API ENDPOINTS =================
+// 1) Line Bot: ดึงผ่าน Apps Script เหมือนเดิม (ทำงานปกติอยู่แล้ว)
+const LINE_API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8JyFd_d-VeyuTfvlHl_PcJk4j-dZZY2lvCIOTC1SrZJ4yMvXau2GA/exec";
 
-  function toggleTheme() {
-    document.body.classList.toggle('dark-theme');
-    if(document.getElementById('monthFilter').value) applyFilter(); 
-  }
+// 2) Smartcare: ดึงตรงจาก Google Sheet ผ่าน JSONP (<script> tag) — เปิดไฟล์แบบ double-click (file://) ได้ ไม่ติด CORS
+// ⚠️ ต้องเปิดแชร์ชีตเป็น "Anyone with the link → Viewer" ครั้งเดียว
+const SC_SHEET_ID = "1hWnS0UMbQolbMg70iQRO_8IIl6j3V_U3HICY1_RbQcw";
+const SC_TICKET_SHEET_NAME = "Ticket";
+const SC_ACTIVITY_SHEET_NAME = "Activity";
 
-  function switchView(targetId) {
+// ============================================================
+// 🏠 ลิงก์ "กลับสู่เมนูหลัก" — ★ แก้ URL ตรงนี้ที่เดียวถ้าต้องการเปลี่ยนในอนาคต ★
+// ============================================================
+const MAIN_MENU_URL = "https://add00917-hue.github.io/GNR3-Building-MS/";
+window.goToMainMenu = () => { window.location.href = MAIN_MENU_URL; };
+
+const THAI_HOLIDAYS = [ "2024-01-01", "2024-04-15", "2024-05-01", "2024-12-05", "2025-01-01", "2025-04-14", "2025-04-15", "2025-12-05", "2026-01-01", "2026-04-13", "2026-04-14", "2026-12-05" ];
+
+let lineDataRaw = [], scDataRaw = [], mailDataRaw = [];
+let lineFiltered = [], scFiltered = [], mailFiltered = [];
+let scGlobalVoteAvg = {}; // จัดเก็บคะแนนโหวตแยกตาม ปี-เดือน
+let mailGlobalVoteAvg = {}; // คะแนนโหวต Mail Service
+let scGlobalVoteCount = {}, mailGlobalVoteCount = {}; // จำนวนงานที่มีคนโหวต แยกตาม ปี-เดือน
+
+let currentYear = 'all', currentMonth = 'all';
+let activeLineTab = 'ari', activeScTab = '', activeMailTab = '';
+let lineChart = null, scChart = null, mailChart = null;
+
+const BUILDINGS = {
+    ari: { name: 'Ari Hills', icon: 'building-2', color: '#3b82f6', keys: ['ari', 'อารีย์'] },
+    ksl: { name: 'KSL Tower', icon: 'building', color: '#a855f7', keys: ['ksl'] },
+    esv: { name: 'ESV Tower', icon: 'factory', color: '#10b981', keys: ['esv'] },
+    sph: { name: 'Saphan Mai', icon: 'home', color: '#f59e0b', keys: ['saphan', 'สะพาน'] },
+    rng: { name: 'Rangsit', icon: 'warehouse', color: '#ef4444', keys: ['rangsit', 'รังสิต'] },
+    bts: { name: 'BTS Visionary', icon: 'train', color: '#ec4899', keys: ['bts', 'visionary'] }
+};
+
+let lineSlaConfig = JSON.parse(localStorage.getItem('sys_line_sla_map_v3')) || {};
+let scSlaConfig = JSON.parse(localStorage.getItem('sys_sc_sla_map_v3')) || {};
+const DEFAULT_LINE_SLA = 7;
+const DEFAULT_SC_SLA = 1;
+
+// --- Utilities ---
+const safeEscape = (str) => String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+
+// The Ultimate Date Parser: รองรับ ISO String, Thai Format (พ.ศ.), US Format
+const parseDateRobust = (dStr) => {
+    if(!dStr) return null;
+    if(dStr instanceof Date) return isNaN(dStr) ? null : dStr;
+    if(typeof dStr === 'number') return new Date(Math.round((dStr - 25569) * 86400 * 1000));
+    
+    let s = String(dStr).trim();
+    if(s.includes('T') && s.includes('Z')) {
+        let d = new Date(s); return isNaN(d) ? null : d;
+    }
+    if(s.includes('/')) { 
+        let p = s.split(/[ T]/)[0].split('/'); 
+        if(p.length >= 3) { 
+            let day = parseInt(p[0]); let month = parseInt(p[1]) - 1; let year = parseInt(p[2]);
+            if (month > 11 && day <= 12) { let temp = month + 1; month = day - 1; day = temp; }
+            if(year < 100) year += 2000; 
+            if(year > 2400) year -= 543; // แปลง พ.ศ. -> ค.ศ.
+            let parsed = new Date(year, month, day);
+            if (!isNaN(parsed)) return parsed;
+        }
+    }
+    let d = new Date(s); return isNaN(d) ? null : d;
+};
+
+const formatDateStr = (d) => {
+    if(!d || !(d instanceof Date) || isNaN(d)) return '-';
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
+};
+const formatDurDays = (days) => (days !== null && days !== '') ? (days >= 1 ? `${parseFloat(days).toFixed(1)} วัน` : `${(parseFloat(days)*24).toFixed(1)} ชม.`) : '-';
+
+let toastTimer;
+window.showToast = (msg, isError = false) => {
+    const t = document.getElementById('toast');
+    document.getElementById('toastText').innerText = msg;
+    t.style.background = isError ? 'var(--danger)' : 'var(--success)';
+    document.getElementById('toastIcon').setAttribute('data-lucide', isError ? 'alert-circle' : 'check-circle');
+    lucide.createIcons();
+    t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+};
+
+window.toggleTheme = () => { 
+    const isDark = document.documentElement.classList.toggle('dark'); 
+    document.body.classList.toggle('dark-theme', isDark);
+    document.getElementById('themeIconMoon').style.display = isDark ? 'none' : 'block'; 
+    document.getElementById('themeIconSun').style.display = isDark ? 'block' : 'none'; 
+    if(lineChart) window.renderLineDash(); 
+    if(scChart) window.renderSmartcareDash();
+    if(mailChart) window.renderMailDash();
+};
+
+window.toggleSidebar = () => {
+    const sb = document.getElementById('appSidebar');
+    const collapsed = sb.classList.toggle('collapsed');
+    try { localStorage.setItem('smp_sidebar_collapsed', collapsed ? '1' : '0'); } catch(e){}
+    const ic = document.querySelector('#sidebarToggle i');
+    if(ic){ ic.setAttribute('data-lucide', collapsed ? 'panel-left-open' : 'panel-left-close'); if(window.lucide) lucide.createIcons(); }
+};
+
+window.switchView = (targetId) => {
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     document.getElementById(targetId).classList.add('active');
+    document.querySelectorAll('.menu-icon').forEach(icon => { icon.classList.remove('active'); if(icon.getAttribute('data-target') === targetId) icon.classList.add('active'); });
+    document.getElementById('mainScrollArea').scrollTo(0,0);
     
-    document.querySelectorAll('.menu-icon').forEach(icon => {
-      icon.classList.remove('active');
-      if(icon.getAttribute('data-target') === targetId) icon.classList.add('active');
-    });
-    
-    if(targetId === 'view-dashboard' && myChart) myChart.resize();
-  }
+    if(targetId === 'view-settings') window.renderSettingsPage();
+    if(targetId === 'view-line') window.renderLineDash();
+    if(targetId === 'view-smartcare') window.renderSmartcareDash();
+    if(targetId === 'view-mailservice') window.renderMailDash();
+    if(targetId === 'view-buildings-line') window.renderLineBuildings();
+    if(targetId === 'view-buildings-sc') window.renderScBuildings();
+    if(targetId === 'view-buildings-mail') window.renderMailBuildings();
+    if(targetId === 'view-recurring') window.renderRecurringView();
+};
 
-  function toggleAdmin() {
-    const isAdmin = document.getElementById('adminToggle').checked;
-    if(isAdmin) alert("เปิดโหมดผู้ดูแลระบบเรียบร้อย (Simulation)");
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const currentMonthIndex = new Date().getMonth();
-    document.getElementById('monthFilter').value = currentMonthIndex.toString();
-    lucide.createIcons();
-    
-    document.querySelectorAll('.menu-icon[data-target]').forEach(icon => {
-      icon.addEventListener('click', function() { switchView(this.getAttribute('data-target')); });
-    });
-  });
-
-  // --- Utility Functions: คำนวณเป็นนาที และแสดง "วัน ชม. นาที" ---
-  function formatDuration(totalMinutes) {
-    if (totalMinutes <= 0) return '0 นาที';
-    const days = Math.floor(totalMinutes / (24 * 60));
-    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
-    const minutes = totalMinutes % 60;
-    let result = [];
-    if (days > 0) result.push(`${days} วัน`);
-    if (hours > 0) result.push(`${hours} ชม.`);
-    if (minutes > 0 || result.length === 0) result.push(`${minutes} นาที`);
-    return result.join(' ');
-  }
-
-  function parseCustomDate(dateStr) {
-    if(!dateStr) return null;
+// --- THE VIEWER: API Loaders (CLOUD FIRST 100%) ---
+async function fetchLineData() {
     try {
-      let d = new Date(dateStr);
-      if (!isNaN(d.getTime()) && dateStr.includes('-')) return d;
-      const parts = dateStr.split(' ');
-      const dateParts = parts[0].includes('/') ? parts[0].split('/') : parts[0].split('-');
-      const timeParts = parts[1] ? parts[1].split(':') : [0,0,0];
-      let year, month, day;
-      if (dateParts[0].length === 4) { year = dateParts[0]; month = dateParts[1]; day = dateParts[2]; } 
-      else { year = dateParts[2]; month = dateParts[1]; day = dateParts[0]; }
-      if(!year) return new Date(dateStr);
-      return new Date(year, parseInt(month) - 1, day, timeParts[0], timeParts[1], timeParts[2] || 0);
-    } catch(e) { return new Date(dateStr); }
-  }
+        const url = `${LINE_API_URL}?sys=line&nocache=${Date.now()}`;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timer);
+        if(!res.ok) throw new Error("API Err");
+        const text = await res.text();
+        try {
+            const data = JSON.parse(text);
+            if(Array.isArray(data)) {
+                lineDataRaw = data.map(row => {
+                    let rawB = (row.Building || '').toLowerCase();
+                    let bCode = 'ari';
+                    for(let key in BUILDINGS) if(BUILDINGS[key].keys.some(k => rawB.includes(k))) { bCode = key; break; }
+                    
+                    let start = parseDateRobust(row.Date || row.dateStr);
+                    let end = row.CloseTime ? parseDateRobust(row.CloseTime) : null;
+                    let status = (row.Status && row.Status.toLowerCase().includes('complete')) ? 'completed' : 'pending';
+                    
+                    let durDays = (start && start instanceof Date && !isNaN(start)) ? (((end || new Date()) - start) / (1000 * 60 * 60 * 24)) : 0;
+                    let targetSla = lineSlaConfig[bCode] || DEFAULT_LINE_SLA;
+                    let isOver = durDays > targetSla; 
 
-  // --- Global Variables ---
-  let mainData = []; let filteredData = []; let buildingMap = {}; 
-  let myChart = null; let activeBuildingTab = 'ari'; 
-
-  const buildOrder = [
-    { key: 'ari', icon: 'building-2', class: 'b-top' }, 
-    { key: 'ksl', icon: 'building', class: 'b-top' }, 
-    { key: 'esv', icon: 'factory', class: 'b-top' }, 
-    { key: 'sph', icon: 'home', class: 'b-bot' }, 
-    { key: 'rng', icon: 'warehouse', class: 'b-bot' }
-  ];
-
-  function initEmptyBuildingMap() {
-    buildingMap = {
-      ari: { name: 'Ari Hills', icon: 'building-2', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#3b82f6' },
-      ksl: { name: 'KSL Tower', icon: 'building', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#a855f7' },
-      esv: { name: 'ESV Tower', icon: 'factory', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#10b981' },
-      sph: { name: 'Saphan Mai', icon: 'home', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#f59e0b' },
-      rng: { name: 'Rangsit', icon: 'warehouse', total: 0, pending: 0, completed: 0, totalMinutes: 0, color: '#ef4444' }
-    };
-  }
-  initEmptyBuildingMap();
-
-  async function loadData() {
-    const syncEl = document.getElementById('syncTime');
-    try {
-      syncEl.innerText = "กำลังซิงค์...";
-      const response = await fetch(API_URL);
-      const rawData = await response.json();
-      mainData = [];
-
-      rawData.forEach(row => {
-        let rawBuilding = (row.Building || '').toLowerCase().trim();
-        let bCode = 'ari'; 
-        if (rawBuilding.includes('ari') || rawBuilding.includes('อารีย์')) bCode = 'ari';
-        else if (rawBuilding.includes('ksl')) bCode = 'ksl';
-        else if (rawBuilding.includes('esv')) bCode = 'esv';
-        else if (rawBuilding.includes('saphan') || rawBuilding.includes('สะพาน')) bCode = 'sph';
-        else if (rawBuilding.includes('rangsit') || rawBuilding.includes('รังสิต')) bCode = 'rng';
-
-        const start = parseCustomDate(row.Date);
-        const end = row.CloseTime ? parseCustomDate(row.CloseTime) : null;
-        const status = (row.Status && row.Status.toLowerCase() === 'complete') ? 'completed' : 'pending';
-        
-        let durationInMinutes = start ? Math.floor(((end || new Date()) - start) / (1000 * 60)) : 0;
-        let isOver7Days = durationInMinutes > 10080 && status === 'pending';
-
-        mainData.push({
-          ticket: row.Ticket || '-', buildingCode: bCode, detail: row.Detail || '-',
-          start: start, lastUpdate: end || start || new Date(0), duration: durationInMinutes, status: status,
-          isOverSLA: isOver7Days,
-          dateStr: start ? `${start.getDate().toString().padStart(2,'0')}/${(start.getMonth()+1).toString().padStart(2,'0')}/${start.getFullYear().toString().slice(-2)}` : '-'
-        });
-      });
-      
-      mainData.sort((a,b) => b.lastUpdate - a.lastUpdate);
-      applyFilter(); 
-      syncEl.innerText = "อัปเดต: " + new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-    } catch (e) { syncEl.innerText = "การซิงค์ล้มเหลว"; }
-  }
-
-  function applyFilter() {
-    const monthVal = document.getElementById('monthFilter').value;
-    const monthText = document.getElementById('monthFilter').options[document.getElementById('monthFilter').selectedIndex].text;
-    document.getElementById('monthlyTitle').innerHTML = `<i data-lucide="calendar" style="color:var(--primary);"></i> สรุปเดือน ${monthText}`;
-
-    initEmptyBuildingMap(); 
-    filteredData = monthVal === 'all' ? [...mainData] : mainData.filter(d => d.start && d.start.getMonth() === parseInt(monthVal));
-
-    filteredData.forEach(d => {
-      let b = buildingMap[d.buildingCode];
-      b.total++;
-      if(d.status === 'completed') { 
-          b.completed++; 
-          b.totalMinutes += d.duration; 
-      } else { b.pending++; }
-    });
-    
-    renderDashboard(monthVal);
-    renderFullTable(filteredData);
-    renderBuildingTabsView();
-    renderAnalyticsView(); 
-  }
-
-  // --- RENDER VIEW 1: DASHBOARD ---
-  function renderDashboard(monthSelect) {
-    document.getElementById('y-total').innerText = mainData.length;
-    document.getElementById('y-open').innerText = mainData.filter(d => d.status === 'pending').length;
-    document.getElementById('y-complete').innerText = mainData.filter(d => d.status === 'completed').length;
-    document.getElementById('y-sla').innerText = mainData.filter(d => d.isOverSLA).length;
-
-    document.getElementById('m-total').innerText = filteredData.length;
-    document.getElementById('m-open').innerText = filteredData.filter(d => d.status === 'pending').length;
-    document.getElementById('m-complete').innerText = filteredData.filter(d => d.status === 'completed').length;
-
-    let bHTML = '';
-    buildOrder.forEach(item => {
-      const b = buildingMap[item.key];
-      bHTML += `
-        <div class="b-item ${item.class}" onclick="openModal('${item.key}')">
-          <div class="b-head"><i data-lucide="${b.icon}" style="color:${b.color}; width:20px;"></i><span>${b.name}</span></div>
-          <div class="b-row"><span style="color:var(--text-muted);">รับ:</span><span style="color:var(--success); font-weight:600;">${b.total}</span></div>
-          <div class="b-row"><span style="color:var(--text-muted);">เสร็จ:</span><span style="color:var(--primary); font-weight:600;">${b.completed}</span></div>
-          <div class="b-row" style="margin-bottom:0;"><span style="color:var(--text-muted);">ค้าง:</span><span style="color:var(--warning); font-weight:600;">${b.pending}</span></div>
-        </div>`;
-    });
-    document.getElementById('buildingContainer').innerHTML = bHTML;
-
-    const slaJobs = mainData.filter(d => d.isOverSLA).sort((a,b) => b.duration - a.duration); 
-    let slaHTML = '';
-    if (slaJobs.length === 0) slaHTML = `<div style="color:var(--success); font-weight:500;"><i data-lucide="check-circle" style="width:14px; vertical-align:middle;"></i> ไม่มีงานที่ค้างเกิน 7 วัน 🎉</div>`;
-    else {
-      slaJobs.forEach(d => {
-        slaHTML += `<div style="border-bottom:1px solid rgba(100,116,139,0.2); padding-bottom:4px; margin-bottom:4px; cursor:pointer;" onclick="openKpiModal('sla', true)">
-          <span style="color:var(--danger); font-weight:600;">${d.ticket}</span> - ${buildingMap[d.buildingCode].name} (ค้าง ${formatDuration(d.duration)})
-        </div>`;
-      });
-    }
-    document.getElementById('slaContainer').innerHTML = slaHTML;
-
-    const latest = [...filteredData].slice(0, 10); 
-    let tableHTML = '';
-    if (latest.length === 0) tableHTML = `<tr><td colspan="5" align="center" style="color:var(--text-muted); padding: 20px;">ไม่มีข้อมูล</td></tr>`;
-    else {
-      latest.forEach((d) => {
-        const badge = d.status === 'completed' ? `<span class="pill pill-done">✓ เสร็จแล้ว</span>` : `<span class="pill pill-pending">⏳ รอดำเนินการ</span>`;
-        tableHTML += `
-          <tr onclick="openModal('${d.buildingCode}')">
-            <td class="tb-ticket">${d.ticket}</td>
-            <td style="font-weight:500; color:${buildingMap[d.buildingCode].color};">${buildingMap[d.buildingCode].name}</td>
-            <td style="max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-muted);" title="${d.detail}">${d.detail}</td>
-            <td style="font-size:0.8rem;">${formatDuration(d.duration)}</td>
-            <td>${badge}</td>
-          </tr>`;
-      });
-    }
-    document.getElementById('dashTableBody').innerHTML = tableHTML;
-
-    renderChart(monthSelect);
-    lucide.createIcons();
-  }
-
-  // --- RENDER VIEW 2: FULL TABLE ---
-  function renderFullTable(data) {
-    let tableHTML = '';
-    if (data.length === 0) tableHTML = `<tr><td colspan="6" align="center" style="padding: 30px; color:var(--text-muted);">ไม่พบข้อมูล</td></tr>`;
-    else {
-      data.forEach(d => {
-        const badge = d.status === 'completed' ? `<span class="pill pill-done">เสร็จแล้ว</span>` : `<span class="pill pill-pending">รอดำเนินการ</span>`;
-        tableHTML += `
-          <tr onclick="openModal('${d.buildingCode}')">
-            <td class="tb-ticket">${d.ticket}</td>
-            <td style="font-weight:500; color:${buildingMap[d.buildingCode].color};">${buildingMap[d.buildingCode].name}</td>
-            <td style="color:var(--text-muted);">${d.detail}</td>
-            <td style="font-size:0.85rem;">${d.dateStr}</td>
-            <td style="font-size:0.85rem; font-weight:500; color: ${d.isOverSLA ? 'var(--danger)' : 'inherit'};">${formatDuration(d.duration)}</td>
-            <td>${badge}</td>
-          </tr>`;
-      });
-    }
-    document.getElementById('fullTableBody').innerHTML = tableHTML;
-  }
-
-  function searchFullTable() {
-    const input = document.getElementById("searchInput").value.toLowerCase();
-    const result = filteredData.filter(d => 
-      d.ticket.toLowerCase().includes(input) || buildingMap[d.buildingCode].name.toLowerCase().includes(input) || d.detail.toLowerCase().includes(input)
-    );
-    renderFullTable(result);
-  }
-
-  // --- RENDER VIEW 3: BUILDINGS (TABS) - SORT & FULL PAGE ---
-  function renderBuildingTabsView() {
-    let tabsHTML = '';
-    buildOrder.forEach(item => {
-      const b = buildingMap[item.key];
-      const isActive = item.key === activeBuildingTab ? 'active' : '';
-      tabsHTML += `<div class="b-tab ${isActive}" onclick="selectBuildingTab('${item.key}')"><i data-lucide="${b.icon}" style="width:16px;"></i> ${b.name} (${b.total})</div>`;
-    });
-    document.getElementById('buildingTabsContainer').innerHTML = tabsHTML;
-    lucide.createIcons();
-    selectBuildingTab(activeBuildingTab); 
-  }
-
-  window.selectBuildingTab = function(bKey) {
-    activeBuildingTab = bKey;
-    document.querySelectorAll('.b-tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.b-tab').forEach(tab => {
-        if(tab.innerText.includes(buildingMap[bKey].name)) tab.classList.add('active');
-    });
-
-    const b = buildingMap[bKey];
-    document.getElementById('activeBuildingTitle').innerHTML = `<i data-lucide="clock" style="color:var(--warning); width:20px;"></i> รายการแจ้งซ่อม: ${b.name} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400; margin-left:8px;">(เรียงจากงานที่ใช้เวลาซ่อมนานที่สุด)</span>`;
-    
-    // เรียงคิวจากใช้เวลามากสุด (ช้าสุด) ลงไปหาไวน้อยสุด
-    const bData = filteredData.filter(d => d.buildingCode === bKey);
-    bData.sort((a, b) => b.duration - a.duration);
-
-    let tableHTML = '';
-    if(bData.length === 0) tableHTML = `<tr><td colspan="5" align="center" style="padding:20px; color:var(--text-muted);">ไม่มีรายการงานในเดือนนี้</td></tr>`;
-    else {
-        bData.forEach(d => {
-            const badge = d.status === 'completed' ? `<span class="pill pill-done">เสร็จแล้ว</span>` : `<span class="pill pill-pending">รอดำเนินการ</span>`;
-            tableHTML += `
-              <tr>
-                <td class="tb-ticket">${d.ticket}</td>
-                <td style="color:var(--text-muted);">${d.detail}</td>
-                <td style="font-size:0.85rem;">${d.dateStr}</td>
-                <td style="font-size:0.85rem; font-weight:600; color: ${d.isOverSLA ? 'var(--danger)' : 'var(--warning)'};">${formatDuration(d.duration)}</td>
-                <td>${badge}</td>
-              </tr>`;
-        });
-    }
-    document.getElementById('buildingTableBody').innerHTML = tableHTML;
-    lucide.createIcons();
-  }
-
-  // --- RENDER VIEW 4: ANALYTICS (PERFORMANCE GRID) ---
-  function renderAnalyticsView() {
-    let html = '';
-    buildOrder.forEach(item => {
-        const b = buildingMap[item.key];
-        const bData = filteredData.filter(d => d.buildingCode === item.key && d.status === 'completed');
-
-        let avgTimeStr = "-";
-        let fastestJobStr = "-";
-        let percentDone = 0;
-
-        if (b.total > 0) {
-            percentDone = Math.round((b.completed / b.total) * 100);
-
-            if (bData.length > 0) {
-                let avgM = Math.floor(b.totalMinutes / b.completed);
-                avgTimeStr = formatDuration(avgM);
-
-                let fastestJob = bData.reduce((prev, curr) => prev.duration < curr.duration ? prev : curr);
-                fastestJobStr = `${fastestJob.ticket} (${formatDuration(fastestJob.duration)})`;
+                    return { source: 'line', ticket: String(row.Ticket || '-').trim(), buildingCode: bCode, detail: String(row.Detail || '-').trim(), start: start, lastUpdate: end || start || new Date(0), durDays: durDays, targetSla: targetSla, status: status, isOverSLA: isOver, dateStr: formatDateStr(start) };
+                }).sort((a,b) => b.lastUpdate - a.lastUpdate);
             }
+        } catch(e) { console.error("Line Parse Error:", text); }
+    } catch (e) { console.error(e); window.showToast("ดึงข้อมูล Line ขัดข้อง", true); }
+}
 
-            html += `
-            <div class="widget-box" style="border-color: ${b.color}50; display: flex; flex-direction: column; gap: 12px; transition: 0.3s;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:8px;"><i data-lucide="${b.icon}" style="color:${b.color}; width:22px;"></i> ${b.name}</div>
-                    <div style="font-size:1.4rem; font-weight:700; color:${b.color};">${percentDone}%</div>
-                </div>
-                <div class="b-progress-bg"><div class="b-progress-fill" style="width: ${percentDone}%; background-color: ${b.color};"></div></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:4px;">
-                    <span style="color:var(--text-muted);">รับแจ้ง: <b style="color:var(--text-main);">${b.total}</b></span>
-                    <span style="color:var(--text-muted);">เสร็จ: <b style="color:var(--success);">${b.completed}</b></span>
-                    <span style="color:var(--text-muted);">ค้าง: <b style="color:var(--warning);">${b.pending}</b></span>
-                </div>
-                <div style="border-top: 1px solid var(--card-border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><i data-lucide="clock" style="width:14px;"></i> เวลาซ่อมเฉลี่ย:</span>
-                        <span style="font-weight:600;">${avgTimeStr}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><i data-lucide="zap" style="width:14px; color:var(--warning);"></i> งานที่ซ่อมไวที่สุด:</span>
-                        <span style="font-weight:600; color:var(--success);">${fastestJobStr}</span>
-                    </div>
-                </div>
-            </div>`;
-        } else {
-             html += `
-            <div class="widget-box" style="border-color: ${b.color}50; display: flex; flex-direction: column; gap: 12px; opacity: 0.7;">
-                <div style="font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:8px;"><i data-lucide="${b.icon}" style="color:${b.color}; width:20px;"></i> ${b.name}</div>
-                <div style="text-align:center; color:var(--text-muted); padding: 30px 0;">ไม่มีข้อมูลงานซ่อมในเดือนนี้</div>
-            </div>`;
-        }
+// แสดงสถานะ/สาเหตุปัญหาบนหน้าจอ (กล่อง Smartcare ในหน้าภาพรวม) แทนการขึ้นจอว่างเปล่า
+function showScStatus(msg, isError) {
+    const box = document.getElementById('u-smartcare-empty');
+    if(box) {
+        box.style.display = 'block';
+        box.innerHTML = `<i data-lucide="${isError?'alert-triangle':'cloud-off'}" class="mx-auto mb-2 ${isError?'text-rose-500':'opacity-50'}" style="width:40px; height:40px;"></i><p class="text-sm ${isError?'text-rose-500 font-medium':''}">${msg}</p>`;
+    }
+    document.getElementById('sc-dash-section').style.display = 'none';
+    document.getElementById('u-smartcare-data').style.display = 'none';
+    if(window.lucide) lucide.createIcons();
+}
+
+// แปลง gviz response -> Array ของ Object {หัวคอลัมน์: ค่า}
+function gvizRespToObjects(resp) {
+    if (!resp || resp.status === 'error') {
+        const e = resp && resp.errors && resp.errors[0];
+        throw new Error(e ? (e.detailed_message || e.message || 'เข้าถึงชีตไม่ได้') : 'เข้าถึงชีตไม่ได้');
+    }
+    const table = resp.table;
+    const cols = table.cols.map((c, i) => (c.label && String(c.label).trim()) ? String(c.label).trim() : ('col' + i));
+    const types = table.cols.map(c => c.type);
+    return (table.rows || []).map(r => {
+        const o = {};
+        (r.c || []).forEach((cell, i) => {
+            const key = cols[i]; if (!key) return;
+            let val = '';
+            if (cell) {
+                // คอลัมน์วันที่: ใช้ค่าที่ format แล้ว (f) จะ parse ง่ายและตรงกับที่แสดงในชีต
+                if ((types[i] === 'date' || types[i] === 'datetime') && cell.f != null) val = cell.f;
+                else if (cell.v !== undefined && cell.v !== null) val = cell.v;
+                else if (cell.f != null) val = cell.f;
+            }
+            o[key] = val;
+        });
+        return o;
     });
-    document.getElementById('analyticsGrid').innerHTML = html;
-    lucide.createIcons();
-  }
+}
 
-  // --- RENDER DASHBOARD CHART (Trend) ---
-  function renderChart(monthSelect) {
-    let labels = [], totalData = [], completedData = [], pendingData = [];
-    const isDark = document.body.classList.contains('dark-theme');
-    const cTotal = isDark ? '#10b981' : '#10b981', cDone = isDark ? '#3b82f6' : '#3b82f6', cPending = isDark ? '#f59e0b' : '#f59e0b';
-    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', textColor = isDark ? '#94a3b8' : '#64748b';
+// โหลดชีตหนึ่งแท็บผ่าน <script> tag (JSONP) — เบราว์เซอร์ไม่บล็อกแม้เปิดจาก file://
+function loadSheetJSONP(sheetName, cbName) {
+    return new Promise((resolve, reject) => {
+        let done = false;
+        const script = document.createElement('script');
+        const cleanup = () => { try { delete window[cbName]; } catch(e) {} if(script.parentNode) script.parentNode.removeChild(script); };
+        window[cbName] = (resp) => { done = true; try { resolve(gvizRespToObjects(resp)); } catch(e) { reject(e); } finally { cleanup(); } };
+        script.onerror = () => { if(!done) { reject(new Error('โหลดชีต "' + sheetName + '" ไม่ได้ (ตรวจการแชร์ชีต)')); cleanup(); } };
+        script.src = `https://docs.google.com/spreadsheets/d/${SC_SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&headers=1&sheet=${encodeURIComponent(sheetName)}&nocache=${Date.now()}`;
+        document.head.appendChild(script);
+        setTimeout(() => { if(!done) { reject(new Error('หมดเวลาโหลดชีต "' + sheetName + '"')); cleanup(); } }, 20000);
+    });
+}
 
-    if (monthSelect === 'all') {
-      document.getElementById('chartLabel').innerText = "(แสดง 12 เดือน)";
-      labels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      let monthStats = Array(12).fill(0).map(()=>({total:0, completed:0, pending:0}));
-      filteredData.forEach(d => { if(d.start) { let m = d.start.getMonth(); monthStats[m].total++; if(d.status === 'completed') monthStats[m].completed++; if(d.status === 'pending') monthStats[m].pending++; } });
-      totalData = monthStats.map(m => m.total); completedData = monthStats.map(m => m.completed); pendingData = monthStats.map(m => m.pending);
+async function fetchSmartcareData() {
+    if(!SC_SHEET_ID) return;
+    let tickets, activities;
+    try {
+        [tickets, activities] = await Promise.all([
+            loadSheetJSONP(SC_TICKET_SHEET_NAME, '__scTicketCB'),
+            loadSheetJSONP(SC_ACTIVITY_SHEET_NAME, '__scActivityCB')
+        ]);
+    } catch(e) {
+        console.error("Fetch SC Sheet Error:", e);
+        scDataRaw = [];
+        showScStatus('ดึงข้อมูลจาก Google Sheet ไม่ได้ (' + e.message + ') — เปิดแชร์ชีตเป็น "Anyone with the link → Viewer"', true);
+        return;
+    }
+
+    if(!tickets || tickets.length === 0) {
+        scDataRaw = [];
+        showScStatus('ชีต "' + SC_TICKET_SHEET_NAME + '" ไม่มีข้อมูล — ตรวจชื่อแท็บให้ตรง', true);
+        return;
+    }
+
+    try {
+        await processSmartcareStrict(tickets, activities || []);
+    } catch(e) {
+        console.error("Engine Error:", e);
+        scDataRaw = [];
+        showScStatus('ประมวลผลข้อมูลผิดพลาด: ' + e.message, true);
+        return;
+    }
+
+    if(scDataRaw.length > 0) {
+        document.getElementById('sc-dash-section').style.display = 'flex';
+        document.getElementById('u-smartcare-empty').style.display = 'none';
+        document.getElementById('u-smartcare-data').style.display = 'flex';
     } else {
-      document.getElementById('chartLabel').innerText = "(แสดงเฉพาะวันที่)";
-      let daysMap = {};
-      filteredData.forEach(d => { if(d.start) { let day = d.start.getDate(); if(!daysMap[day]) daysMap[day] = { total: 0, completed: 0, pending: 0 }; daysMap[day].total++; if(d.status === 'completed') daysMap[day].completed++; if(d.status === 'pending') daysMap[day].pending++; } });
-      const sortedDays = Object.keys(daysMap).map(Number).sort((a,b) => a-b);
-      labels = sortedDays.map(d => d.toString());
-      totalData = sortedDays.map(d => daysMap[d].total); completedData = sortedDays.map(d => daysMap[d].completed); pendingData = sortedDays.map(d => daysMap[d].pending);
+        showScStatus('ดึงได้ ' + tickets.length + ' Ticket แต่จับคู่สถานะจาก Activity ไม่ได้ — ตรวจคอลัมน์ Action (Submit/Accept Task/Done) และ TicketNo', true);
     }
 
-    const ctx = document.getElementById('trendChart').getContext('2d');
-    if (myChart) myChart.destroy(); 
-    myChart = new Chart(ctx, {
-      type: 'bar', 
-      data: { labels: labels, datasets: [
-        { label: 'งานค้าง', data: pendingData, backgroundColor: cPending, borderColor: cPending, borderWidth: 1, order: 1, borderRadius: 2 },
-        { label: 'เสร็จสิ้น', data: completedData, backgroundColor: cDone, borderColor: cDone, borderWidth: 1, order: 2, borderRadius: 2 },
-        { label: 'งานทั้งหมด', data: totalData, backgroundColor: cTotal, borderColor: cTotal, borderWidth: 1, order: 3, borderRadius: 2 }
-      ]},
-      options: { 
-        responsive: true, maintainAspectRatio: false, 
-        plugins: { legend: { position: 'top', labels: { color: textColor, boxWidth: 10, usePointStyle: true, font: {family: 'inherit'} } } }, 
-        scales: { 
-            x: { grid: { display: false }, ticks: { color: textColor, font: {family: 'inherit', size: 13} } }, 
-            y: { grid: { color: gridColor }, ticks: { color: textColor, font: {family: 'inherit', size: 12}, stepSize: 1 }, beginAtZero: true } 
-        }, 
-        interaction: { mode: 'index', intersect: false } 
-      }
+    // เปิดหน้า Mail Service เมื่อมีงานขนส่งเอกสาร
+    if(mailDataRaw.length > 0) {
+        const md = document.getElementById('mail-dash-section'); if(md) md.style.display = 'flex';
+        const me = document.getElementById('u-mail-empty'); if(me) me.style.display = 'none';
+        const mdt = document.getElementById('u-mail-data'); if(mdt) mdt.style.display = 'flex';
+    }
+}
+
+function calculateWorkingDays(startD, endD) {
+    if(!startD || !endD || startD > endD) return 0;
+    let days = 0; let cur = new Date(startD); cur.setHours(0,0,0,0); let end = new Date(endD); end.setHours(0,0,0,0);
+    while(cur <= end) {
+        let dw = cur.getDay(); let isWknd = (dw === 0 || dw === 6);
+        let iso = cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0');
+        if(!isWknd && !THAI_HOLIDAYS.includes(iso)) days++;
+        cur.setDate(cur.getDate() + 1);
+    }
+    return Math.max(days - 1, 0) + ((endD-startD)/(1000*60*60*24) % 1);
+}
+
+// ============================================================
+// 🧠 STRICT ENGINE (แก้ใหม่ตามเงื่อนไขจริงของ Sheet)
+// ------------------------------------------------------------
+// 1. คะแนน Vote: คิดจาก Sheet Ticket คอลัมน์ VoteScore เท่านั้น (แยกอิสระ)
+// 2. สถานะงาน: จับกลุ่ม TicketNo เดียวกันใน Sheet Activity
+//      - Submit อย่างเดียว           => รอดำเนินการ
+//      - Submit -> Accept Task        => กำลังดำเนินการ
+//      - Submit -> Accept Task -> Done => เสร็จสิ้น
+// 3. คำ Action นอกเหนือ 3 คำหลัก (Vote/Update/Save ฯลฯ) => ตัดทิ้งเฉพาะแถวนั้น
+// ============================================================
+async function processSmartcareStrict(tickets, activities) {
+
+    // จัดหมวด Action แบบยืดหยุ่น (ใช้ includes) — ตรงตามไฟล์ต้นฉบับที่อนุมัติ
+    const classifyAction = (raw) => {
+        const s = String(raw ?? '').trim().toLowerCase();
+        if (!s) return null;
+        if (s.includes('cancel')) return 'Cancel';
+        if (s.includes('done') || s.includes('closed')) return 'Done';
+        if (s.includes('accept')) return 'Accept Task';
+        if (s.includes('submit')) return 'Submit';
+        return 'Other'; // คำแปลกปลอม -> จะทำให้ลำดับผิด แล้วโดนตัดทิ้ง
+    };
+    // ดึงคะแนน Vote จากคอลัมน์ Vote Score / VoteScore (หลายรูปแบบ)
+    const extractVote = (row) => {
+        let v = 0;
+        if (row['Vote Score'] !== undefined && row['Vote Score'] !== null && String(row['Vote Score']).trim() !== '') v = parseFloat(row['Vote Score']);
+        else if (row['VoteScore'] !== undefined && row['VoteScore'] !== null && String(row['VoteScore']).trim() !== '') v = parseFloat(row['VoteScore']);
+        else {
+            for (const k in row) {
+                const ck = String(k).replace(/\s+/g, '').toLowerCase();
+                if (ck === 'votescore' || ck === 'คะแนนโหวต') {
+                    const val = row[k];
+                    if (val !== undefined && val !== null && String(val).trim() !== '') { v = parseFloat(val); break; }
+                }
+            }
+        }
+        if (isNaN(v) || v < 0) v = 0;
+        return v;
+    };
+    // อ่านวันที่ของ Activity (รองรับหลายชื่อคอลัมน์)
+    const ACT_DATE_KEYS = ['ActionDate','Date','Datetime','DateTime','Timestamp','Time','CreateDate','ActionTime','วันที่','วันเวลา'];
+    const readActDate = (row) => { for (const k of ACT_DATE_KEYS) if (row[k] !== undefined && row[k] !== '') return parseDateRobust(row[k]); return null; };
+
+    // ---------- 1) จับกลุ่ม Activity ตาม TicketNo (เก็บทุกสถานะที่จัดหมวดได้ รวม Cancel/Other) ----------
+    const actHistory = new Map();
+    for (const act of activities) {
+        const tNo = String(act['TicketNo'] ?? '').trim();
+        if (!tNo) continue;
+        const cls = classifyAction(act['Action'] || act['Status']);
+        if (!cls) continue;
+        if (!actHistory.has(tNo)) actHistory.set(tNo, []);
+        actHistory.get(tNo).push({ action: cls, date: readActDate(act) });
+    }
+
+    // ---------- 2) วนแต่ละ Ticket: Vote แยกอิสระ + ตรวจลำดับสถานะแบบ Strict ----------
+    let voteStats = { all: { total: 0, count: 0 } };       // Smartcare (ไม่รวม Mail)
+    let mailVoteStats = { all: { total: 0, count: 0 } };   // Mail Service
+    let payloadTickets = [];
+    let mailPayload = [];
+    let droppedCount = 0;
+    const now = new Date();
+    const isMailCat = (c) => String(c || '').includes('ขนส่งเอกสาร');
+
+    for (let i = 0; i < tickets.length; i++) {
+        const row = tickets[i];
+        const ticketNo = String(row['TicketNo'] || '').trim();
+        if (!ticketNo) continue;
+        let hist = actHistory.get(ticketNo) || [];
+        const ticketStatusStr = String(row['Status'] || '').toLowerCase();
+        const rawCatFull = String(row['Category'] || '');
+        const mail = isMailCat(rawCatFull);   // งานขนส่งเอกสาร => Mail Service
+
+        // (0) Cancel => ตัดทั้งใบ ไม่นับทั้ง Vote และ SLA
+        if (ticketStatusStr.includes('cancel') || hist.some(h => h.action === 'Cancel')) {
+            droppedCount++;
+            continue;
+        }
+
+        // (1) คะแนน Vote — คิดแยกก่อนเช็คลำดับเสมอ (แยกถัง Smartcare vs Mail)
+        const vote = extractVote(row);
+        const cDate = parseDateRobust(row['CreateDate']);
+        if (vote > 0) {
+            const bucket = mail ? mailVoteStats : voteStats;
+            bucket.all.total += vote; bucket.all.count++;
+            if (cDate && !isNaN(cDate)) {
+                const vk = `${cDate.getFullYear()}-${cDate.getMonth()}`;
+                if (!bucket[vk]) bucket[vk] = { total: 0, count: 0 };
+                bucket[vk].total += vote; bucket[vk].count++;
+            }
+        }
+
+        // (2) ตรวจลำดับสถานะ (Strict) — เรียงเวลา + บีบอัดคำซ้ำติดกัน
+        hist.sort((a, b) => (a.date && b.date) ? a.date - b.date : 0);
+        let cleaned = [];
+        for (const h of hist) {
+            if (cleaned.length === 0 || cleaned[cleaned.length - 1].action !== h.action) cleaned.push(h);
+        }
+        const seqStr = cleaned.map(h => h.action).join(',');
+        if (seqStr !== 'Submit' && seqStr !== 'Submit,Accept Task' && seqStr !== 'Submit,Accept Task,Done') {
+            droppedCount++;
+            continue; // ลำดับผิด/มีคำแปลกปลอม => ตัดใบนี้ออกจากการนับงาน (แต่ Vote นับไปแล้ว)
+        }
+
+        const finalStatus = cleaned[cleaned.length - 1].action;
+        const acceptDate = (cleaned.find(h => h.action === 'Accept Task') || {}).date || null;
+        const doneDate   = (cleaned.find(h => h.action === 'Done') || {}).date || null;
+        const submitDate = (cleaned.find(h => h.action === 'Submit') || {}).date || null;
+
+        let rawCat = rawCatFull;
+        let cat = rawCat.includes('-') ? rawCat.split('-').slice(1).join('-').trim() : rawCat.trim();
+        cat = cat || 'อื่นๆ';
+        const faction = String(row['Faction'] || row['Department'] || 'ไม่ระบุ').trim();
+        let detail = '-';
+        for (const k of ['Description','Detail','Details','Problem','รายละเอียด','ปัญหา']) { if (row[k]) { detail = String(row[k]); break; } }
+
+        const targetDays = scSlaConfig[cat] || DEFAULT_SC_SLA;
+        let slaDays = null, isSlaMet = null;
+        if (finalStatus === 'Done' && acceptDate && doneDate) {
+            slaDays = calculateWorkingDays(acceptDate, doneDate);
+            isSlaMet = slaDays <= targetDays;
+        } else if (finalStatus === 'Accept Task' && acceptDate) {
+            slaDays = calculateWorkingDays(acceptDate, now);
+            isSlaMet = slaDays <= targetDays;
+        }
+
+        const startDate = cDate || submitDate;
+        const rec = {
+            source: mail ? 'mailservice' : 'smartcare', ticket: ticketNo, category: cat, detail: detail,
+            faction: faction, start: startDate, status: finalStatus,
+            slaDays: slaDays, targetSla: targetDays, isOverSLA: isSlaMet === false,
+            voteScore: (row['VoteScore'] || row['Vote Score'] || ''), dateStr: formatDateStr(startDate), original: row
+        };
+        if (mail) mailPayload.push(rec); else payloadTickets.push(rec);
+    }
+
+    // ---------- 3) สรุปค่าเฉลี่ย Vote (แยก 2 ระบบ) ----------
+    const avgOf = (stats) => { let o = {}; for (let k in stats) o[k] = stats[k].count > 0 ? parseFloat((stats[k].total / stats[k].count).toFixed(1)) : 0; return o; };
+    const countOf = (stats) => { let o = {}; for (let k in stats) o[k] = stats[k].count || 0; return o; };
+    scGlobalVoteAvg = avgOf(voteStats);
+    mailGlobalVoteAvg = avgOf(mailVoteStats);
+    scGlobalVoteCount = countOf(voteStats);
+    mailGlobalVoteCount = countOf(mailVoteStats);
+
+    scDataRaw = payloadTickets;
+    mailDataRaw = mailPayload;
+    console.log(`Smartcare ✓ ${payloadTickets.length} ใบ | Mail Service ✓ ${mailPayload.length} ใบ | Activity ${activities.length} | Ticket ${tickets.length} | ตัดทิ้ง ${droppedCount}`);
+}
+
+// --- Filters & Renders ---
+function updateYearFilterOptions() {
+    let years = new Set();
+    [...lineDataRaw, ...scDataRaw].forEach(r => { 
+        if(r.start && r.start instanceof Date && !isNaN(r.start)) years.add(r.start.getFullYear()); 
     });
-  }
+    let ySelect = document.getElementById('yearFilter'); let currV = ySelect.value;
+    ySelect.innerHTML = '<option value="all">ทุกปี</option>';
+    Array.from(years).sort().forEach(y => { ySelect.innerHTML += `<option value="${y}">ปี ${y}</option>`; });
+    if(Array.from(years).includes(parseInt(currV))) ySelect.value = currV;
+}
 
-  // --- MODALS ---
-  const modalOverlay = document.getElementById('buildingModal');
-  function openModal(buildingKey) {
-    if(mainData.length === 0) return; 
-    const b = buildingMap[buildingKey];
-    document.getElementById('modalTitle').innerHTML = `<i data-lucide="${b.icon}" style="color:${b.color}; width:20px;"></i> รายการงาน: ${b.name}`;
-    renderJobListModal(filteredData.filter(d => d.buildingCode === buildingKey));
-    modalOverlay.classList.add('show'); lucide.createIcons();
-  }
+window.applyGlobalFilter = () => {
+    currentYear = document.getElementById('yearFilter').value; currentMonth = document.getElementById('monthFilter').value;
+    let lbl = ''; if(currentYear !== 'all') lbl += `ปี ${currentYear} `; if(currentMonth !== 'all') lbl += `เดือน ${document.getElementById('monthFilter').options[document.getElementById('monthFilter').selectedIndex].text}`;
+    document.querySelectorAll('.filter-label').forEach(el => el.innerText = lbl ? `(${lbl.trim()})` : '');
 
-  function openKpiModal(type, isYearly = false) {
-    if(mainData.length === 0) return; 
-    let sourceData = isYearly ? mainData : filteredData;
-    let modalData = []; let title = ""; let icon = "";
-    if(type === 'total') { modalData = [...sourceData]; title = "งานซ่อมทั้งหมด"; icon = "layers"; } 
-    else if(type === 'pending') { modalData = sourceData.filter(d => d.status === 'pending'); title = "งานค้าง"; icon = "clock"; } 
-    else if(type === 'completed') { modalData = sourceData.filter(d => d.status === 'completed'); title = "งานเสร็จสิ้น"; icon = "check-circle-2"; } 
-    else if(type === 'sla') { modalData = sourceData.filter(d => d.isOverSLA); title = "งานค้างเกิน SLA"; icon = "alert-triangle"; }
-    document.getElementById('modalTitle').innerHTML = `<i data-lucide="${icon}"></i> ${title}`;
-    renderJobListModal(modalData, true); modalOverlay.classList.add('show'); lucide.createIcons();
-  }
+    // 🛡️ THE ULTIMATE SAFE FILTER: ป้องกันจอขาว 100%
+    let filterFunc = d => {
+        if (currentYear === 'all' && currentMonth === 'all') return true; 
+        if (!d.start || !(d.start instanceof Date) || isNaN(d.start)) return false;
+        let matchYear = (currentYear === 'all' || d.start.getFullYear().toString() === currentYear);
+        let matchMonth = (currentMonth === 'all' || d.start.getMonth().toString() === currentMonth);
+        return matchYear && matchMonth;
+    };
+    
+    lineFiltered = lineDataRaw.filter(filterFunc);
+    scFiltered = scDataRaw.filter(filterFunc);
+    mailFiltered = mailDataRaw.filter(filterFunc);
 
-  function renderJobListModal(dataList, showBuildingName = false) {
-    dataList.sort((a, b) => { if (a.status === 'pending' && b.status === 'completed') return -1; if (a.status === 'completed' && b.status === 'pending') return 1; return b.start - a.start; });
-    let jobsHTML = '';
-    if(dataList.length === 0) { jobsHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">ไม่มีข้อมูล</div>'; } 
-    else {
-      dataList.forEach(job => {
-        const badge = job.status === 'completed' ? `<span class="pill pill-done">เสร็จสิ้น</span>` : `<span class="pill pill-pending">งานค้าง</span>`;
-        let bNameHtml = showBuildingName ? `<span style="color:var(--primary); font-weight:600; margin-right:8px;">[${buildingMap[job.buildingCode].name}]</span>` : '';
-        jobsHTML += `<div class="job-row"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-weight:600;">${bNameHtml}${job.ticket} - ${job.detail}</span>${badge}</div><div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.8rem;"><span>เริ่ม: ${job.dateStr}</span><span style="color: ${job.isOverSLA ? 'var(--danger)' : 'inherit'};">ใช้เวลา: ${formatDuration(job.duration)}</span></div></div>`;
-      });
+    window.renderUnified(); window.renderLineDash(); window.renderSmartcareDash(); if(window.renderMailDash) window.renderMailDash();
+    window.renderLineBuildings(); window.renderScBuildings(); if(window.renderMailBuildings) window.renderMailBuildings(); window.renderRecurringView();
+};
+
+window.syncData = async () => { 
+    window.showToast("กำลังดึงข้อมูลอัปเดตล่าสุดจาก Cloud...", false); 
+    try {
+        await Promise.all([fetchLineData(), fetchSmartcareData()]);
+        updateYearFilterOptions(); window.applyGlobalFilter(); 
+        window.showToast("อัปเดตข้อมูลสำเร็จ!"); 
+    } catch(e) { window.showToast("การเชื่อมต่อขัดข้อง", true); }
+};
+
+window.renderUnified = () => {
+    // ---- คำนวณ % SLA (ตัวเลือก B: ตรงเวลา ÷ วัดผลได้) ----
+    // Line: ทุกงานวัดผลได้ (มี durDays เสมอ) | Smartcare: เฉพาะงานที่มีค่า slaDays
+    const calcSla = (list, kind) => {
+        let met = 0, breach = 0, measured = 0;
+        list.forEach(d => {
+            let isMeasured = (kind === 'line') ? true : (d.slaDays !== null && d.slaDays !== '');
+            if (!isMeasured) return;
+            measured++;
+            if (d.isOverSLA) breach++; else met++;
+        });
+        return { met, breach, measured, pct: measured > 0 ? Math.round(met / measured * 100) : null };
+    };
+    window.renderSlaDonut = (prefix, stats) => {
+        const p = stats.pct;
+        const pctEl = document.getElementById(prefix + '-pct'); if (pctEl) pctEl.innerText = (p === null ? '–' : p + '%');
+        const setNum = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v.toLocaleString(); };
+        setNum(prefix + '-met', stats.met); setNum(prefix + '-breach', stats.breach); setNum(prefix + '-measured', stats.measured);
+        const ring = document.getElementById(prefix + '-ring');
+        if (ring) {
+            const color = p === null ? 'var(--card-border)' : (p >= 90 ? '#10b981' : (p >= 70 ? '#f59e0b' : '#ef4444'));
+            ring.style.stroke = color;
+            ring.style.strokeDashoffset = 326.7 * (1 - (p || 0) / 100);
+        }
+    };
+    // ภาพรวม = Line + Smartcare + Mail Service รวมกัน
+    let lineSla = calcSla(lineFiltered, 'line');
+    let scSla = calcSla(scFiltered, 'sc');
+    let mailSla = calcSla(mailFiltered, 'sc');
+    let grandSla = {
+        met: lineSla.met + scSla.met + mailSla.met,
+        breach: lineSla.breach + scSla.breach + mailSla.breach,
+        measured: lineSla.measured + scSla.measured + mailSla.measured
+    };
+    grandSla.pct = grandSla.measured > 0 ? Math.round(grandSla.met / grandSla.measured * 100) : null;
+    window.renderSlaDonut('grand-sla', grandSla);
+    window._lineSlaStats = lineSla; // เก็บไว้ให้ renderLineDash ใช้ต่อ
+
+    let allData = [...lineFiltered, ...scFiltered, ...mailFiltered];
+    document.getElementById('u-grand-total').innerText = allData.length.toLocaleString();
+    document.getElementById('u-grand-done').innerText = allData.filter(d=>d.status==='completed'||d.status==='Done').length.toLocaleString();
+    document.getElementById('u-grand-accept').innerText = allData.filter(d=>d.status==='Accept Task').length.toLocaleString();
+    document.getElementById('u-grand-pending').innerText = allData.filter(d=>d.status==='pending'||d.status==='Submit').length.toLocaleString();
+    document.getElementById('u-grand-sla').innerText = allData.filter(d=>d.isOverSLA).length.toLocaleString();
+
+    document.getElementById('u-line-total').innerText = lineFiltered.length.toLocaleString();
+    document.getElementById('u-line-pending').innerText = lineFiltered.filter(d=>d.status==='pending').length.toLocaleString();
+    document.getElementById('u-line-done').innerText = lineFiltered.filter(d=>d.status==='completed').length.toLocaleString();
+    document.getElementById('u-line-sla').innerText = lineFiltered.filter(d=>d.isOverSLA).length.toLocaleString();
+
+    if(scDataRaw.length > 0) {
+        document.getElementById('u-sc-total').innerText = scFiltered.length.toLocaleString();
+        document.getElementById('u-sc-pending').innerText = scFiltered.filter(d=>d.status!=='Done').length.toLocaleString();
+        document.getElementById('u-sc-done').innerText = scFiltered.filter(d=>d.status==='Done').length.toLocaleString();
+        document.getElementById('u-sc-sla').innerText = scFiltered.filter(d=>d.isOverSLA).length.toLocaleString();
     }
-    document.getElementById('modalJobList').innerHTML = jobsHTML;
-  }
 
-  function closeModal() { modalOverlay.classList.remove('show'); }
-  modalOverlay.addEventListener('click', function(e) { if(e.target === modalOverlay) closeModal(); });
-  function refreshData() { loadData(); }
-  setInterval(() => { loadData(); }, AUTO_REFRESH_SECONDS * 1000);
-  loadData();
+    // Mail Service box
+    if(mailDataRaw.length > 0) {
+        document.getElementById('u-mail-empty').style.display = 'none';
+        document.getElementById('u-mail-data').style.display = 'flex';
+        document.getElementById('u-mail-total').innerText = mailFiltered.length.toLocaleString();
+        document.getElementById('u-mail-pending').innerText = mailFiltered.filter(d=>d.status!=='Done').length.toLocaleString();
+        document.getElementById('u-mail-done').innerText = mailFiltered.filter(d=>d.status==='Done').length.toLocaleString();
+        document.getElementById('u-mail-sla').innerText = mailFiltered.filter(d=>d.isOverSLA).length.toLocaleString();
+    }
+    lucide.createIcons();
+};
+
+window.renderLineDash = () => {
+    document.getElementById('line-full-total').innerText = lineFiltered.length.toLocaleString();
+    document.getElementById('line-full-pending').innerText = lineFiltered.filter(d=>d.status==='pending').length.toLocaleString();
+    document.getElementById('line-full-done').innerText = lineFiltered.filter(d=>d.status==='completed').length.toLocaleString();
+    document.getElementById('line-full-sla').innerText = lineFiltered.filter(d=>d.isOverSLA).length.toLocaleString();
+
+    // Donut % SLA ของ Line (ตัวเลือก B: ทุกงานวัดผลได้)
+    (function(){
+        let measured = lineFiltered.length, breach = lineFiltered.filter(d=>d.isOverSLA).length, met = measured - breach;
+        let stats = { met, breach, measured, pct: measured > 0 ? Math.round(met / measured * 100) : null };
+        if (window.renderSlaDonut) window.renderSlaDonut('line-sla', stats);
+    })();
+
+    document.getElementById('lineBuildingContainer').innerHTML = Object.keys(BUILDINGS).map(k=> {
+        let b = BUILDINGS[k]; let list = lineFiltered.filter(d=>d.buildingCode === k);
+        return `<div class="kpi-card text-center" onclick="window.openUniversalModal('line', 'building', '${k}')"><i data-lucide="${b.icon}" style="color:${b.color}; width:28px; margin:0 auto 8px;"></i><div class="font-bold text-lg num">${list.length}</div><div class="text-xs text-muted">${b.name}</div></div>`;
+    }).join('');
+
+    let sortedLatest = [...lineFiltered].sort((a,b) => (a.status==='pending'?-1:1) || (b.lastUpdate - a.lastUpdate));
+    document.getElementById('lineLatestTable').innerHTML = sortedLatest.slice(0,100).map(d=>`
+        <tr class="clickable" onclick="window.openLineTicket('${d.ticket}')">
+            <td class="font-bold text-primary num">${d.ticket}</td><td style="color:${BUILDINGS[d.buildingCode].color}"><i data-lucide="${BUILDINGS[d.buildingCode].icon}" class="inline w-3 h-3 mr-1"></i>${BUILDINGS[d.buildingCode].name}</td><td class="truncate max-w-[200px]">${safeEscape(d.detail)}</td>
+            <td>${d.status==='completed' ? '<span class="pill pill-success">Done</span>' : '<span class="pill pill-warning">Pending</span>'}</td>
+            <td>${d.isOverSLA ? `<span class="text-danger font-bold text-xs">เกิน SLA</span>` : `<span class="text-success text-xs">ปกติ</span>`}</td>
+        </tr>
+    `).join('') || `<tr><td colspan="5" class="text-center py-8 text-muted">ไม่มีข้อมูล</td></tr>`;
+
+    let cLine = document.getElementById('lineTrendChart');
+    if(!cLine || !document.getElementById('view-line').classList.contains('active')) return;
+    const isDark = document.documentElement.classList.contains('dark'); const txtC = isDark ? '#94a3b8' : '#64748b', gridC = isDark ? '#334155' : '#e2e8f0';
+    let days = {}; lineFiltered.forEach(d=>{ if(!d.start || isNaN(d.start)) return; let day = d.start.getDate().toString(); if(!days[day]) days[day]={p:0,c:0}; d.status==='completed'?days[day].c++:days[day].p++; });
+    let sortedD = Object.keys(days).sort((a,b)=>a-b);
+    if(lineChart) lineChart.destroy();
+    lineChart = new Chart(cLine.getContext('2d'), { type: 'bar', data: { labels: sortedD, datasets: [ {label:'ค้าง', data:sortedD.map(k=>days[k].p), backgroundColor:'#f59e0b', borderRadius:6, borderSkipped:false}, {label:'เสร็จ', data:sortedD.map(k=>days[k].c), backgroundColor: (document.documentElement.classList.contains('dark') ? '#34d399' : '#16a34a'), borderRadius:6, borderSkipped:false} ] }, options: { responsive:true, maintainAspectRatio:false, scales: { x: { stacked:true, ticks:{color:txtC}, grid:{display:false} }, y: { stacked:true, ticks:{color:txtC}, grid:{color:gridC} } }, plugins: { legend: { labels: { color: txtC, usePointStyle:true, pointStyle:'circle' } } } } });
+    lucide.createIcons();
+};
+
+window.renderSmartcareDash = () => {
+    if(scDataRaw.length === 0) return;
+    
+    document.getElementById('sc-ui-total').innerText = scFiltered.length.toLocaleString();
+    let doneList = scFiltered.filter(d=>d.status==='Done');
+    document.getElementById('sc-ui-done').innerText = doneList.length.toLocaleString();
+    document.getElementById('sc-ui-accept').innerText = scFiltered.filter(d=>d.status==='Accept Task').length.toLocaleString();
+    document.getElementById('sc-ui-submit').innerText = scFiltered.filter(d=>d.status==='Submit').length.toLocaleString();
+
+    let metCount = 0, breachCount = 0, catMap = {}, facMap = {};
+    scFiltered.forEach(d => {
+        if(!facMap[d.faction]) facMap[d.faction] = 0; facMap[d.faction]++;
+        if(!catMap[d.category]) catMap[d.category] = []; catMap[d.category].push(d);
+        if(d.slaDays !== null && d.slaDays !== '') { if(!d.isOverSLA) metCount++; else breachCount++; }
+    });
+    
+    let totalM = metCount + breachCount; let slaPct = totalM > 0 ? Math.round((metCount / totalM) * 100) : null;
+    document.getElementById('sc-ui-pct').innerText = slaPct !== null ? `${slaPct}%` : '–';
+    document.getElementById('sc-ui-met').innerText = metCount.toLocaleString(); document.getElementById('sc-ui-breach').innerText = breachCount.toLocaleString(); document.getElementById('sc-ui-measured').innerText = totalM.toLocaleString();
+    let ring = document.getElementById('sc-ui-ring'); if(ring) { ring.style.stroke = slaPct === null ? 'var(--card-border)' : (slaPct >= 90 ? '#10b981' : (slaPct >= 70 ? '#f59e0b' : '#ef4444')); ring.style.strokeDashoffset = 326.7 * (1 - (slaPct || 0)/100); }
+
+    let overAll = scFiltered.filter(d=>d.isOverSLA);
+    document.getElementById('sc-ui-sla-total').innerText = overAll.length.toLocaleString();
+    document.getElementById('sc-ui-sla-done').innerText = overAll.filter(d=>d.status==='Done').length.toLocaleString();
+    document.getElementById('sc-ui-sla-pend').innerText = overAll.filter(d=>d.status!=='Done').length.toLocaleString();
+
+    // ⭐️ Dynamic Vote Score
+    let voteKey = 'all';
+    if (currentYear !== 'all' && currentMonth !== 'all') voteKey = `${currentYear}-${currentMonth}`;
+    let displayVote = (scGlobalVoteAvg && scGlobalVoteAvg[voteKey]) ? scGlobalVoteAvg[voteKey] : (scGlobalVoteAvg['all'] || 0);
+    if (currentMonth !== 'all' && (!scGlobalVoteAvg[voteKey])) { displayVote = 0; }
+
+    document.getElementById('sc-ui-vote-avg').innerHTML = `${displayVote.toFixed(1)}<span class="text-sm font-normal opacity-70"> / 5.0</span>`;
+    let scVoteN = (scGlobalVoteCount && scGlobalVoteCount[voteKey] !== undefined) ? scGlobalVoteCount[voteKey] : (scGlobalVoteCount['all'] || 0);
+    if (currentMonth !== 'all' && (scGlobalVoteCount[voteKey] === undefined)) scVoteN = 0;
+    { const el = document.getElementById('sc-ui-vote-count'); if(el) el.innerText = scVoteN.toLocaleString(); }
+    document.getElementById('sc-ui-vote-stars').innerHTML = Array.from({length:5}, (_,i) => `<i data-lucide="star" class="${i<Math.round(displayVote) ? 'fill-white text-white' : 'text-white/30'}" style="width:16px;height:16px;"></i>`).join('');
+
+    document.getElementById('sc-ui-cat-list').innerHTML = Object.entries(catMap).sort((a,b)=>b[1].length-a[1].length).map(([cat, items]) => {
+        let m=0, t=0; items.forEach(x=>{ if(x.slaDays!==null && x.slaDays!==''){ t++; if(!x.isOverSLA)m++; } });
+        let p = t>0 ? Math.round((m/t)*100) : 0; let c = p>=90?'#10b981':(p>=70?'#f59e0b':'#ef4444');
+        return `<div><div class="flex justify-between text-[11px] font-medium mb-1"><span class="truncate pr-2">${safeEscape(cat)}</span><span style="color:${c}">${p}% <span class="text-muted font-normal text-[9px]">(${m}/${t})</span></span></div><div class="w-full bg-base rounded-full h-1"><div class="h-full rounded-full" style="width:${p}%; background:${c};"></div></div></div>`;
+    }).join('') || '<div class="text-xs text-muted text-center py-4">ไม่มีข้อมูล</div>';
+
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'];
+    document.getElementById('sc-ui-cat-cards').innerHTML = Object.entries(catMap).sort((a,b)=>b[1].length-a[1].length).slice(0,8).map(([cat, items], i) => {
+        let pctTotal = scFiltered.length > 0 ? Math.round((items.length/scFiltered.length)*100) : 0;
+        let m=0, t=0; items.forEach(x=>{ if(x.slaDays!==null && x.slaDays!==''){ t++; if(!x.isOverSLA)m++; } });
+        let slaP = t>0 ? Math.round((m/t)*100) : null; let sTxt = slaP===null?'-':`${slaP}%`;
+        return `<div class="sc-card sc-card-hover flex flex-col justify-between" onclick="window.openUniversalModal('smartcare', 'category', '${safeEscape(cat)}')"><div class="flex justify-between items-start mb-4"><div class="font-bold text-[11px] leading-tight line-clamp-2 pr-2">${safeEscape(cat)}</div><div class="text-[9px] font-bold px-1.5 py-0.5 rounded text-indigo-600 bg-indigo-50 dark:bg-indigo-500/20 dark:text-indigo-300">${pctTotal}%</div></div><div><div class="flex items-end justify-between mb-1"><span class="text-2xl font-bold num leading-none">${items.length} <span class="text-[9px] font-normal text-muted">Tickets</span></span><span class="text-[9px] font-bold text-emerald-500">SLA ${sTxt}</span></div><div class="w-full bg-base rounded-full h-1"><div class="h-full rounded-full" style="width:${pctTotal}%; background:${colors[i%colors.length]}"></div></div></div></div>`;
+    }).join('');
+
+    let sortedFac = Object.entries(facMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const isDark = document.documentElement.classList.contains('dark'); const txtC = isDark ? '#94a3b8' : '#64748b', gridC = isDark ? '#334155' : '#e2e8f0';
+    if(scChart) scChart.destroy();
+    let cSC = document.getElementById('sc-ui-chart'); if(cSC) {
+        scChart = new Chart(cSC.getContext('2d'), { type: 'bar', data: { labels: sortedFac.map(x=>x[0]), datasets: [{data: sortedFac.map(x=>x[1]), backgroundColor: (document.documentElement.classList.contains('dark') ? '#a78bfa' : '#8b5cf6'), borderRadius: 6, borderSkipped:false}] }, options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales: { x:{grid:{color:gridC}, ticks:{color:txtC}}, y:{grid:{display:false}, ticks:{color:txtC, font:{size:10}}} } } });
+    }
+
+    document.getElementById('sc-ui-pending-body').innerHTML = scFiltered.filter(d=>d.status!=='Done').sort((a,b)=>(a.isOverSLA?-1:1) || (a.status==='Submit'?1:-1)).slice(0,100).map(d=>`
+        <tr class="clickable" onclick="window.openTicket('${d.ticket}')"><td class="py-2 text-indigo-500 font-bold num">${d.ticket}</td><td class="py-2 text-xs truncate max-w-[150px]">${safeEscape(d.category)} - ${safeEscape(d.faction)}</td><td class="py-2 text-center text-[10px]">${d.isOverSLA?`<span class="text-danger font-bold">เกินกำหนด ${formatDurDays(d.slaDays)}</span>`:`<span class="text-success">ปกติ</span>`}</td><td class="py-2 text-center text-[10px]"><span class="px-1.5 py-0.5 rounded bg-warning/10 text-warning font-bold">${d.status}</span></td></tr>
+    `).join('') || `<tr><td colspan="4" class="text-center py-8 text-muted">ไม่มีงานค้าง</td></tr>`;
+
+    lucide.createIcons();
+};
+
+window.renderMailDash = () => {
+    if(mailDataRaw.length === 0) return;
+    
+    document.getElementById('mail-ui-total').innerText = mailFiltered.length.toLocaleString();
+    let doneList = mailFiltered.filter(d=>d.status==='Done');
+    document.getElementById('mail-ui-done').innerText = doneList.length.toLocaleString();
+    document.getElementById('mail-ui-accept').innerText = mailFiltered.filter(d=>d.status==='Accept Task').length.toLocaleString();
+    document.getElementById('mail-ui-submit').innerText = mailFiltered.filter(d=>d.status==='Submit').length.toLocaleString();
+
+    let metCount = 0, breachCount = 0, catMap = {}, facMap = {};
+    mailFiltered.forEach(d => {
+        if(!facMap[d.faction]) facMap[d.faction] = 0; facMap[d.faction]++;
+        if(!catMap[d.category]) catMap[d.category] = []; catMap[d.category].push(d);
+        if(d.slaDays !== null && d.slaDays !== '') { if(!d.isOverSLA) metCount++; else breachCount++; }
+    });
+    
+    let totalM = metCount + breachCount; let slaPct = totalM > 0 ? Math.round((metCount / totalM) * 100) : null;
+    document.getElementById('mail-ui-pct').innerText = slaPct !== null ? `${slaPct}%` : '–';
+    document.getElementById('mail-ui-met').innerText = metCount.toLocaleString(); document.getElementById('mail-ui-breach').innerText = breachCount.toLocaleString(); document.getElementById('mail-ui-measured').innerText = totalM.toLocaleString();
+    let ring = document.getElementById('mail-ui-ring'); if(ring) { ring.style.stroke = slaPct === null ? 'var(--card-border)' : (slaPct >= 90 ? '#10b981' : (slaPct >= 70 ? '#f59e0b' : '#ef4444')); ring.style.strokeDashoffset = 326.7 * (1 - (slaPct || 0)/100); }
+
+    let overAll = mailFiltered.filter(d=>d.isOverSLA);
+    document.getElementById('mail-ui-sla-total').innerText = overAll.length.toLocaleString();
+    document.getElementById('mail-ui-sla-done').innerText = overAll.filter(d=>d.status==='Done').length.toLocaleString();
+    document.getElementById('mail-ui-sla-pend').innerText = overAll.filter(d=>d.status!=='Done').length.toLocaleString();
+
+    // ⭐️ Dynamic Vote Score
+    let voteKey = 'all';
+    if (currentYear !== 'all' && currentMonth !== 'all') voteKey = `${currentYear}-${currentMonth}`;
+    let displayVote = (mailGlobalVoteAvg && mailGlobalVoteAvg[voteKey]) ? mailGlobalVoteAvg[voteKey] : (mailGlobalVoteAvg['all'] || 0);
+    if (currentMonth !== 'all' && (!mailGlobalVoteAvg[voteKey])) { displayVote = 0; }
+
+    document.getElementById('mail-ui-vote-avg').innerHTML = `${displayVote.toFixed(1)}<span class="text-sm font-normal opacity-70"> / 5.0</span>`;
+    let mailVoteN = (mailGlobalVoteCount && mailGlobalVoteCount[voteKey] !== undefined) ? mailGlobalVoteCount[voteKey] : (mailGlobalVoteCount['all'] || 0);
+    if (currentMonth !== 'all' && (mailGlobalVoteCount[voteKey] === undefined)) mailVoteN = 0;
+    { const el = document.getElementById('mail-ui-vote-count'); if(el) el.innerText = mailVoteN.toLocaleString(); }
+    document.getElementById('mail-ui-vote-stars').innerHTML = Array.from({length:5}, (_,i) => `<i data-lucide="star" class="${i<Math.round(displayVote) ? 'fill-white text-white' : 'text-white/30'}" style="width:16px;height:16px;"></i>`).join('');
+
+    document.getElementById('mail-ui-cat-list').innerHTML = Object.entries(catMap).sort((a,b)=>b[1].length-a[1].length).map(([cat, items]) => {
+        let m=0, t=0; items.forEach(x=>{ if(x.slaDays!==null && x.slaDays!==''){ t++; if(!x.isOverSLA)m++; } });
+        let p = t>0 ? Math.round((m/t)*100) : 0; let c = p>=90?'#10b981':(p>=70?'#f59e0b':'#ef4444');
+        return `<div><div class="flex justify-between text-[11px] font-medium mb-1"><span class="truncate pr-2">${safeEscape(cat)}</span><span style="color:${c}">${p}% <span class="text-muted font-normal text-[9px]">(${m}/${t})</span></span></div><div class="w-full bg-base rounded-full h-1"><div class="h-full rounded-full" style="width:${p}%; background:${c};"></div></div></div>`;
+    }).join('') || '<div class="text-xs text-muted text-center py-4">ไม่มีข้อมูล</div>';
+
+    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'];
+    document.getElementById('mail-ui-cat-cards').innerHTML = Object.entries(catMap).sort((a,b)=>b[1].length-a[1].length).slice(0,8).map(([cat, items], i) => {
+        let pctTotal = mailFiltered.length > 0 ? Math.round((items.length/mailFiltered.length)*100) : 0;
+        let m=0, t=0; items.forEach(x=>{ if(x.slaDays!==null && x.slaDays!==''){ t++; if(!x.isOverSLA)m++; } });
+        let slaP = t>0 ? Math.round((m/t)*100) : null; let sTxt = slaP===null?'-':`${slaP}%`;
+        return `<div class="sc-card sc-card-hover flex flex-col justify-between" onclick="window.openUniversalModal('mailservice', 'category', '${safeEscape(cat)}')"><div class="flex justify-between items-start mb-4"><div class="font-bold text-[11px] leading-tight line-clamp-2 pr-2">${safeEscape(cat)}</div><div class="text-[9px] font-bold px-1.5 py-0.5 rounded text-teal-600 bg-teal-50 dark:bg-teal-500/20 dark:text-teal-300">${pctTotal}%</div></div><div><div class="flex items-end justify-between mb-1"><span class="text-2xl font-bold num leading-none">${items.length} <span class="text-[9px] font-normal text-muted">Tickets</span></span><span class="text-[9px] font-bold text-emerald-500">SLA ${sTxt}</span></div><div class="w-full bg-base rounded-full h-1"><div class="h-full rounded-full" style="width:${pctTotal}%; background:${colors[i%colors.length]}"></div></div></div></div>`;
+    }).join('');
+
+    let sortedFac = Object.entries(facMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const isDark = document.documentElement.classList.contains('dark'); const txtC = isDark ? '#94a3b8' : '#64748b', gridC = isDark ? '#334155' : '#e2e8f0';
+    if(mailChart) mailChart.destroy();
+    let cSC = document.getElementById('mail-ui-chart'); if(cSC) {
+        mailChart = new Chart(cSC.getContext('2d'), { type: 'bar', data: { labels: sortedFac.map(x=>x[0]), datasets: [{data: sortedFac.map(x=>x[1]), backgroundColor: (document.documentElement.classList.contains('dark') ? '#2dd4bf' : '#14b8a6'), borderRadius: 6, borderSkipped:false}] }, options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales: { x:{grid:{color:gridC}, ticks:{color:txtC}}, y:{grid:{display:false}, ticks:{color:txtC, font:{size:10}}} } } });
+    }
+
+    document.getElementById('mail-ui-pending-body').innerHTML = mailFiltered.filter(d=>d.status!=='Done').sort((a,b)=>(a.isOverSLA?-1:1) || (a.status==='Submit'?1:-1)).slice(0,100).map(d=>`
+        <tr class="clickable" onclick="window.openTicket('${d.ticket}')"><td class="py-2 text-indigo-500 font-bold num">${d.ticket}</td><td class="py-2 text-xs truncate max-w-[150px]">${safeEscape(d.category)} - ${safeEscape(d.faction)}</td><td class="py-2 text-center text-[10px]">${d.isOverSLA?`<span class="text-danger font-bold">เกินกำหนด ${formatDurDays(d.slaDays)}</span>`:`<span class="text-success">ปกติ</span>`}</td><td class="py-2 text-center text-[10px]"><span class="px-1.5 py-0.5 rounded bg-warning/10 text-warning font-bold">${d.status}</span></td></tr>
+    `).join('') || `<tr><td colspan="4" class="text-center py-8 text-muted">ไม่มีงานค้าง</td></tr>`;
+
+    lucide.createIcons();
+};
+
+window.renderLineBuildings = () => {
+    document.getElementById('lineBuildingTabs').innerHTML = Object.keys(BUILDINGS).map(k=> `<button class="tab-btn ${activeLineTab===k?'active':''}" onclick="activeLineTab='${k}'; window.renderLineBuildings();"><i data-lucide="${BUILDINGS[k].icon}" class="w-4 h-4"></i> ${BUILDINGS[k].name} <span class="num">(${lineFiltered.filter(d=>d.buildingCode===k).length})</span></button>`).join('');
+    document.getElementById('lineBuildingTableBody').innerHTML = lineFiltered.filter(d=>d.buildingCode === activeLineTab).sort((a,b)=>b.durDays-a.durDays).slice(0,100).map(d=>`
+        <tr class="clickable" onclick="window.openLineTicket('${d.ticket}')"><td class="font-bold text-primary num">${d.ticket}</td><td class="truncate max-w-[250px]">${safeEscape(d.detail)}</td><td class="num">${d.dateStr}</td><td>${d.status==='completed' ? '<span class="pill pill-success">Done</span>' : '<span class="pill pill-warning">Pending</span>'}</td><td>${d.isOverSLA ? `<span class="text-danger font-bold text-xs">เกิน SLA (${formatDurDays(d.durDays)})</span>` : `<span class="text-success text-xs">ปกติ</span>`}</td></tr>
+    `).join('') || `<tr><td colspan="5" class="text-center py-8 text-muted">ไม่มีข้อมูลของอาคารนี้</td></tr>`;
+    lucide.createIcons();
+};
+
+window.renderScBuildings = () => {
+    if(scFiltered.length === 0) { document.getElementById('scBuildingTabs').innerHTML=''; document.getElementById('scBuildingTableBody').innerHTML=`<tr><td colspan="5" class="text-center py-8 text-muted">ไม่มีข้อมูล Smartcare</td></tr>`; return; }
+    let cats = [...new Set(scFiltered.map(d=>d.category))];
+    if((!activeScTab || !cats.includes(activeScTab)) && cats.length > 0) activeScTab = cats[0];
+    document.getElementById('scBuildingTabs').innerHTML = cats.map(k=> `<button class="tab-btn ${activeScTab===k?'active active-purple':''}" onclick="activeScTab='${safeEscape(k)}'; window.renderScBuildings();"><i data-lucide="tag" class="w-4 h-4"></i> ${safeEscape(k)} <span class="num">(${scFiltered.filter(d=>d.category===k).length})</span></button>`).join('');
+    
+    document.getElementById('scBuildingTableBody').innerHTML = scFiltered.filter(d=>d.category === activeScTab).slice(0,100).map(d=>`
+        <tr class="clickable" onclick="window.openTicket('${d.ticket}')">
+            <td class="font-bold text-purple-500 num">${d.ticket}</td><td class="text-sm font-medium">${safeEscape(d.faction)}</td><td class="text-sm truncate max-w-[200px]">${safeEscape(d.detail)}</td>
+            <td>${d.status==='Done'?'<span class="pill pill-success">Done</span>':(d.status==='Accept Task'?'<span class="pill pill-warning">Accept</span>':'<span class="pill pill-primary">Submit</span>')}</td>
+            <td>${d.isOverSLA ? `<span class="text-danger font-bold text-xs">เกิน SLA</span>` : ((d.slaDays !== null && d.slaDays !== '') ? `<span class="text-success text-xs">ปกติ</span>` : `<span class="text-muted text-xs">-</span>`)}</td>
+        </tr>
+    `).join('') || `<tr><td colspan="5" class="text-center py-8 text-muted">ไม่มีข้อมูลของหมวดหมู่นี้</td></tr>`;
+    lucide.createIcons();
+};
+
+window.renderMailBuildings = () => {
+    if(mailFiltered.length === 0) { document.getElementById('mailBuildingTabs').innerHTML=''; document.getElementById('mailBuildingTableBody').innerHTML=`<tr><td colspan="5" class="text-center py-8 text-muted">ไม่มีข้อมูล Mail Service</td></tr>`; return; }
+    let cats = [...new Set(mailFiltered.map(d=>d.category))];
+    if((!activeMailTab || !cats.includes(activeMailTab)) && cats.length > 0) activeMailTab = cats[0];
+    document.getElementById('mailBuildingTabs').innerHTML = cats.map(k=> `<button class="tab-btn ${activeMailTab===k?'active active-teal':''}" onclick="activeMailTab='${safeEscape(k)}'; window.renderMailBuildings();"><i data-lucide="tag" class="w-4 h-4"></i> ${safeEscape(k)} <span class="num">(${mailFiltered.filter(d=>d.category===k).length})</span></button>`).join('');
+    
+    document.getElementById('mailBuildingTableBody').innerHTML = mailFiltered.filter(d=>d.category === activeMailTab).slice(0,100).map(d=>`
+        <tr class="clickable" onclick="window.openTicket('${d.ticket}')">
+            <td class="font-bold num" style="color:var(--teal)">${d.ticket}</td><td class="text-sm font-medium">${safeEscape(d.faction)}</td><td class="text-sm truncate max-w-[200px]">${safeEscape(d.detail)}</td>
+            <td>${d.status==='Done'?'<span class="pill pill-success">Done</span>':(d.status==='Accept Task'?'<span class="pill pill-warning">Accept</span>':'<span class="pill pill-primary">Submit</span>')}</td>
+            <td>${d.isOverSLA ? `<span class="text-danger font-bold text-xs">เกิน SLA</span>` : ((d.slaDays !== null && d.slaDays !== '') ? `<span class="text-success text-xs">ปกติ</span>` : `<span class="text-muted text-xs">-</span>`)}</td>
+        </tr>
+    `).join('') || `<tr><td colspan="5" class="text-center py-8 text-muted">ไม่มีข้อมูลของหมวดหมู่นี้</td></tr>`;
+    lucide.createIcons();
+};
+
+window.renderRecurringView = () => {
+    const cleanDetail = (str) => { 
+        let s = str.trim().toLowerCase();
+        s = s.replace(/แจ้งซ่อม\s*-\s*/g, '').replace(/ปัญหา\s*-\s*/g, '');
+        s = s.replace(/\s*\(?ห้อง\s*\d+[a-z]?\)?\s*/g, '').replace(/\s*ชั้น\s*\d+\s*/g, ''); 
+        return s.length > 50 ? s.substring(0, 50) + '...' : s; 
+    };
+    
+    let lMap = {}, sMap = {};
+    lineFiltered.forEach(d => {
+        if(!d.start || isNaN(d.start)) return; let mKey = `${d.start.getFullYear()}-${String(d.start.getMonth()+1).padStart(2,'0')}`;
+        let bCode = BUILDINGS[d.buildingCode].name; let kw = cleanDetail(d.detail);
+        let key = `${mKey}|${bCode}|${kw}`;
+        if(!lMap[key]) lMap[key] = { m: mKey, b: bCode, k: kw, count: 0, items: [] }; 
+        lMap[key].count++; lMap[key].items.push(d.ticket);
+    });
+
+    scFiltered.forEach(d => {
+        if(!d.start || isNaN(d.start)) return; let mKey = `${d.start.getFullYear()}-${String(d.start.getMonth()+1).padStart(2,'0')}`;
+        let kw = d.category; 
+        let key = `${mKey}|${kw}`;
+        if(!sMap[key]) sMap[key] = { m: mKey, k: kw, count: 0, items: [] }; 
+        sMap[key].count++; sMap[key].items.push(d.ticket);
+    });
+    
+    let lRec = Object.values(lMap).filter(x => x.count > 1).sort((a,b) => b.count - a.count);
+    document.getElementById('recurringLineBody').innerHTML = lRec.map(d=>`
+        <tr class="clickable" onclick="window.openUniversalModal('line', 'recurring', '${d.items.join(',')}')">
+            <td class="num">${d.m}</td><td class="font-medium text-primary">${safeEscape(d.b)}</td><td class="truncate max-w-[200px] text-xs">${safeEscape(d.k)}</td><td class="font-bold text-danger num text-center text-lg">${d.count}</td>
+        </tr>
+    `).join('') || `<tr><td colspan="4" class="text-center py-8 text-muted">ไม่พบข้อมูลเกิดซ้ำใน Line</td></tr>`;
+
+    let sRec = Object.values(sMap).filter(x => x.count > 1).sort((a,b) => b.count - a.count);
+    document.getElementById('recurringScBody').innerHTML = sRec.map(d=>`
+        <tr class="clickable" onclick="window.openUniversalModal('smartcare', 'recurring', '${d.items.join(',')}')">
+            <td class="num">${d.m}</td><td class="font-medium text-purple-500 truncate max-w-[200px] text-sm">${safeEscape(d.k)}</td><td class="font-bold text-danger num text-center text-lg">${d.count}</td>
+        </tr>
+    `).join('') || `<tr><td colspan="3" class="text-center py-8 text-muted">ไม่พบข้อมูลเกิดซ้ำใน Smartcare</td></tr>`;
+};
+
+window.renderSettingsPage = () => {
+    document.getElementById('setting-line-sla-list').innerHTML = Object.keys(BUILDINGS).map(k => {
+        let val = lineSlaConfig[k] || DEFAULT_LINE_SLA;
+        return `<div class="flex justify-between items-center py-2 border-b border-card-border last:border-0"><div class="text-sm font-medium text-main flex items-center gap-2"><i data-lucide="${BUILDINGS[k].icon}" class="w-4 h-4 text-muted"></i> ${BUILDINGS[k].name}</div><div class="flex items-center gap-2"><input type="number" min="1" class="line-sla-input custom-input w-20 px-2 py-1 text-center num" data-bcode="${k}" value="${val}"></div></div>`;
+    }).join('');
+
+    let scListEl = document.getElementById('setting-sc-sla-list');
+    if(scDataRaw.length === 0 && mailDataRaw.length === 0) { scListEl.innerHTML = `<div class="text-center py-6 text-muted text-sm">ยังไม่มีหมวดหมู่ (รอซิงค์ข้อมูล Cloud)</div>`; return; }
+    let scCats = [...new Set(scDataRaw.map(d => d.category))].sort().map(c => ({cat:c, mail:false}));
+    let mailCats = [...new Set(mailDataRaw.map(d => d.category))].sort().map(c => ({cat:c, mail:true}));
+    let allCats = [...scCats, ...mailCats];
+    scListEl.innerHTML = allCats.map(({cat, mail}) => {
+        let val = scSlaConfig[cat] || DEFAULT_SC_SLA;
+        let tag = mail ? `<span class="pill ml-2" style="background:rgba(20,184,166,0.12); color:var(--teal); font-size:0.6rem;">Mail</span>` : `<span class="pill ml-2" style="background:rgba(139,92,246,0.1); color:var(--purple); font-size:0.6rem;">SC</span>`;
+        return `<div class="flex justify-between items-center py-2 border-b border-card-border last:border-0"><div class="text-sm font-medium text-main truncate pr-4">${safeEscape(cat)} ${tag}</div><div class="flex items-center gap-2"><input type="number" step="0.1" min="0.1" class="sc-sla-input custom-input w-20 px-2 py-1 text-center num" data-cat="${safeEscape(cat)}" value="${val}"></div></div>`;
+    }).join('');
+    lucide.createIcons();
+};
+
+window.saveSlaSettings = () => {
+    document.querySelectorAll('.line-sla-input').forEach(inp => { let v = parseFloat(inp.value); if(v>0) lineSlaConfig[inp.getAttribute('data-bcode')] = v; });
+    localStorage.setItem('sys_line_sla_map_v3', JSON.stringify(lineSlaConfig));
+    document.querySelectorAll('.sc-sla-input').forEach(inp => { let v = parseFloat(inp.value); if(v>0) scSlaConfig[inp.getAttribute('data-cat')] = v; });
+    localStorage.setItem('sys_sc_sla_map_v3', JSON.stringify(scSlaConfig));
+    
+    lineDataRaw.forEach(d => { d.targetSla = lineSlaConfig[d.buildingCode] || DEFAULT_LINE_SLA; d.isOverSLA = d.durDays > d.targetSla; });
+    scDataRaw.forEach(d => { d.targetSla = scSlaConfig[d.category] || DEFAULT_SC_SLA; if(d.slaDays !== null && d.slaDays !== '') d.isOverSLA = parseFloat(d.slaDays) > d.targetSla; });
+    mailDataRaw.forEach(d => { d.targetSla = scSlaConfig[d.category] || DEFAULT_SC_SLA; if(d.slaDays !== null && d.slaDays !== '') d.isOverSLA = parseFloat(d.slaDays) > d.targetSla; });
+
+    window.showToast('บันทึกเป้าหมาย SLA เรียบร้อย!'); window.applyGlobalFilter(); 
+};
+
+window.exportOverSLA = (system, format) => {
+    let rawData = []; let title = "";
+    if (system === 'line') {
+        let overList = lineFiltered.filter(d => d.isOverSLA);
+        if (overList.length === 0) { window.showToast("ไม่มีงานค้างเกิน SLA ใน Line", true); return; }
+        rawData = overList.map(d => ({
+            "Ticket No": d.ticket, "อาคาร (Building)": BUILDINGS[d.buildingCode]?.name || d.buildingCode, "รายละเอียด (Detail)": d.detail,
+            "วันที่รับแจ้ง (Date)": d.dateStr, "สถานะ (Status)": d.status === 'completed' ? 'Done' : 'Pending',
+            "ใช้เวลา (วัน)": d.durDays ? d.durDays.toFixed(2) : 0, "เป้าหมาย SLA": d.targetSla
+        }));
+        title = `Over_SLA_LineBot_${new Date().toISOString().split('T')[0]}`;
+    } else {
+        if (scDataRaw.length === 0) { window.showToast("ไม่มีข้อมูล กรุณาเชื่อมต่อ Cloud หรืออัปโหลดไฟล์", true); return; }
+        let overList = scFiltered.filter(d => d.isOverSLA);
+        if (overList.length === 0) { window.showToast("ไม่มีงานค้างเกิน SLA ใน Smartcare", true); return; }
+        rawData = overList.map(d => ({
+            "Ticket No": d.ticket, "หมวดหมู่ (Category)": d.category, "ฝ่ายแจ้ง (Faction)": d.faction, "รายละเอียด (Detail)": d.detail,
+            "สถานะ (Status)": d.status, "ใช้เวลา (วัน)": d.slaDays ? parseFloat(d.slaDays).toFixed(2) : 0, "เป้าหมาย SLA": d.targetSla
+        }));
+        title = `Over_SLA_Smartcare_${new Date().toISOString().split('T')[0]}`;
+    }
+
+    if (format === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(rawData); const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Over SLA"); XLSX.writeFile(wb, `${title}.xlsx`);
+        window.showToast("ส่งออกไฟล์ Excel สำเร็จ");
+    } else if (format === 'pdf') { window.exportToPDF(rawData, title, system); }
+};
+
+window.exportToPDF = (data, title, system) => {
+    window.showToast("กำลังประมวลผล PDF...", false);
+    const container = document.createElement('div'); container.style.padding = '30px'; container.style.fontFamily = "'Prompt', sans-serif"; container.style.background = '#ffffff'; container.style.width = '1000px'; container.style.color = '#000000';
+    const sysName = system === 'line' ? 'Line Bot' : 'Smartcare'; const color = system === 'line' ? '#3b82f6' : '#8b5cf6';
+    let html = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: ${color}; margin-bottom: 5px; font-size: 24px; font-weight: bold;">รายงานงานซ่อมที่ล่าช้าเกินกำหนด (Over SLA)</h2>
+            <p style="color: #64748b; font-size: 14px;">ระบบ: <b>${sysName}</b> | ออกรายงานเมื่อ: ${new Date().toLocaleDateString('th-TH')}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+            <thead><tr style="background-color: ${color}; color: #ffffff;">
+    `;
+    const keys = Object.keys(data[0]); keys.forEach(k => { html += `<th style="padding: 10px; border: 1px solid #e2e8f0; white-space: nowrap;">${k}</th>`; });
+    html += `</tr></thead><tbody>`;
+    data.forEach((row, i) => { const bg = i % 2 === 0 ? '#f8fafc' : '#ffffff'; html += `<tr style="background-color: ${bg};">`; keys.forEach(k => { html += `<td style="padding: 10px; border: 1px solid #e2e8f0; vertical-align: top;">${safeEscape(row[k])}</td>`; }); html += `</tr>`; });
+    html += `</tbody></table>`; container.innerHTML = html; document.body.appendChild(container);
+
+    const opt = { margin: 10, filename: `${title}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+    html2pdf().set(opt).from(container).save().then(() => { document.body.removeChild(container); window.showToast("ส่งออกไฟล์ PDF สำเร็จ!"); }).catch(err => { document.body.removeChild(container); window.showToast("เกิดข้อผิดพลาดในการสร้าง PDF", true); console.error(err); });
+};
+
+window.openUniversalModal = (source, type, filterVal = null) => {
+    let list = []; let title = ""; let isGrand = source === 'grand';
+    if(isGrand) {
+        let combine = [...lineFiltered.map(d=>({...d, _sys:'Line'})), ...scFiltered.map(d=>({...d, _sys:'SC'})), ...mailFiltered.map(d=>({...d, _sys:'Mail'}))];
+        if(type==='total') { list=combine; title="ภาพรวม: รับแจ้งทั้งหมด"; } else if(type==='completed') { list=combine.filter(d=>d.status==='completed'||d.status==='Done'); title="ภาพรวม: เสร็จสมบูรณ์"; } else if(type==='pending') { list=combine.filter(d=>d.status==='pending'||d.status==='Submit'); title="ภาพรวม: รอดำเนินการ"; }else if(type==='accept') { list=combine.filter(d=>d.status==='Accept Task'); title="ภาพรวม: กำลังดำเนินการ"; } else if(type==='sla') { list=combine.filter(d=>d.isOverSLA); title="ภาพรวม: งานเกิน SLA ทั้งระบบ"; }
+    } else if(source === 'line') {
+        if(type==='total') { list=lineFiltered; title="Line: รับแจ้งทั้งหมด"; } else if(type==='completed') { list=lineFiltered.filter(d=>d.status==='completed'); title="Line: เสร็จสิ้น"; } else if(type==='pending') { list=lineFiltered.filter(d=>d.status==='pending'); title="Line: งานค้าง"; } else if(type==='sla') { list=lineFiltered.filter(d=>d.isOverSLA); title=`Line: เกิน SLA`; } else if(type==='building') { list=lineFiltered.filter(d=>d.buildingCode===filterVal); title=`Line: อาคาร ${BUILDINGS[filterVal].name}`; } else if(type==='ticket') { list=lineFiltered.filter(d=>d.ticket===filterVal); title=`รายละเอียด Ticket: ${filterVal}`; } else if(type==='recurring') { let tArr = filterVal.split(','); list=lineFiltered.filter(d=>tArr.includes(d.ticket)); title="Line: รายการงานที่เกิดซ้ำ"; }
+    } else if(source === 'smartcare') {
+        if(type==='total') { list=scFiltered; title="Smartcare: รับแจ้งทั้งหมด"; } else if(type==='completed') { list=scFiltered.filter(d=>d.status==='Done'); title="Smartcare: เสร็จสิ้น (Done)"; } else if(type==='pending') { list=scFiltered.filter(d=>d.status!=='Done'); title="Smartcare: ค้างทั้งหมด"; } else if(type==='submit') { list=scFiltered.filter(d=>d.status==='Submit'); title="Smartcare: Submit"; } else if(type==='accept') { list=scFiltered.filter(d=>d.status==='Accept Task'); title="Smartcare: Accept Task"; } else if(type==='sla') { list=scFiltered.filter(d=>d.isOverSLA); title="Smartcare: เกิน SLA"; } else if(type==='category') { list=scFiltered.filter(d=>d.category===filterVal); title=`หมวดหมู่: ${filterVal}`; } else if(type==='recurring') { let tArr = filterVal.split(','); list=scFiltered.filter(d=>tArr.includes(d.ticket)); title="Smartcare: รายการงานที่เกิดซ้ำ"; }
+    } else if(source === 'mailservice') {
+        if(type==='total') { list=mailFiltered; title="Mail Service: รับแจ้งทั้งหมด"; } else if(type==='completed') { list=mailFiltered.filter(d=>d.status==='Done'); title="Mail Service: เสร็จสิ้น (Done)"; } else if(type==='pending') { list=mailFiltered.filter(d=>d.status!=='Done'); title="Mail Service: ค้างทั้งหมด"; } else if(type==='submit') { list=mailFiltered.filter(d=>d.status==='Submit'); title="Mail Service: Submit"; } else if(type==='accept') { list=mailFiltered.filter(d=>d.status==='Accept Task'); title="Mail Service: Accept Task"; } else if(type==='sla') { list=mailFiltered.filter(d=>d.isOverSLA); title="Mail Service: เกิน SLA"; } else if(type==='category') { list=mailFiltered.filter(d=>d.category===filterVal); title=`หมวดหมู่: ${filterVal}`; } else if(type==='recurring') { let tArr = filterVal.split(','); list=mailFiltered.filter(d=>tArr.includes(d.ticket)); title="Mail Service: รายการงานที่เกิดซ้ำ"; }
+    }
+
+    document.getElementById('um-title').innerHTML = title; document.getElementById('um-subtitle').innerText = `พบ ${list.length.toLocaleString()} รายการ`;
+    let thead = isGrand ? `<tr><th>ระบบ</th><th>Ticket</th><th>รายละเอียด</th><th>วันที่</th><th>สถานะ</th><th>SLA</th></tr>` : (source==='line' ? `<tr><th>Ticket</th><th>อาคาร</th><th>รายละเอียด</th><th>สถานะ</th><th>SLA</th></tr>` : `<tr><th>Ticket</th><th>หมวดหมู่</th><th>รายละเอียด</th><th>สถานะ</th><th>SLA</th></tr>`);
+    document.getElementById('um-thead').innerHTML = thead;
+    document.getElementById('um-tbody').innerHTML = list.slice(0, 150).map(d => {
+        let slaBad = d.isOverSLA ? `<span class="text-danger font-bold text-xs">เกิน SLA</span>` : ((d.slaDays !== null && d.slaDays !== '') || d.durDays !== undefined ? `<span class="text-success text-xs">ปกติ</span>` : `<span class="text-muted text-xs">-</span>`);
+        let trHtml = `<tr>`;
+        if(isGrand) trHtml += `<td>${d._sys==='Line'?'<span class="pill pill-primary">Line</span>':(d._sys==='Mail'?'<span class="pill" style="background:rgba(20,184,166,0.12); color:var(--teal)">Mail</span>':'<span class="pill" style="background:rgba(139,92,246,0.1); color:var(--purple)">SC</span>')}</td><td class="font-bold num">${d.ticket}</td><td class="truncate max-w-[150px] text-sm">${safeEscape(d.detail)}</td><td class="num">${d.dateStr}</td><td>${(d.status==='completed'||d.status==='Done')?'<span class="pill pill-success">Done</span>':'<span class="pill pill-warning">Pending</span>'}</td><td>${slaBad}</td>`;
+        else if(source==='line') trHtml += `<td class="font-bold text-primary num">${d.ticket}</td><td class="font-medium text-sm"><i data-lucide="${BUILDINGS[d.buildingCode].icon}" class="inline w-3 h-3 mr-1"></i>${BUILDINGS[d.buildingCode].name}</td><td class="truncate max-w-[200px] text-sm">${safeEscape(d.detail)}</td><td>${d.status==='completed'?'<span class="pill pill-success">Done</span>':'<span class="pill pill-warning">Pending</span>'}</td><td>${slaBad}</td>`;
+        else trHtml += `<td class="font-bold num" style="color:${source==='mailservice'?'var(--teal)':'var(--purple)'}">${d.ticket}</td><td class="text-sm">${safeEscape(d.category)}</td><td class="text-sm truncate max-w-[200px]">${safeEscape(d.detail)}</td><td>${d.status==='Done'?'<span class="pill pill-success">Done</span>':(d.status==='Accept Task'?'<span class="pill pill-warning">Accept</span>':'<span class="pill pill-primary">Submit</span>')}</td><td>${slaBad}</td>`;
+        trHtml += `</tr>`;
+        
+        if(source === 'smartcare' || source === 'mailservice' || (isGrand && (d._sys === 'SC' || d._sys === 'Mail'))) trHtml = trHtml.replace('<tr>', `<tr class="clickable" onclick="window.openTicket('${d.ticket}')">`);
+        if(source === 'line' || (isGrand && d._sys === 'Line')) trHtml = trHtml.replace('<tr>', `<tr class="clickable" onclick="window.openLineTicket('${d.ticket}')">`);
+        return trHtml;
+    }).join('') || `<tr><td colspan="6" class="text-center py-8 text-muted">ไม่พบข้อมูล</td></tr>`;
+
+    document.getElementById('universalModal').classList.add('show'); lucide.createIcons();
+};
+window.closeUniversalModal = () => document.getElementById('universalModal').classList.remove('show');
+
+window.openTicket = (tNo) => {
+    let d = [...scDataRaw, ...mailDataRaw].find(x => x.ticket === tNo); if(!d) return;
+    const isMail = d.source === 'mailservice';
+    document.getElementById('tm-system-label').innerText = isMail ? 'รายละเอียดงานเจาะลึก (Mail Service)' : 'รายละเอียดงานซ่อมเจาะลึก (Smartcare)';
+    document.getElementById('tm-no').innerText = d.ticket; document.getElementById('tm-no').className = 'font-bold text-xl num'; document.getElementById('tm-no').style.color = isMail ? 'var(--teal)' : 'var(--purple)';
+    let sCol = d.isOverSLA ? 'text-danger' : 'text-success';
+    let sTxt = d.isOverSLA ? `เกิน SLA (${formatDurDays(d.slaDays)})` : ((d.slaDays !== null && d.slaDays !== '') ? `ตรงเวลา (${formatDurDays(d.slaDays)})` : 'ยังวัดผลไม่ได้');
+    
+    let html = `
+        <div class="flex gap-2 mb-6">
+            <span class="pill ${d.status==='Done'?'pill-success':(d.status==='Accept Task'?'pill-warning':'pill-primary')}">${d.status}</span>
+            <span class="pill" style="background:var(--card-bg); border:1px solid var(--card-border); color:var(--text-main);">${safeEscape(d.faction)}</span>
+        </div>
+        <div class="ticket-field-box mb-4 bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30">
+            <div class="ticket-field-label text-purple-500">รายละเอียดปัญหา (Description)</div>
+            <div class="ticket-field-val text-sm leading-relaxed">${safeEscape(d.detail)}</div>
+        </div>
+        <div class="grid-2 gap-4 mb-6">
+            <div class="ticket-field-box"><div class="ticket-field-label">หมวดหมู่งาน</div><div class="ticket-field-val">${safeEscape(d.category)}</div></div>
+            <div class="ticket-field-box"><div class="ticket-field-label">วันที่แจ้ง</div><div class="ticket-field-val num">${d.dateStr}</div></div>
+            <div class="ticket-field-box"><div class="ticket-field-label">คะแนนโหวต (Vote Score)</div><div class="ticket-field-val num text-purple-500">${d.voteScore || '-'}</div></div>
+            <div class="ticket-field-box"><div class="ticket-field-label">สถานะ SLA (เป้า ${d.targetSla} วัน)</div><div class="ticket-field-val num ${sCol}">${sTxt}</div></div>
+        </div>
+    `;
+    document.getElementById('tm-body').innerHTML = html; document.getElementById('ticketModal').classList.add('show'); lucide.createIcons();
+};
+
+window.openLineTicket = (tNo) => {
+    let d = lineDataRaw.find(x => x.ticket === tNo); if(!d) return;
+    document.getElementById('tm-system-label').innerText = 'รายละเอียดงานซ่อมเจาะลึก (Line Bot)';
+    document.getElementById('tm-no').innerText = d.ticket; document.getElementById('tm-no').className = 'font-bold text-xl text-primary num';
+    let sCol = d.isOverSLA ? 'text-danger' : 'text-success';
+    let sTxt = d.isOverSLA ? `เกิน SLA (${formatDurDays(d.durDays)})` : `ตรงเวลา (${formatDurDays(d.durDays)})`;
+
+    let html = `
+        <div class="flex gap-2 mb-6">
+            <span class="pill ${d.status==='completed'?'pill-success':'pill-warning'}">${d.status}</span>
+            <span class="pill" style="background:var(--card-bg); border:1px solid var(--card-border); color:${BUILDINGS[d.buildingCode].color};"><i data-lucide="${BUILDINGS[d.buildingCode].icon}" class="w-3 h-3 mr-1 inline"></i>${BUILDINGS[d.buildingCode].name}</span>
+        </div>
+        <div class="ticket-field-box mb-4 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30">
+            <div class="ticket-field-label text-blue-500">รายละเอียดปัญหา (Description)</div>
+            <div class="ticket-field-val text-sm leading-relaxed">${safeEscape(d.detail)}</div>
+        </div>
+        <div class="grid-2 gap-4 mb-6">
+            <div class="ticket-field-box"><div class="ticket-field-label">วันที่แจ้ง</div><div class="ticket-field-val num">${d.dateStr}</div></div>
+            <div class="ticket-field-box"><div class="ticket-field-label">สถานะ SLA (เป้า ${d.targetSla} วัน)</div><div class="ticket-field-val num ${sCol}">${sTxt}</div></div>
+        </div>
+    `;
+    document.getElementById('tm-body').innerHTML = html; document.getElementById('ticketModal').classList.add('show'); lucide.createIcons();
+};
+window.closeTicketModal = () => document.getElementById('ticketModal').classList.remove('show');
+
+document.addEventListener('DOMContentLoaded', async () => {
+    lucide.createIcons();
+    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        if (document.documentElement.classList.contains('dark')) window.toggleTheme();
+    }
+
+    // คืนค่าสถานะเมนู (พับ/กาง) — ค่าเริ่มต้น = กาง (มีชื่อ)
+    try {
+        if(localStorage.getItem('smp_sidebar_collapsed') === '1') {
+            document.getElementById('appSidebar').classList.add('collapsed');
+            const ic = document.querySelector('#sidebarToggle i');
+            if(ic) ic.setAttribute('data-lucide', 'panel-left-open');
+            lucide.createIcons();
+        }
+    } catch(e){}
+    
+    // ตั้งค่าเริ่มต้นตัวกรองเป็น "รวมทุกเดือน (all)"
+    document.getElementById('monthFilter').value = 'all';
+
+    // 🛡️ ซ่อนหน้า Loading ทันทีหลัง 1.2 วิ ไม่ผูกกับการดึงข้อมูล (กันค้างยาว)
+    setTimeout(() => {
+        const loader = document.getElementById('initialLoader');
+        if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
+    }, 1200);
+
+    // ดึงข้อมูล 2 ฝั่งแบบแยกกัน ไม่ให้ฝั่งใดฝั่งหนึ่งค้างแล้วบล็อกอีกฝั่ง
+    window.showToast("กำลังดึงข้อมูลล่าสุด...", false);
+    try { await fetchLineData(); } catch(e) { console.error("Line load fail:", e); }
+    try { await fetchSmartcareData(); } catch(e) { console.error("SC load fail:", e); }
+
+    updateYearFilterOptions(); 
+    window.applyGlobalFilter(); 
+
+    // 🔄 อัปเดตข้อมูลอัตโนมัติทุก 10 วินาที (เงียบๆ ไม่รบกวนการใช้งาน)
+    let _refreshing = false;
+    setInterval(async () => {
+        if(_refreshing || document.hidden) return;   // ข้ามถ้ากำลังโหลดอยู่ หรือแท็บไม่ได้เปิด
+        _refreshing = true;
+        try {
+            await Promise.all([
+                fetchLineData().catch(e => console.error("auto Line:", e)),
+                fetchSmartcareData().catch(e => console.error("auto SC:", e))
+            ]);
+            updateYearFilterOptions();
+            window.applyGlobalFilter();
+        } finally { _refreshing = false; }
+    }, 10000);
+});
 </script>
 </body>
 </html>
