@@ -276,42 +276,30 @@
   #view-mailservice .section-title .text-teal-500, #view-mailservice .text-teal-500 { color: var(--teal) !important; }
 
   /* ============================================================
-     ✦ FIT-TO-SCREEN (เดสก์ท็อป) — แต่ละหน้าพอดี 1 จอ, ตารางยาวเลื่อนในกล่อง
+     ✦ LAYOUT (เดสก์ท็อป) — เต็มความสูงจอ + สัดส่วนพอดี + ล้นแล้วเลื่อนได้ (ไม่ตัดทิ้ง)
      ============================================================ */
   @media (min-width: 1024px) {
-    .view-content-area { overflow: hidden; padding: 14px 18px; display: flex; flex-direction: column; }
-    .view-section { padding-bottom: 0; }
-    .view-section.active { height: 100%; min-height: 0; }
+    /* พื้นที่เนื้อหาเต็มจอ และเลื่อนได้เมื่อเนื้อหาล้น — ไม่มีการตัดข้อมูลหาย */
+    .view-content-area { overflow-y: auto; overflow-x: hidden; padding: 18px 22px; }
+    .view-section { padding-bottom: 24px; }
 
-    /* บีบระยะให้กระชับ */
-    .widget-box { padding: 16px; }
-    .sc-card { padding: 13px; }
-    .section-title { margin-bottom: 12px; }
-    .grid-2, .grid-3, .grid-4, .grid-5 { gap: 12px; }
-    .k-val { font-size: 1.55rem; }
-    .k-label { margin-bottom: 6px; }
-    .kpi-card { padding: 13px; }
+    /* จัดสัดส่วนให้กระชับ อ่านง่าย ได้จังหวะ */
+    .widget-box { padding: 18px; }
+    .sc-card { padding: 14px; }
+    .section-title { margin-bottom: 14px; }
+    .grid-2, .grid-3, .grid-4, .grid-5 { gap: 14px; }
+    .k-val { font-size: 1.7rem; }
+    .kpi-card { padding: 15px; }
 
-    /* Dashboards Smartcare / Mail — ให้เต็มความสูงและจัดสัดส่วนภายใน */
-    #sc-dash-section, #mail-dash-section { flex: 1; min-height: 0; gap: 12px !important; }
-    #sc-dash-section > .grid-2:last-child, #mail-dash-section > .grid-2:last-child { flex: 1; min-height: 0; }
-    .sc-card.h-\[350px\] { height: 100% !important; min-height: 0; }
-
-    /* ตารางยาว: เลื่อนเฉพาะในกล่อง */
+    /* ตารางยาว: เลื่อนภายในกล่อง ไม่ดันทั้งหน้ายืดเกินจำเป็น */
     .table-container { overflow-y: auto; }
-
-    /* หน้าที่เป็นตารางเดี่ยว (เจาะลึก/ตั้งค่า/เกิดซ้ำ) ให้เลื่อนภายในหน้าได้ */
-    #view-buildings-line.view-section.active,
-    #view-buildings-sc.view-section.active,
-    #view-settings.view-section.active,
-    #view-recurring.view-section.active { overflow-y: auto; }
     #view-buildings-line .table-container,
-    #view-buildings-sc .table-container { max-height: calc(100vh - 220px); }
+    #view-buildings-sc .table-container,
+    #view-buildings-mail .table-container { max-height: calc(100vh - 240px); }
+    #view-line .grid-2 .table-container { max-height: 62vh; }
 
-    /* หน้าภาพรวม/Line: ให้ตารางอัปเดตล่าสุดเลื่อนในกล่อง ไม่ดันหน้ายาว */
-    #view-line .grid-2 { flex: 1; min-height: 0; align-items: stretch; }
-    #view-line .grid-2 .table-container { max-height: calc(100vh - 430px); }
-    #view-unified { min-height: 0; }
+    /* การ์ดกราฟ/ตารางของ Smartcare & Mail คงสัดส่วนสูงเดิม (ไม่ยืด/ไม่ยุบจนเพี้ยน) */
+    #sc-dash-section .sc-card.h-\[350px\], #mail-dash-section .sc-card.h-\[350px\] { height: 350px; }
   }
 
 
@@ -890,6 +878,15 @@ const LINE_API_URL = "https://script.google.com/macros/s/AKfycbygiyeaAfjPr3dfl8J
 const SC_SHEET_ID = "1hWnS0UMbQolbMg70iQRO_8IIl6j3V_U3HICY1_RbQcw";
 const SC_TICKET_SHEET_NAME = "Ticket";
 const SC_ACTIVITY_SHEET_NAME = "Activity";
+const SC_SLA_SHEET_NAME = "SLA";   // ชีตเก็บ Remark (คอลัมน์: TicketNo | Remark | วันที่)
+let remarkStore = {};              // { TicketNo: { remark, date } } อ่านจากชีต SLA
+
+// ============================================================
+// 📝 URL สำหรับ "บันทึก Remark" — ★ วาง URL ของ Apps Script โปรเจกต์ Remark ตรงนี้ ★
+//    (ได้จากการ Deploy ไฟล์ Remark_API.gs → Web app → Anyone)
+//    ถ้าเว้นว่าง จะใช้ LINE_API_URL แทนโดยอัตโนมัติ
+// ============================================================
+const REMARK_API_URL = "";
 
 // ============================================================
 // 🏠 ลิงก์ "กลับสู่เมนูหลัก" — ★ แก้ URL ตรงนี้ที่เดียวถ้าต้องการเปลี่ยนในอนาคต ★
@@ -1131,6 +1128,58 @@ async function fetchSmartcareData() {
         const mdt = document.getElementById('u-mail-data'); if(mdt) mdt.style.display = 'flex';
     }
 }
+
+// อ่าน Remark เดิมจากชีต SLA (ผ่าน JSONP — อ่านอย่างเดียว)
+async function loadRemarks() {
+    try {
+        const rows = await loadSheetJSONP(SC_SLA_SHEET_NAME, '__scSlaCB');
+        const store = {};
+        (rows || []).forEach(r => {
+            const t = String(r['TicketNo'] || '').trim();
+            if(!t) return;
+            store[t] = { remark: String(r['Remark'] || ''), date: String(r['วันที่'] || r['Date'] || '') };
+        });
+        remarkStore = store;
+    } catch(e) { console.warn("โหลด Remark (ชีต SLA) ไม่ได้:", e.message); }
+}
+
+// บันทึก Remark กลับเข้าชีต SLA ผ่าน Apps Script (JSONP GET — ทำงานได้จาก file://)
+// ⚠️ ต้อง Deploy Apps Script ที่รองรับ action=saveRemark ก่อน (ดูโค้ด Code.gs ที่แนบให้)
+window.saveRemark = (ticket) => {
+    const ta = document.getElementById('tm-remark-input');
+    const btn = document.getElementById('tm-remark-btn');
+    const statusEl = document.getElementById('tm-remark-status');
+    if(!ta) return;
+    const text = ta.value.trim();
+    if(btn){ btn.disabled = true; btn.innerText = 'กำลังบันทึก...'; }
+    if(statusEl) statusEl.innerText = '';
+
+    const cbName = '__saveRemarkCB_' + Date.now();
+    const script = document.createElement('script');
+    let done = false;
+    const cleanup = () => { try { delete window[cbName]; } catch(e){} if(script.parentNode) script.parentNode.removeChild(script); };
+    window[cbName] = (resp) => {
+        done = true;
+        // อัปเดตในหน่วยความจำทันที (สถานะ SLA ไม่เปลี่ยน — เก็บแค่หมายเหตุ)
+        const today = new Date().toLocaleDateString('th-TH');
+        remarkStore[ticket] = { remark: text, date: today };
+        if(statusEl){ statusEl.style.color = 'var(--success)'; statusEl.innerText = '✓ บันทึกลงชีต SLA แล้ว (' + today + ')'; }
+        if(btn){ btn.disabled = false; btn.innerText = '💾 บันทึกหมายเหตุ'; }
+        if(window.applyGlobalFilter) window.applyGlobalFilter();
+        cleanup();
+    };
+    script.onerror = () => {
+        if(done) return;
+        if(statusEl){ statusEl.style.color = 'var(--danger)'; statusEl.innerText = '✗ บันทึกไม่ได้ — ตรวจว่า Deploy Apps Script (saveRemark) แล้ว'; }
+        if(btn){ btn.disabled = false; btn.innerText = '💾 บันทึกหมายเหตุ'; }
+        cleanup();
+    };
+    const base = (typeof REMARK_API_URL === 'string' && REMARK_API_URL.trim()) ? REMARK_API_URL.trim() : LINE_API_URL;
+    const url = `${base}?action=saveRemark&ticket=${encodeURIComponent(ticket)}&remark=${encodeURIComponent(text)}&callback=${cbName}&nocache=${Date.now()}`;
+    script.src = url;
+    document.head.appendChild(script);
+    setTimeout(() => { if(!done){ script.onerror(); } }, 15000);
+};
 
 function calculateWorkingDays(startD, endD) {
     if(!startD || !endD || startD > endD) return 0;
@@ -1715,24 +1764,41 @@ window.exportOverSLA = (system, format) => {
 };
 
 window.exportToPDF = (data, title, system) => {
-    window.showToast("กำลังประมวลผล PDF...", false);
-    const container = document.createElement('div'); container.style.padding = '30px'; container.style.fontFamily = "'Prompt', sans-serif"; container.style.background = '#ffffff'; container.style.width = '1000px'; container.style.color = '#000000';
-    const sysName = system === 'line' ? 'Line Bot' : 'Smartcare'; const color = system === 'line' ? '#3b82f6' : '#8b5cf6';
-    let html = `
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: ${color}; margin-bottom: 5px; font-size: 24px; font-weight: bold;">รายงานงานซ่อมที่ล่าช้าเกินกำหนด (Over SLA)</h2>
-            <p style="color: #64748b; font-size: 14px;">ระบบ: <b>${sysName}</b> | ออกรายงานเมื่อ: ${new Date().toLocaleDateString('th-TH')}</p>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
-            <thead><tr style="background-color: ${color}; color: #ffffff;">
-    `;
-    const keys = Object.keys(data[0]); keys.forEach(k => { html += `<th style="padding: 10px; border: 1px solid #e2e8f0; white-space: nowrap;">${k}</th>`; });
-    html += `</tr></thead><tbody>`;
-    data.forEach((row, i) => { const bg = i % 2 === 0 ? '#f8fafc' : '#ffffff'; html += `<tr style="background-color: ${bg};">`; keys.forEach(k => { html += `<td style="padding: 10px; border: 1px solid #e2e8f0; vertical-align: top;">${safeEscape(row[k])}</td>`; }); html += `</tr>`; });
-    html += `</tbody></table>`; container.innerHTML = html; document.body.appendChild(container);
+    // ✅ ใช้ระบบพิมพ์ของเบราว์เซอร์ (Print to PDF) — ภาษาไทยเรนเดอร์ถูกต้อง 100% (ไม่ใช่การถ่ายภาพ)
+    const sysName = system === 'line' ? 'Line Bot' : (system === 'mailservice' ? 'Smartcare (Mail Service)' : 'Smartcare');
+    const color = system === 'line' ? '#16a34a' : (system === 'mailservice' ? '#0d9488' : '#8b5cf6');
+    const keys = Object.keys(data[0] || {});
+    let rowsHtml = data.map((row, i) => {
+        const bg = i % 2 === 0 ? '#f4f4f6' : '#ffffff';
+        return `<tr style="background:${bg};">` + keys.map(k => `<td>${safeEscape(row[k])}</td>`).join('') + `</tr>`;
+    }).join('');
+    let headHtml = keys.map(k => `<th>${safeEscape(k)}</th>`).join('');
 
-    const opt = { margin: 10, filename: `${title}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
-    html2pdf().set(opt).from(container).save().then(() => { document.body.removeChild(container); window.showToast("ส่งออกไฟล์ PDF สำเร็จ!"); }).catch(err => { document.body.removeChild(container); window.showToast("เกิดข้อผิดพลาดในการสร้าง PDF", true); console.error(err); });
+    const win = window.open('', '_blank');
+    if(!win) { window.showToast("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ — อนุญาต pop-up แล้วลองใหม่", true); return; }
+    win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8">
+        <title>${safeEscape(title)}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+        <style>
+            * { font-family: 'Sarabun','Prompt',sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { margin: 24px; color: #111; }
+            h2 { color: ${color}; margin: 0 0 4px; font-size: 22px; }
+            .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th { background: ${color}; color: #fff; padding: 9px 10px; border: 1px solid #d1d5db; text-align: left; white-space: nowrap; }
+            td { padding: 8px 10px; border: 1px solid #e2e8f0; vertical-align: top; }
+            @media print { @page { size: A4 landscape; margin: 12mm; } .noprint { display: none; } }
+            .noprint { text-align:center; margin-bottom:16px; }
+            .noprint button { background:${color}; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+        </style></head><body>
+        <div class="noprint"><button onclick="window.print()">🖨️ บันทึกเป็น PDF / พิมพ์</button></div>
+        <h2>รายงานงานซ่อมที่ล่าช้าเกินกำหนด (Over SLA)</h2>
+        <div class="sub">ระบบ: <b>${sysName}</b> &nbsp;|&nbsp; ออกรายงานเมื่อ: ${new Date().toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'})} &nbsp;|&nbsp; ทั้งหมด ${data.length} รายการ</div>
+        <table><thead><tr>${headHtml}</tr></thead><tbody>${rowsHtml}</tbody></table>
+        <script>window.onload = () => { setTimeout(() => window.print(), 600); };<\/script>
+        </body></html>`);
+    win.document.close();
+    window.showToast("เปิดหน้าพิมพ์แล้ว — เลือก 'บันทึกเป็น PDF'");
 };
 
 window.openUniversalModal = (source, type, filterVal = null) => {
@@ -1756,7 +1822,7 @@ window.openUniversalModal = (source, type, filterVal = null) => {
         let trHtml = `<tr>`;
         if(isGrand) trHtml += `<td>${d._sys==='Line'?'<span class="pill pill-primary">Line</span>':(d._sys==='Mail'?'<span class="pill" style="background:rgba(20,184,166,0.12); color:var(--teal)">Mail</span>':'<span class="pill" style="background:rgba(139,92,246,0.1); color:var(--purple)">SC</span>')}</td><td class="font-bold num">${d.ticket}</td><td class="truncate max-w-[150px] text-sm">${safeEscape(d.detail)}</td><td class="num">${d.dateStr}</td><td>${(d.status==='completed'||d.status==='Done')?'<span class="pill pill-success">Done</span>':'<span class="pill pill-warning">Pending</span>'}</td><td>${slaBad}</td>`;
         else if(source==='line') trHtml += `<td class="font-bold text-primary num">${d.ticket}</td><td class="font-medium text-sm"><i data-lucide="${BUILDINGS[d.buildingCode].icon}" class="inline w-3 h-3 mr-1"></i>${BUILDINGS[d.buildingCode].name}</td><td class="truncate max-w-[200px] text-sm">${safeEscape(d.detail)}</td><td>${d.status==='completed'?'<span class="pill pill-success">Done</span>':'<span class="pill pill-warning">Pending</span>'}</td><td>${slaBad}</td>`;
-        else trHtml += `<td class="font-bold num" style="color:${source==='mailservice'?'var(--teal)':'var(--purple)'}">${d.ticket}</td><td class="text-sm">${safeEscape(d.category)}</td><td class="text-sm truncate max-w-[200px]">${safeEscape(d.detail)}</td><td>${d.status==='Done'?'<span class="pill pill-success">Done</span>':(d.status==='Accept Task'?'<span class="pill pill-warning">Accept</span>':'<span class="pill pill-primary">Submit</span>')}</td><td>${slaBad}</td>`;
+        else trHtml += `<td class="font-bold num" style="color:${source==='mailservice'?'var(--teal)':'var(--purple)'}">${d.ticket}${(remarkStore[d.ticket] && remarkStore[d.ticket].remark) ? ' <span title="มีหมายเหตุ">📝</span>' : ''}</td><td class="text-sm">${safeEscape(d.category)}</td><td class="text-sm truncate max-w-[200px]">${safeEscape(d.detail)}</td><td>${d.status==='Done'?'<span class="pill pill-success">Done</span>':(d.status==='Accept Task'?'<span class="pill pill-warning">Accept</span>':'<span class="pill pill-primary">Submit</span>')}</td><td>${slaBad}</td>`;
         trHtml += `</tr>`;
         
         if(source === 'smartcare' || source === 'mailservice' || (isGrand && (d._sys === 'SC' || d._sys === 'Mail'))) trHtml = trHtml.replace('<tr>', `<tr class="clickable" onclick="window.openTicket('${d.ticket}')">`);
@@ -1790,6 +1856,14 @@ window.openTicket = (tNo) => {
             <div class="ticket-field-box"><div class="ticket-field-label">วันที่แจ้ง</div><div class="ticket-field-val num">${d.dateStr}</div></div>
             <div class="ticket-field-box"><div class="ticket-field-label">คะแนนโหวต (Vote Score)</div><div class="ticket-field-val num text-purple-500">${d.voteScore || '-'}</div></div>
             <div class="ticket-field-box"><div class="ticket-field-label">สถานะ SLA (เป้า ${d.targetSla} วัน)</div><div class="ticket-field-val num ${sCol}">${sTxt}</div></div>
+        </div>
+        <div class="ticket-field-box" style="border-color: var(--card-border);">
+            <div class="ticket-field-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="sticky-note" style="width:15px;height:15px;"></i> หมายเหตุ (Remark) <span class="text-muted" style="font-weight:400;">— บันทึกลงชีต SLA · สถานะ SLA คงเดิม</span></div>
+            <textarea id="tm-remark-input" class="custom-input" style="width:100%; height:78px; padding:10px 12px; resize:vertical; line-height:1.5;" placeholder="พิมพ์หมายเหตุ/สาเหตุที่งานล่าช้า...">${safeEscape((remarkStore[d.ticket] && remarkStore[d.ticket].remark) || '')}</textarea>
+            <div class="flex items-center gap-3 mt-2">
+                <button id="tm-remark-btn" onclick="window.saveRemark('${safeEscape(d.ticket)}')" class="btn-icon" style="background:var(--primary); color:#fff; padding:8px 16px; font-weight:600; font-size:0.85rem; border:none;">💾 บันทึกหมายเหตุ</button>
+                <span id="tm-remark-status" class="text-xs num">${(remarkStore[d.ticket] && remarkStore[d.ticket].date) ? ('บันทึกล่าสุด: ' + safeEscape(remarkStore[d.ticket].date)) : ''}</span>
+            </div>
         </div>
     `;
     document.getElementById('tm-body').innerHTML = html; document.getElementById('ticketModal').classList.add('show'); lucide.createIcons();
@@ -1849,6 +1923,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.showToast("กำลังดึงข้อมูลล่าสุด...", false);
     try { await fetchLineData(); } catch(e) { console.error("Line load fail:", e); }
     try { await fetchSmartcareData(); } catch(e) { console.error("SC load fail:", e); }
+    try { await loadRemarks(); } catch(e) { console.error("Remark load fail:", e); }
 
     updateYearFilterOptions(); 
     window.applyGlobalFilter(); 
@@ -1863,6 +1938,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 fetchLineData().catch(e => console.error("auto Line:", e)),
                 fetchSmartcareData().catch(e => console.error("auto SC:", e))
             ]);
+            await loadRemarks().catch(e => console.error("auto Remark:", e));
             updateYearFilterOptions();
             window.applyGlobalFilter();
         } finally { _refreshing = false; }
