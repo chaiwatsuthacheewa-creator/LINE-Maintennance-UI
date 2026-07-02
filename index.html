@@ -817,7 +817,7 @@
                 <p class="text-sm text-muted mb-6">ส่งออกรายงานงานซ่อมจาก Line ที่ใช้เวลาแก้ไขเกินเป้าหมาย</p>
                 <div class="flex gap-4">
                     <button onclick="window.exportOverSLA('line', 'excel')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-emerald-500/20"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
-                    <button onclick="window.exportOverSLA('line', 'pdf')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-rose-500/20"><i data-lucide="file-text" class="w-4 h-4"></i> PDF</button>
+                    <button onclick="window.openPdfPlotDialog('line')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-rose-500/20"><i data-lucide="file-text" class="w-4 h-4"></i> PDF</button>
                 </div>
             </div>
             <!-- Export Smartcare -->
@@ -827,7 +827,7 @@
                 <p class="text-sm text-muted mb-6">ส่งออกรายงานงานซ่อมจากระบบ Excel ที่ใช้เวลาดำเนินการเกินเป้าหมาย</p>
                 <div class="flex gap-4">
                     <button onclick="window.exportOverSLA('sc', 'excel')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-emerald-500/20"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
-                    <button onclick="window.exportOverSLA('sc', 'pdf')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-rose-500/20"><i data-lucide="file-text" class="w-4 h-4"></i> PDF</button>
+                    <button onclick="window.openPdfPlotDialog('sc')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg flex items-center gap-2 font-medium transition shadow-md shadow-rose-500/20"><i data-lucide="file-text" class="w-4 h-4"></i> PDF</button>
                 </div>
             </div>
         </div>
@@ -901,6 +901,7 @@ let lineFiltered = [], scFiltered = [], mailFiltered = [];
 let scGlobalVoteAvg = {}; // จัดเก็บคะแนนโหวตแยกตาม ปี-เดือน
 let mailGlobalVoteAvg = {}; // คะแนนโหวต Mail Service
 let scGlobalVoteCount = {}, mailGlobalVoteCount = {}; // จำนวนงานที่มีคนโหวต แยกตาม ปี-เดือน
+let scVoteEntries = [], mailVoteEntries = []; // รายการโหวตดิบ {year, month, vote} — คำนวณสดตามตัวกรอง
 
 let currentYear = 'all', currentMonth = 'all';
 let activeLineTab = 'ari', activeScTab = '', activeMailTab = '';
@@ -1250,6 +1251,7 @@ async function processSmartcareStrict(tickets, activities) {
     // ---------- 2) วนแต่ละ Ticket: Vote แยกอิสระ + ตรวจลำดับสถานะแบบ Strict ----------
     let voteStats = { all: { total: 0, count: 0 } };       // Smartcare (ไม่รวม Mail)
     let mailVoteStats = { all: { total: 0, count: 0 } };   // Mail Service
+    scVoteEntries = []; mailVoteEntries = [];
     let payloadTickets = [];
     let mailPayload = [];
     let droppedCount = 0;
@@ -1281,6 +1283,10 @@ async function processSmartcareStrict(tickets, activities) {
                 const vk = `${cDate.getFullYear()}-${cDate.getMonth()}`;
                 if (!bucket[vk]) bucket[vk] = { total: 0, count: 0 };
                 bucket[vk].total += vote; bucket[vk].count++;
+                // เก็บรายการดิบไว้คำนวณสดตามตัวกรอง (ปี / ปี+เดือน / ทั้งหมด)
+                (mail ? mailVoteEntries : scVoteEntries).push({ year: cDate.getFullYear(), month: cDate.getMonth(), vote: vote });
+            } else {
+                (mail ? mailVoteEntries : scVoteEntries).push({ year: null, month: null, vote: vote });
             }
         }
 
@@ -1490,6 +1496,22 @@ window.renderLineDash = () => {
     lucide.createIcons();
 };
 
+// คำนวณ avg + count ของคะแนนโหวต จากรายการดิบ ตามตัวกรองปี/เดือน
+// year='all' = ทุกปี | month='all' = ทุกเดือน | เลือกทั้งคู่ = เจาะจงปี+เดือน
+window.computeVoteStat = (entries, year, month) => {
+    let total = 0, count = 0;
+    (entries || []).forEach(e => {
+        if (year !== 'all') {
+            if (e.year === null || e.year.toString() !== year.toString()) return;
+        }
+        if (month !== 'all') {
+            if (e.month === null || e.month.toString() !== month.toString()) return;
+        }
+        total += e.vote; count++;
+    });
+    return { avg: count > 0 ? parseFloat((total / count).toFixed(1)) : 0, count: count };
+};
+
 window.renderSmartcareDash = () => {
     if(scDataRaw.length === 0) return;
     
@@ -1519,12 +1541,12 @@ window.renderSmartcareDash = () => {
     // ⭐️ Dynamic Vote Score
     let voteKey = 'all';
     if (currentYear !== 'all' && currentMonth !== 'all') voteKey = `${currentYear}-${currentMonth}`;
-    let displayVote = (scGlobalVoteAvg && scGlobalVoteAvg[voteKey]) ? scGlobalVoteAvg[voteKey] : (scGlobalVoteAvg['all'] || 0);
-    if (currentMonth !== 'all' && (!scGlobalVoteAvg[voteKey])) { displayVote = 0; }
+    // คำนวณสดจากรายการโหวตดิบ ตามตัวกรองปี/เดือน (รองรับทั้งปี / ปี+เดือน / ทุกอย่าง)
+    let scVoteStat = window.computeVoteStat(scVoteEntries, currentYear, currentMonth);
+    let displayVote = scVoteStat.avg;
 
     document.getElementById('sc-ui-vote-avg').innerHTML = `${displayVote.toFixed(1)}<span class="text-sm font-normal opacity-70"> / 5.0</span>`;
-    let scVoteN = (scGlobalVoteCount && scGlobalVoteCount[voteKey] !== undefined) ? scGlobalVoteCount[voteKey] : (scGlobalVoteCount['all'] || 0);
-    if (currentMonth !== 'all' && (scGlobalVoteCount[voteKey] === undefined)) scVoteN = 0;
+    let scVoteN = scVoteStat.count;
     { const el = document.getElementById('sc-ui-vote-count'); if(el) el.innerText = scVoteN.toLocaleString(); }
     document.getElementById('sc-ui-vote-stars').innerHTML = Array.from({length:5}, (_,i) => `<i data-lucide="star" class="${i<Math.round(displayVote) ? 'fill-white text-white' : 'text-white/30'}" style="width:16px;height:16px;"></i>`).join('');
 
@@ -1585,12 +1607,11 @@ window.renderMailDash = () => {
     // ⭐️ Dynamic Vote Score
     let voteKey = 'all';
     if (currentYear !== 'all' && currentMonth !== 'all') voteKey = `${currentYear}-${currentMonth}`;
-    let displayVote = (mailGlobalVoteAvg && mailGlobalVoteAvg[voteKey]) ? mailGlobalVoteAvg[voteKey] : (mailGlobalVoteAvg['all'] || 0);
-    if (currentMonth !== 'all' && (!mailGlobalVoteAvg[voteKey])) { displayVote = 0; }
+    let mailVoteStat = window.computeVoteStat(mailVoteEntries, currentYear, currentMonth);
+    let displayVote = mailVoteStat.avg;
 
     document.getElementById('mail-ui-vote-avg').innerHTML = `${displayVote.toFixed(1)}<span class="text-sm font-normal opacity-70"> / 5.0</span>`;
-    let mailVoteN = (mailGlobalVoteCount && mailGlobalVoteCount[voteKey] !== undefined) ? mailGlobalVoteCount[voteKey] : (mailGlobalVoteCount['all'] || 0);
-    if (currentMonth !== 'all' && (mailGlobalVoteCount[voteKey] === undefined)) mailVoteN = 0;
+    let mailVoteN = mailVoteStat.count;
     { const el = document.getElementById('mail-ui-vote-count'); if(el) el.innerText = mailVoteN.toLocaleString(); }
     document.getElementById('mail-ui-vote-stars').innerHTML = Array.from({length:5}, (_,i) => `<i data-lucide="star" class="${i<Math.round(displayVote) ? 'fill-white text-white' : 'text-white/30'}" style="width:16px;height:16px;"></i>`).join('');
 
@@ -1732,6 +1753,127 @@ window.saveSlaSettings = () => {
     mailDataRaw.forEach(d => { d.targetSla = scSlaConfig[d.category] || DEFAULT_SC_SLA; if(d.slaDays !== null && d.slaDays !== '') d.isOverSLA = parseFloat(d.slaDays) > d.targetSla; });
 
     window.showToast('บันทึกเป้าหมาย SLA เรียบร้อย!'); window.applyGlobalFilter(); 
+};
+
+// ===== หน้าต่างเลือกก่อน Plot PDF: ช่วงวันที่ + ติ๊กเลือกรายการ =====
+let _pdfPlotRows = [];  // เก็บรายการปัจจุบันไว้ให้ปุ่มสร้าง PDF อ่าน
+window.openPdfPlotDialog = (system) => {
+    let list = (system === 'line') ? lineFiltered.filter(d => d.isOverSLA)
+             : (system === 'mailservice') ? mailFiltered.filter(d => d.isOverSLA)
+             : scFiltered.filter(d => d.isOverSLA);
+    if (!list || list.length === 0) { window.showToast("ไม่มีงานเกิน SLA ให้ส่งออก", true); return; }
+
+    // เรียงตามวันที่ (เก่า→ใหม่) เก็บไว้ใน _pdfPlotRows
+    _pdfPlotRows = list.slice().sort((a,b) => (a.start && b.start) ? a.start - b.start : 0);
+    const sysName = system === 'line' ? 'Line Bot' : (system === 'mailservice' ? 'Mail Service' : 'Smartcare');
+    const accent = system === 'line' ? 'var(--line)' : (system === 'mailservice' ? 'var(--teal)' : 'var(--sc)');
+
+    // ช่วงวันที่เริ่มต้น = จากวันแรกถึงวันสุดท้ายในลิสต์
+    const dates = _pdfPlotRows.map(d => d.start).filter(d => d && !isNaN(d));
+    const toISO = (dt) => dt ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` : '';
+    const minD = dates.length ? toISO(new Date(Math.min(...dates))) : '';
+    const maxD = dates.length ? toISO(new Date(Math.max(...dates))) : '';
+
+    let rowsHtml = _pdfPlotRows.map((d, i) => {
+        const detail = (d.detail || '-').toString();
+        const short = detail.length > 60 ? detail.slice(0,60) + '…' : detail;
+        const extra = system === 'line' ? (BUILDINGS[d.buildingCode]?.name || d.buildingCode || '-') : (d.category || '-');
+        return `<label class="pdf-plot-row" style="display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-bottom:1px solid var(--card-border); cursor:pointer;" data-idx="${i}" data-date="${d.start && !isNaN(d.start) ? toISO(d.start) : ''}">
+            <input type="checkbox" class="pdf-plot-cb" checked style="margin-top:3px; width:16px; height:16px; flex-shrink:0; accent-color:${accent};">
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:600; font-size:0.85rem;" class="num">${safeEscape(d.ticket)} <span class="text-muted" style="font-weight:400;">· ${safeEscape(d.dateStr || '')}</span></div>
+                <div class="text-muted" style="font-size:0.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeEscape(extra)} — ${safeEscape(short)}</div>
+            </div>
+        </label>`;
+    }).join('');
+
+    const old = document.getElementById('pdfPlotModal'); if(old) old.remove();
+    const modal = document.createElement('div');
+    modal.id = 'pdfPlotModal';
+    modal.className = 'modal-overlay show';
+    modal.style.cssText = 'z-index:1100; padding:20px;';
+    modal.innerHTML = `
+        <div class="modal-content" style="background:var(--card-bg); border:1px solid var(--card-border); width:100%; max-width:640px; max-height:88vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+            <div style="padding:18px 22px; border-bottom:1px solid var(--card-border); display:flex; align-items:center; justify-content:space-between;">
+                <div class="section-title" style="margin:0;"><i data-lucide="file-text" style="color:${accent};"></i> เลือกข้อมูลเพื่อสร้าง PDF — ${sysName} (เกิน SLA)</div>
+                <button onclick="document.getElementById('pdfPlotModal').remove()" class="btn-icon" style="border:none; background:transparent; cursor:pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div style="padding:16px 22px; border-bottom:1px solid var(--card-border); display:flex; gap:16px; flex-wrap:wrap; align-items:end;">
+                <div><label class="text-xs text-muted" style="display:block; margin-bottom:4px;">จากวันที่</label><input type="date" id="pdfPlotFrom" class="custom-input" style="padding:6px 10px;" value="${minD}" onchange="window.pdfPlotApplyRange()"></div>
+                <div><label class="text-xs text-muted" style="display:block; margin-bottom:4px;">ถึงวันที่</label><input type="date" id="pdfPlotTo" class="custom-input" style="padding:6px 10px;" value="${maxD}" onchange="window.pdfPlotApplyRange()"></div>
+                <button onclick="window.pdfPlotApplyRange()" class="btn-icon" style="background:${accent}; color:#fff; border:none; padding:8px 14px; font-weight:600; font-size:0.82rem;">กรองช่วงวันที่</button>
+                <label style="display:flex; align-items:center; gap:6px; margin-left:auto; font-size:0.82rem; cursor:pointer;"><input type="checkbox" id="pdfPlotAll" checked onclick="window.pdfPlotToggleAll(this.checked)" style="width:16px;height:16px; accent-color:${accent};"> เลือกทั้งหมด</label>
+            </div>
+            <div id="pdfPlotList" style="overflow-y:auto; flex:1;">${rowsHtml}</div>
+            <div style="padding:14px 22px; border-top:1px solid var(--card-border); display:flex; align-items:center; justify-content:space-between;">
+                <span class="text-sm text-muted"><span id="pdfPlotCount" class="num">${_pdfPlotRows.length}</span> รายการที่จะพิมพ์</span>
+                <button onclick="window.pdfPlotGenerate('${system}')" class="btn-icon" style="background:${accent}; color:#fff; border:none; padding:10px 22px; font-weight:700;">🖨️ สร้าง PDF</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if(e.target === modal) modal.remove(); });
+    modal.querySelectorAll('.pdf-plot-cb').forEach(cb => cb.addEventListener('change', window.pdfPlotUpdateCount));
+    if(window.lucide) lucide.createIcons();
+};
+
+// กรองตามช่วงวันที่: ซ่อน+เอาติ๊กออกของแถวนอกช่วง
+window.pdfPlotApplyRange = () => {
+    const from = document.getElementById('pdfPlotFrom').value;
+    const to = document.getElementById('pdfPlotTo').value;
+    document.querySelectorAll('#pdfPlotList .pdf-plot-row').forEach(row => {
+        const ds = row.getAttribute('data-date');
+        let inRange = true;
+        if(from && ds && ds < from) inRange = false;
+        if(to && ds && ds > to) inRange = false;
+        if(from && !ds) inRange = false; // ไม่มีวันที่ = ตัดออกเมื่อกำหนดช่วง
+        row.style.display = inRange ? 'flex' : 'none';
+        const cb = row.querySelector('.pdf-plot-cb');
+        if(cb) cb.checked = inRange;
+    });
+    window.pdfPlotUpdateCount();
+};
+
+window.pdfPlotToggleAll = (checked) => {
+    document.querySelectorAll('#pdfPlotList .pdf-plot-row').forEach(row => {
+        if(row.style.display !== 'none') { const cb = row.querySelector('.pdf-plot-cb'); if(cb) cb.checked = checked; }
+    });
+    window.pdfPlotUpdateCount();
+};
+
+window.pdfPlotUpdateCount = () => {
+    let n = 0;
+    document.querySelectorAll('#pdfPlotList .pdf-plot-row').forEach(row => {
+        if(row.style.display !== 'none' && row.querySelector('.pdf-plot-cb').checked) n++;
+    });
+    const el = document.getElementById('pdfPlotCount'); if(el) el.innerText = n;
+};
+
+// สร้าง PDF จากเฉพาะแถวที่ติ๊ก (และอยู่ในช่วงวันที่)
+window.pdfPlotGenerate = (system) => {
+    let chosen = [];
+    document.querySelectorAll('#pdfPlotList .pdf-plot-row').forEach(row => {
+        if(row.style.display !== 'none' && row.querySelector('.pdf-plot-cb').checked) {
+            chosen.push(_pdfPlotRows[parseInt(row.getAttribute('data-idx'))]);
+        }
+    });
+    if(chosen.length === 0) { window.showToast("ยังไม่ได้ติ๊กเลือกรายการ", true); return; }
+
+    let rawData;
+    if(system === 'line') {
+        rawData = chosen.map(d => ({
+            "Ticket No": d.ticket, "อาคาร (Building)": BUILDINGS[d.buildingCode]?.name || d.buildingCode, "รายละเอียด (Detail)": d.detail,
+            "วันที่รับแจ้ง (Date)": d.dateStr, "สถานะ (Status)": d.status === 'completed' ? 'Done' : 'Pending',
+            "ใช้เวลา (วัน)": d.durDays ? d.durDays.toFixed(2) : 0, "เป้าหมาย SLA": d.targetSla
+        }));
+    } else {
+        rawData = chosen.map(d => ({
+            "Ticket No": d.ticket, "หมวดหมู่ (Category)": d.category, "ฝ่ายแจ้ง (Faction)": d.faction, "รายละเอียด (Detail)": d.detail,
+            "สถานะ (Status)": d.status, "ใช้เวลา (วัน)": d.slaDays ? parseFloat(d.slaDays).toFixed(2) : 0, "เป้าหมาย SLA": d.targetSla
+        }));
+    }
+    const title = `Over_SLA_${system}_${new Date().toISOString().split('T')[0]}`;
+    document.getElementById('pdfPlotModal').remove();
+    window.exportToPDF(rawData, title, system);
 };
 
 window.exportOverSLA = (system, format) => {
